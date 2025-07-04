@@ -1,0 +1,31 @@
+DROP TABLE IF EXISTS `warehouses`;
+
+CREATE TABLE `warehouses` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `serial_no` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `supervisor_id` int NOT NULL,
+  `country_id` bigint unsigned NOT NULL,
+  `city_id` bigint unsigned NOT NULL,
+  `station` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` int DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `warehouses_country_id_foreign` (`country_id`),
+  KEY `warehouses_city_id_foreign` (`city_id`),
+  CONSTRAINT `warehouses_city_id_foreign` FOREIGN KEY (`city_id`) REFERENCES `cities` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `warehouses_country_id_foreign` FOREIGN KEY (`country_id`) REFERENCES `countries` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*Data for the table `warehouses` */
+
+insert  into `warehouses`(`id`,`serial_no`,`name`,`supervisor_id`,`country_id`,`city_id`,`station`,`is_active`,`created_at`,`updated_at`) values 
+(1,'000000001','WareHouse Demo',0,2,1,'0',0,'2025-05-21 05:38:27','2025-06-03 12:43:30'),
+(2,'000000002','52/C Shadbagh',0,2,1,'0',0,'2025-05-29 03:00:18','2025-06-03 12:43:26'),
+(4,'000000004','Warehouse Name updated',0,2,6,'0',0,'2025-06-03 12:04:16','2025-06-03 12:40:38'),
+(5,'000000005','wareouse 1',0,2,6,'0',0,'2025-06-03 12:43:45','2025-06-03 12:43:45'),
+(6,'000000006','Warehouse 1',0,2,6,'KESC',0,'2025-06-04 12:00:18','2025-06-18 09:46:15'),
+(7,'000000007','Warehouse 1',13,2,4,'Velit minim tempore',1,'2025-06-18 09:46:08','2025-06-18 09:49:56'),
+(8,'000000008','Warehouse 2',12,2,4,'Qui animi animi vo',1,'2025-06-18 09:49:00','2025-06-18 09:49:00'),
+(9,'000000009','Warehouse 3',11,2,6,'Ducimus ullamco qui',1,'2025-06-18 09:50:51','2025-06-18 09:50:51');

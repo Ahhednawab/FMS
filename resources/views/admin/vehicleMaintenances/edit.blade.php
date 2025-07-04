@@ -1,0 +1,213 @@
+@extends('layouts.admin')
+
+@section('title', 'Edit Vehicle Maintenance')
+
+@section('content')
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+
+
+  <div class="page-header page-header-light">
+    <div class="page-header-content header-elements-lg-inline">
+      <div class="page-title d-flex">
+        <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Edit Vehicle Maintenance</span></h4>
+        <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
+      </div>
+      <div class="header-elements d-none">
+        <div class="d-flex justify-content-center">
+          <a href="{{ route('admin.vehicleMaintenances.index') }}" class="btn btn-primary">
+            <span>View Vehicle Maintenance <i class="icon-list ml-2"></i></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+            <form method="POST" action="{{ route('admin.vehicleMaintenances.update', $vehicleMaintenance->id) }}" enctype="multipart/form-data">
+              @csrf
+              @method('PUT')
+              
+              <div class="row">
+                <!-- Maintenance ID -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Maintenance ID</label>
+                    <input value="{{$vehicleMaintenance->maintenance_id}}" name="maintenance_id" type="text" class="form-control" readonly>
+                  </div>
+                </div>
+
+                <!-- Vehicle No -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Vehicle No</label>
+                    <select class="custom-select select2" id="vehicle_id" name="vehicle_id">
+                      <option value="">--Select--</option>
+                      @foreach($vehicles as $key => $value)
+                        <option value="{{$key}}" {{ old('vehicle_id', $vehicleMaintenance->vehicle_id ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('vehicle_id'))
+                      <label class="text-danger">{{ $errors->first('vehicle_id') }}</label>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Model -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" class="form-control" name="model" value="{{ old('model', $vehicleMaintenance->model ?? '') }}">
+                    @if ($errors->has('model'))
+                      <label class="text-danger">{{ $errors->first('model') }}</label>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Odometer Reading -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Odometer Reading</label>
+                    <input type="number" min="1" step="1" class="form-control" name="odometer_reading" value="{{ old('odometer_reading', $vehicleMaintenance->odometer_reading ?? '') }}">
+                    @if ($errors->has('odometer_reading'))
+                      <label class="text-danger">{{ $errors->first('odometer_reading') }}</label>
+                    @endif
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Fuel Type -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Fuel Type</label>
+                    <select class="custom-select" name="fuel_type">
+                      <option value="">--Select--</option>
+                      @foreach($fuel_types as $key => $value)
+                        <option value="{{$key}}" {{ old('fuel_type', $vehicleMaintenance->fuel_type ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('fuel_type'))
+                      <label class="text-danger">{{ $errors->first('fuel_type') }}</label>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Maintenance Category -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Maintenance Category</label>
+                    <select class="custom-select" name="category">
+                      <option value="">--Select--</option>
+                      @foreach($category as $key => $value)
+                        <option value="{{$key}}" {{ old('category', $vehicleMaintenance->category ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('category'))
+                      <label class="text-danger">{{ $errors->first('category') }}</label>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Service Date -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Service Date</label>
+                    <input type="date" class="form-control" name="service_date" value="{{ old('service_date', $vehicleMaintenance->service_date ?? '') }}">
+                    @if ($errors->has('service_date'))
+                      <label class="text-danger">{{ $errors->first('service_date') }}</label>
+                    @endif
+                  </div>
+                </div>            
+
+                <!-- Service Provider -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Service Provider</label>
+                    <select class="custom-select" name="service_provider">
+                      <option value="">--Select--</option>
+                      @foreach($service_provider as $key => $value)
+                        <option value="{{$key}}" {{ old('service_provider', $vehicleMaintenance->service_provider ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('service_provider'))
+                      <label class="text-danger">{{ $errors->first('service_provider') }}</label>
+                    @endif
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Parts Replaced -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <div class="form-group">
+                      <label>Parts Replaced</label>
+                      <select class="custom-select" name="parts_replaced">
+                        <option value="">--Select--</option>
+                        @foreach($parts as $key => $value)
+                          <option value="{{$key}}" {{ old('parts_replaced', $vehicleMaintenance->parts_replaced ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                        @endforeach
+                      </select>
+                      @if ($errors->has('parts_replaced'))
+                        <label class="text-danger">{{ $errors->first('parts_replaced') }}</label>
+                      @endif
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cost of Service -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Cost of Service</label>
+                    <input type="number" min="1" step="1" class="form-control" name="service_cost" value="{{ old('service_cost', $vehicleMaintenance->service_cost ?? '') }}">
+                    @if ($errors->has('service_cost'))
+                      <label class="text-danger">{{ $errors->first('service_cost') }}</label>
+                    @endif
+                  </div>
+                </div>
+                
+                <!-- Service Description -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <label>Service Description</label>
+                    <textarea class="form-control" name="service_description">{{ old('service_description', $vehicleMaintenance->service_description ?? '') }}</textarea>
+                    @if ($errors->has('service_description'))
+                      <label class="text-danger">{{ $errors->first('service_description') }}</label>
+                    @endif
+                  </div>
+                </div>          
+              
+                <!-- Buttons -->
+                <div class="col-md-3">
+                  <label for=""></label>
+                  <div class="text-right">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="{{ route('admin.vehicleMaintenances.index') }}" class="btn btn-warning">Cancel</a>
+                  </div>
+                </div>            
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+        $('#vehicle_id').select2({
+            placeholder: "--Select--",
+            allowClear: true,
+            theme: 'bootstrap4'
+        });
+    });
+  </script>
+@endsection
