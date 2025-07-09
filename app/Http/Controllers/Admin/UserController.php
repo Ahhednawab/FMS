@@ -66,7 +66,8 @@ class UserController extends Controller
         $user->designation_id   =   $request->designation_id;
         $user->phone            =   $request->phone;
         $user->password         =   Hash::make($request->password);
-        $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
+        // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
+        $user->role = 'admin';
         $user->address          =   $request->address;        
         $user->save();
 
@@ -112,7 +113,8 @@ class UserController extends Controller
         $user->password         =   Hash::make($request->password);
         $user->country_id       =   $request->country_id;
         $user->city_id          =   $request->city_id;
-        $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
+        // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
+        $user->role = 'admin';
         $user->address          =   $request->address;       
         $user->save();
 
