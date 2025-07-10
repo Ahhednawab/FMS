@@ -22,7 +22,8 @@ class CustomLoginController extends Controller
 
         if (Auth::attempt([
             'email' => $request->email,
-            'password' => $request->password
+            'password' => $request->password,
+            'is_active' => 1,
         ], $request->filled('remember'))) {
 
             $user = Auth::user();
@@ -36,7 +37,7 @@ class CustomLoginController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Invalid login credentials.',
+             'email' => 'Invalid login credentials or account is inactive.',
         ])->withInput($request->only('email', 'remember'));
     }
 }
