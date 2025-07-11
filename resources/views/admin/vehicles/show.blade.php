@@ -122,7 +122,7 @@
             <div class="col-md-3 text-center">
               <div class="card">
                 <h5 class="m-0">Fabrication Vendor</h5>
-                <p>{{$vehicle->fabricationVendor->name}}</p>
+                <p>{{$vehicle->fabricationVendor ? $vehicle->fabricationVendor->name : 'N/A'}}</p>
               </div>
             </div>
           </div>
@@ -198,7 +198,7 @@
             <div class="col-md-3 text-center">
               <div class="card">
                 <h5 class="m-0">Induction Date</h5>
-                <p>{{\Carbon\Carbon::parse($vehicle->induction_date)->format('d-M-Y')}}</p>
+                <p>{{ ($vehicle->induction_date && $vehicle->induction_date !== '0000-00-00')  ? \Carbon\Carbon::parse($vehicle->induction_date)->format('d-M-Y')  : 'N/A' }} </p>
               </div>
             </div>            
           </div>
