@@ -149,7 +149,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">EOBI No</h5>
-                <p>{{ $driver->eobi_no }}</p>
+                <p>{{ $driver->eobi_no ? $driver->eobi_no : 'N/A' }}</p>
               </div>
             </div>
 
@@ -157,7 +157,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">EOBI Start Date</h5>
-                <p>{{ \Carbon\Carbon::parse($driver->eobi_start_date)->format('d-M-Y') }}</p>
+                <p>{{ $driver->eobi_start_date ? \Carbon\Carbon::parse($driver->eobi_start_date)->format('d-M-Y') : 'N/A' }}</p>
               </div>
             </div>
 
@@ -165,7 +165,13 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">EOBI Card</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->eobi_card_file) }}" download> Download</a></p>
+                <p>
+                  @if($driver->eobi_card_file)
+                    <a href="{{ asset('uploads/vehicles/' . $driver->eobi_card_file) }}" download> Download</a>
+                  @else
+                    N/A
+                  @endif
+                </p>
               </div>
             </div>
           </div>
@@ -183,7 +189,13 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">Medical Report</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->medical_report_file) }}" download> Download</a></p>
+                <p>
+                  @if($driver->medical_report_file)
+                    <a href="{{ asset('uploads/vehicles/' . $driver->medical_report_file) }}" download> Download</a>
+                  @else
+                    N/A
+                  @endif
+                </p>
               </div>
             </div>
 

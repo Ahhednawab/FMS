@@ -71,8 +71,8 @@
                 <td>{{ $value->serial_no }}</td>
                 <td>{{ $value->name }}</td>
                 <td>{{ $value->email }}</td>
-                <td>{{ $value->designation->designation }}</td>
                 <td>{{ $value->phone }}</td>
+                <td>{{ $value->designation->designation }}</td>                
                 <td>{{ $value->address }}</td>
                 <td class="text-center">
                   <div class="list-icons">

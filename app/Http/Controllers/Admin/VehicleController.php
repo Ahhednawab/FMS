@@ -9,13 +9,14 @@ use App\Models\VehicleType;
 use App\Models\Station;
 use App\Models\LadderMaker;
 use App\Models\IbcCenter;
+use App\Models\Vendor;
 
 
 
 class VehicleController extends Controller
 {
     public function index(){
-        $vehicles = Vehicle::with(['vehicleType','station','ladderMaker','ibcCenter'])->where('is_active',1)->orderby('id','DESC')->get();
+        $vehicles = Vehicle::with(['vehicleType','station','ibcCenter','fabricationVendor'])->where('is_active',1)->orderby('id','DESC')->get();
     	return view('admin.vehicles.index', compact('vehicles'));
     }
 
@@ -34,13 +35,14 @@ class VehicleController extends Controller
 
         $ladder_maker = LadderMaker::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
+        $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         
         
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.create',compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center'));
+        return view('admin.vehicles.create',compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors'));
     }
 
     public function store(Request $request)
@@ -58,13 +60,14 @@ class VehicleController extends Controller
                 'cone'                      =>  'required|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                'ladder_maker_id'           =>  'required',
+                // 'ladder_maker_id'           =>  'required',
                 'medical_box'               =>  'required',
                 'seat_cover'                =>  'required',
                 'fire_extenguisher'         =>  'required',
                 'tracker_installation_date' =>  'required|date',
                 'inspection_date'           =>  'required|date',
                 'next_inspection_date'      =>  'required|date|after:inspection_date',
+                'induction_date'            =>  'required|date',
                 'pso_card'                  =>  'required',
                 'akpl'                      =>  'required',
                 'registration_file'         =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -92,13 +95,14 @@ class VehicleController extends Controller
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                'ladder_maker_id.required'              =>  'Ladder Maker is required',
+                // 'ladder_maker_id.required'              =>  'Ladder Maker is required',
                 'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
                 'tracker_installation_date.required'    =>  'Tracker Installation Date is required',
                 'inspection_date.required'              =>  'Inspection Date is required',
                 'next_inspection_date.required'         =>  'Next Inspection Date is required',
+                'induction_date.required'               =>  'Induction Date is required',
                 'pso_card.required'                     =>  'PSO Card Details is required',
                 'akpl.required'                         =>  'AKPL is required',
                 'registration_file.required'            =>  'Registration Attachment is required',
@@ -139,13 +143,14 @@ class VehicleController extends Controller
         $vehicle->cone =   $request->cone;
         $vehicle->station_id =   $request->station_id;
         $vehicle->ibc_center_id =   $request->ibc_center_id;
-        $vehicle->ladder_maker_id =   $request->ladder_maker_id;
+        $vehicle->fabrication_vendor_id =   $request->fabrication_vendor_id;
         $vehicle->medical_box =   $request->medical_box;
         $vehicle->seat_cover =   $request->seat_cover;
         $vehicle->fire_extenguisher =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
         $vehicle->inspection_date =   $request->inspection_date;
         $vehicle->next_inspection_date =   $request->next_inspection_date;
+        $vehicle->induction_date =   $request->induction_date;        
         $vehicle->pso_card =   $request->pso_card;
         $vehicle->akpl =   $request->akpl;
         $vehicle->fitness_date =   $request->fitness_date;
@@ -220,13 +225,13 @@ class VehicleController extends Controller
 
         $ladder_maker = LadderMaker::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+        $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit',compact('vehicle','vehicleTypes','stations','status','ladder_maker','ibc_center'));
+        return view('admin.vehicles.edit',compact('vehicle','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -244,13 +249,14 @@ class VehicleController extends Controller
                 'cone'                      =>  'required|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                'ladder_maker_id'           =>  'required',
+                // 'ladder_maker_id'           =>  'required',
                 'medical_box'               =>  'required',
                 'seat_cover'                =>  'required',
                 'fire_extenguisher'         =>  'required',
                 'tracker_installation_date' =>  'required|date',
                 'inspection_date'           =>  'required|date',
                 'next_inspection_date'      =>  'required|date|after:inspection_date',
+                'induction_date'            =>  'required|date',
                 'pso_card'                  =>  'required',
                 'akpl'                      =>  'required',
                 'registration_file'         =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -278,13 +284,14 @@ class VehicleController extends Controller
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                'ladder_maker_id.required'              =>  'Ladder Maker is required',
+                // 'ladder_maker_id.required'              =>  'Ladder Maker is required',
                 'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
                 'tracker_installation_date.required'    =>  'Tracker Installation Date is required',
                 'inspection_date.required'              =>  'Inspection Date is required',
                 'next_inspection_date.required'         =>  'Next Inspection Date is required',
+                'induction_date.required'               =>  'Induction Date is required',
                 'pso_card.required'                     =>  'PSO Card Details is required',
                 'akpl.required'                         =>  'AKPL is required',
                 'registration_file.required'            =>  'Registration Attachment is required',
@@ -323,13 +330,14 @@ class VehicleController extends Controller
         $vehicle->cone =   $request->cone;
         $vehicle->station_id =   $request->station_id;
         $vehicle->ibc_center_id =   $request->ibc_center_id;
-        $vehicle->ladder_maker_id =   $request->ladder_maker_id;
+        $vehicle->fabrication_vendor_id =   $request->fabrication_vendor_id;
         $vehicle->medical_box =   $request->medical_box;
         $vehicle->seat_cover =   $request->seat_cover;
         $vehicle->fire_extenguisher =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
         $vehicle->inspection_date =   $request->inspection_date;
         $vehicle->next_inspection_date =   $request->next_inspection_date;
+        $vehicle->induction_date =   $request->induction_date;
         $vehicle->pso_card =   $request->pso_card;
         $vehicle->akpl =   $request->akpl;
         $vehicle->fitness_date =   $request->fitness_date;

@@ -55,11 +55,6 @@ class Vehicle extends Model
         return $this->belongsTo(Station::class, 'station_id');
     }
 
-    public function ladderMaker()
-    {
-        return $this->belongsTo(LadderMaker::class, 'ladder_maker_id');
-    }
-
     public function ibcCenter()
     {
         return $this->belongsTo(IbcCenter::class, 'ibc_center_id');
@@ -69,6 +64,13 @@ class Vehicle extends Model
     {
         return $this->hasMany(Driver::class);
     }
+
+    public function fabricationVendor()
+    {
+        return $this->belongsTo(Vendor::class, 'fabrication_vendor_id');
+    }
+
+    
 
     public static function GetSerialNumber()
     {

@@ -118,11 +118,11 @@
               </div>
             </div>
 
-            <!-- Ladder Maker -->
+            <!-- Fabrication Vendor -->
             <div class="col-md-3 text-center">
               <div class="card">
-                <h5 class="m-0">Ladder Maker</h5>
-                <p>{{$vehicle->ladderMaker->name}}</p>
+                <h5 class="m-0">Fabrication Vendor</h5>
+                <p>{{$vehicle->fabricationVendor->name}}</p>
               </div>
             </div>
           </div>
@@ -194,13 +194,13 @@
               </div>
             </div>
 
-            <!-- Registration Attachment -->
+            <!-- Induction Date -->
             <div class="col-md-3 text-center">
               <div class="card">
-                <h5 class="m-0">Registration Attachment</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $vehicle->registration_file) }}" download> Download</a></p>
+                <h5 class="m-0">Induction Date</h5>
+                <p>{{\Carbon\Carbon::parse($vehicle->induction_date)->format('d-M-Y')}}</p>
               </div>
-            </div>
+            </div>            
           </div>
 
           <div class="row">
@@ -225,6 +225,14 @@
               <div class="card">
                 <h5 class="m-0">Fitness Attachment</h5>
                 <p><a href="{{ asset('uploads/vehicles/' . $vehicle->fitness_file) }}" download> Download</a></p>
+              </div>
+            </div>
+
+            <!-- Registration Attachment -->
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Registration Attachment</h5>
+                <p><a href="{{ asset('uploads/vehicles/' . $vehicle->registration_file) }}" download> Download</a></p>
               </div>
             </div>
           </div>

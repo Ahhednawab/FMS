@@ -161,18 +161,18 @@
                   </div>
                 </div>
 
-                <!-- Ladder Make -->
+                <!-- Fabrication Vendor -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>Ladder Maker</strong>
-                    <select class="custom-select" name="ladder_maker_id">
+                    <strong>Fabrication Vendor</strong>
+                    <select class="custom-select" name="fabrication_vendor_id">
                       <option value="">-- Select --</option>
-                      @foreach($ladder_maker as $key => $value)
-                        <option value="{{$key}}" {{ old('ladder_maker_id', $vehicle->ladder_maker_id ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @foreach($vendors as $key => $value)
+                        <option value="{{$key}}" {{ old('fabrication_vendor_id', $vehicle->fabrication_vendor_id ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
                       @endforeach
                     </select>
-                    @if ($errors->has('ladder_maker_id'))
-                      <label class="text-danger">{{ $errors->first('ladder_maker_id') }}</label>
+                    @if ($errors->has('fabrication_vendor_id'))
+                      <label class="text-danger">{{ $errors->first('fabrication_vendor_id') }}</label>
                     @endif                
                   </div>
                 </div>
@@ -303,16 +303,16 @@
                   </div>
                 </div>
 
-                <!-- Registration Attachment -->
+                <!-- Induction Date -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>Registration Attachment</strong>
-                    <input type="file" class="form-control" name="registration_file">
-                    @if ($errors->has('registration_file'))
-                      <label class="text-danger">{{ $errors->first('registration_file') }}</label>
+                    <strong>Induction Date</strong>
+                    <input type="date" class="form-control" name="induction_date" value="{{ old('induction_date', $vehicle->induction_date ?? '') }}">
+                    @if ($errors->has('induction_date'))
+                      <label class="text-danger">{{ $errors->first('induction_date') }}</label>
                     @endif
                   </div>
-                </div>
+                </div>                  
               </div>
 
               <div class="row">
@@ -345,6 +345,17 @@
                     <input type="file" class="form-control" name="fitness_file">
                     @if ($errors->has('fitness_file'))
                       <label class="text-danger">{{ $errors->first('fitness_file') }}</label>
+                    @endif
+                  </div>
+                </div>
+
+                <!-- Registration Attachment -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Registration Attachment</strong>
+                    <input type="file" class="form-control" name="registration_file">
+                    @if ($errors->has('registration_file'))
+                      <label class="text-danger">{{ $errors->first('registration_file') }}</label>
                     @endif
                   </div>
                 </div>
