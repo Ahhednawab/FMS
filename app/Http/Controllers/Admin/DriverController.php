@@ -25,7 +25,7 @@ class DriverController extends Controller
     {
         $serial_no = Driver::GetSerialNumber();
         $driver_status = DriverStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+
         $vehicles = Vehicle::where('is_active', 1)
             ->whereNotIn('id', function ($query) {
                 $query->select('vehicle_id')
@@ -59,7 +59,7 @@ class DriverController extends Controller
                 'driver_status_id' =>  'required',
                 'marital_status_id' =>  'required',
                 'dob' =>  'required|date',
-                'vehicle_id' =>  'required',
+                'vehicle_id' =>  'required_if:driver_status_id,1|nullable',
                 'cnic_no' =>  'required|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -91,7 +91,8 @@ class DriverController extends Controller
                 'driver_status_id.required'         =>  'Status is required',
                 'marital_status_id.required'        =>  'Marital Status is required',
                 'dob.required'                      =>  'DOB is required',
-                'vehicle_id.required'               =>  'Vehicle Number is required',
+                // 'vehicle_id.required'               =>  'Vehicle Number is required',
+                'vehicle_id.required_if'            => 'Vehicle Number is required.',
                 'cnic_no.required'                  =>  'CNIC No is required',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
@@ -278,7 +279,8 @@ class DriverController extends Controller
                 'driver_status_id' =>  'required',
                 'marital_status_id' =>  'required',
                 'dob' =>  'required|date',
-                'vehicle_id' =>  'required',
+                // 'vehicle_id' =>  'required',
+                'vehicle_id' =>  'required_if:driver_status_id,1|nullable',
                 'cnic_no' =>  'required|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -310,7 +312,7 @@ class DriverController extends Controller
                 'driver_status_id.required'         =>  'Status is required',
                 'marital_status_id.required'        =>  'Marital Status is required',
                 'dob.required'                      =>  'DOB is required',
-                'vehicle_id.required'               =>  'Vehicle Number is required',
+                'vehicle_id.required_if'            => 'Vehicle Number is required.',
                 'cnic_no.required'                  =>  'CNIC No is required',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
@@ -359,7 +361,7 @@ class DriverController extends Controller
         $driver->driver_status_id       =   $request->driver_status_id;
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
-        $driver->vehicle_id             =   $request->vehicle_id;
+        $driver->vehicle_id             =   ($request->driver_status_id == 1) ? $request->vehicle_id : NULL;
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;
