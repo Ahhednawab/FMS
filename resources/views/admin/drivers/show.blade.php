@@ -139,7 +139,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">CNIC</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->cnic_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->cnic_file) }}" download> Download</a></p>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@
                 <h5 class="m-0">EOBI Card</h5>
                 <p>
                   @if($driver->eobi_card_file)
-                    <a href="{{ asset('uploads/vehicles/' . $driver->eobi_card_file) }}" download> Download</a>
+                    <a href="{{ asset('uploads/drivers/' . $driver->eobi_card_file) }}" download> Download</a>
                   @else
                     N/A
                   @endif
@@ -181,7 +181,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">Picture</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->picture_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->picture_file) }}" download> Download</a></p>
               </div>
             </div>
 
@@ -191,7 +191,7 @@
                 <h5 class="m-0">Medical Report</h5>
                 <p>
                   @if($driver->medical_report_file)
-                    <a href="{{ asset('uploads/vehicles/' . $driver->medical_report_file) }}" download> Download</a>
+                    <a href="{{ asset('uploads/drivers/' . $driver->medical_report_file) }}" download> Download</a>
                   @else
                     N/A
                   @endif
@@ -203,7 +203,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">Authority Letter</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->authority_letter_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->authority_letter_file) }}" download> Download</a></p>
               </div>
             </div>
           </div>
@@ -221,7 +221,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">Employee Card</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->employee_card_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->employee_card_file) }}" download> Download</a></p>
               </div>
             </div>
 
@@ -229,7 +229,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">DDC</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->ddc_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->ddc_file) }}" download> Download</a></p>
               </div>
             </div>
 
@@ -239,7 +239,7 @@
                 <h5 class="m-0">3P Driver Form</h5>
                 <p>
                   @if(isset($driver->third_party_driver_file))
-                    <a href="{{ asset('uploads/vehicles/' . $driver->third_party_driver_file) }}" download> Download</a>
+                    <a href="{{ asset('uploads/drivers/' . $driver->third_party_driver_file) }}" download> Download</a>
                   @else
                     N/A
                   @endif
@@ -277,7 +277,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">License</h5>
-                <p><a href="{{ asset('uploads/vehicles/' . $driver->license_file) }}" download> Download</a></p>
+                <p><a href="{{ asset('uploads/drivers/' . $driver->license_file) }}" download> Download</a></p>
               </div>
             </div>
           </div>

@@ -65,7 +65,7 @@
               <tr>
                 <td>{{$value->serial_no}}</td>
                 <td>{{$value->full_name}}</td>
-                <td>{{$value->vehicle->vehicle_no}}</td>
+                <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>
                 <td>{{$value->phone}}</td>
                 <td>{{$value->driverStatus->name}}</td>
                 <td>{{$value->father_name}}</td>
