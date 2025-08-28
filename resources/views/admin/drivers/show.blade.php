@@ -113,7 +113,7 @@
             <div class="col-md-3 text-center">
               <div class="card p-2">
                 <h5 class="m-0">Vehicle No</h5>
-                <p>@if($driver->vehicle) {{ $driver->vehicle->vehicle_no}} @endif</p>
+                <p>@if($driver->vehicle) {{ $driver->vehicle->vehicle_no}} @else N/A @endif</p>
               </div>
             </div>
           </div>
