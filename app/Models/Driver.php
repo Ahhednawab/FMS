@@ -22,6 +22,7 @@ class Driver extends Model
         'marital_status_id',
         'dob',
         'vehicle_id',
+        'shift_timing_id',
         'cnic_no',
         'cnic_expiry_date',
         'cnic_file',
@@ -61,6 +62,13 @@ class Driver extends Model
     {
         return $this->belongsTo(LicenseCategory::class, 'license_category_id');
     }
+
+    public function shiftTiming()
+    {
+        return $this->belongsTo(ShiftTimings::class, 'shift_timing_id');
+    }
+
+    
     
 	public static function GetSerialNumber()
     {

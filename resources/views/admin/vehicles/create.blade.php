@@ -141,12 +141,28 @@
               </div>
             </div>
 
+            <!-- Shift Hours -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <strong>Shift Hours</strong>
+                <select class="custom-select" name="shift_hour_id">
+                  <option value="">-- Select --</option>
+                  @foreach($shift_hours as $key => $value)
+                    <option value="{{ $key }}" {{ old('shift_hour_id') == $key ? 'selected' : '' }}>{{ $value }}</option>
+                  @endforeach
+                </select>
+                @if ($errors->has('shift_hour_id'))
+                  <label class="text-danger">{{ $errors->first('shift_hour_id') }}</label>
+                @endif
+              </div>
+            </div>
+
             <!-- Vehicle Type -->
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="form-group">
                 <strong>Vehicle Type</strong>
                 <select class="custom-select" name="vehicle_type_id">
-                  <option value="">-- Select Vehicle Type --</option>
+                  <option value="">-- Select --</option>
                   @foreach($vehicleTypes as $key => $value)
                     <option value="{{ $key }}" {{ old('vehicle_type_id') == $key ? 'selected' : '' }}>{{ $value }}</option>
                   @endforeach
@@ -158,7 +174,7 @@
             </div>
 
             <!-- Fabrication Vendor -->
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="form-group">
                 <strong>Fabrication Vendor</strong>
                 <select class="custom-select" name="fabrication_vendor_id">

@@ -110,8 +110,16 @@
               </div>
             </div>
 
+            <!-- Shift Hours -->
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Shift Hours</h5>
+                <p>{{$vehicle->shiftHours->name}}</p>
+              </div>
+            </div>
+
             <!-- Vehicle Type -->
-            <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
               <div class="card">
                 <h5 class="m-0">Vehicle Type</h5>
                 <p>{{$vehicle->vehicleType->name}}</p>
@@ -119,7 +127,7 @@
             </div>
 
             <!-- Fabrication Vendor -->
-            <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
               <div class="card">
                 <h5 class="m-0">Fabrication Vendor</h5>
                 <p>{{$vehicle->fabricationVendor ? $vehicle->fabricationVendor->name : 'N/A'}}</p>

@@ -176,6 +176,22 @@
                     @endif
                   </div>
                 </div>
+
+                <!-- Shift Timing -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Shift Timing</strong>
+                    <select class="form-control " id="shift_timing_id" name="shift_timing_id">
+                      <option value="">--Select--</option>
+                      @foreach($shift_timings as $key => $value)
+                        <option value="{{$key}}" {{ old('shift_timing_id', $driver->shift_timing_id ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('shift_timing_id'))
+                      <label class="text-danger">{{ $errors->first('shift_timing_id') }}</label>
+                    @endif
+                  </div>
+                </div>
               </div>
 
               <div class="row">

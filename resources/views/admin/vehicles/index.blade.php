@@ -53,6 +53,7 @@
               <th>Serial no</th>
               <th>Vehicle No</th>
               <th>Model</th>
+              <th>Shift</th>
               <th>Type</th>
               <th>Station</th>
               <th>IBC Center</th>
@@ -65,6 +66,7 @@
                 <td>{{$value->serial_no}}</td>
                 <td>{{$value->vehicle_no}}</td>
                 <td>{{$value->model}}</td>
+                <td>{{$value->shiftHours->name}}</td>
                 <td>{{$value->vehicleType->name}}</td>
                 <td>{{$value->station->area}}</td>
                 <td>{{$value->ibcCenter->name}}</td>

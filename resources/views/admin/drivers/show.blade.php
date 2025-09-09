@@ -116,6 +116,25 @@
                 <p>@if($driver->vehicle) {{ $driver->vehicle->vehicle_no}} @else N/A @endif</p>
               </div>
             </div>
+
+            <!-- Shift -->
+            <div class="col-md-3 text-center">
+              <div class="card p-2">
+                <h5 class="m-0">Shift</h5>
+                <p>
+                  @if($driver->shiftTiming)
+                    {{ $driver->shiftTiming->name }}
+                    ( 
+                      {{ \Carbon\Carbon::parse($driver->shiftTiming->start_time)->format('h:i A') }} 
+                      - 
+                      {{ \Carbon\Carbon::parse($driver->shiftTiming->end_time)->format('h:i A') }} 
+                    )
+                  @else 
+                    N/A 
+                  @endif
+                </p>
+              </div>
+            </div>
           </div>
 
           <div class="row">

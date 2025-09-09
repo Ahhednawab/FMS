@@ -9,6 +9,7 @@ use App\Models\DriverStatus;
 use App\Models\Vehicle;
 use App\Models\MaritalStatus;
 use App\Models\LicenseCategory;
+use App\Models\ShiftTimings;
 
 
 use Illuminate\Http\Request;
@@ -17,7 +18,15 @@ class DriverController extends Controller
 {
     public function index()
     {
-        $drivers = Driver::with(['driverStatus','vehicle','maritalStatus','licenseCategory'])->where('is_active',1)->latest()->get();
+        $drivers = Driver::with(['driverStatus','vehicle','maritalStatus','licenseCategory','shiftTiming'])
+            ->where('is_active',1)->latest()
+            ->get();
+
+        // echo "<pre>";
+        // print_r($drivers[0]);
+        // echo "</pre>";
+        // return;
+
         return view('admin.drivers.index', compact('drivers'));
     }
 
@@ -28,21 +37,48 @@ class DriverController extends Controller
 
         $vehicles = Vehicle::where('is_active', 1)
             ->whereNotIn('id', function ($query) {
-                $query->select('vehicle_id')
-                    ->from('drivers')
-                    ->where('is_active', 1);
+                // Exclude vehicles where shift_hour_id = 1 and already has a driver
+                $query->select('v.id')
+                    ->from('vehicles as v')
+                    ->join('drivers as d', 'v.id', '=', 'd.vehicle_id')
+                    ->where('v.shift_hour_id', 1)
+                    ->where('d.is_active', 1);
+            })
+            ->whereNotIn('id', function ($query) {
+                // Exclude vehicles where shift_hour_id = 2 and has 2 drivers with different shift_timing_id
+                $query->select('v.id')
+                    ->from('vehicles as v')
+                    ->join('drivers as d', 'v.id', '=', 'd.vehicle_id')
+                    ->where('v.shift_hour_id', 2)
+                    ->where('d.is_active', 1)
+                    ->groupBy('v.id')
+                    ->havingRaw('COUNT(DISTINCT d.shift_timing_id) >= 2');
             })
             ->orderBy('vehicle_no')
             ->pluck('vehicle_no', 'id');
 
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+        $shift_timings = ShiftTimings::select('id','name','start_time','end_time')
+            ->where('is_active', 1)
+            ->orderBy('start_time')
+            ->get()
+            ->mapWithKeys(function($shift) {
+                return [
+                    $shift->id => $shift->name . ' (' 
+                        . date('h:i a', strtotime($shift->start_time)) 
+                        . ' - ' 
+                        . date('h:i a', strtotime($shift->end_time)) 
+                        . ')'
+                ];
+            })
+            ->toArray();
+
         $status = array(
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles'));
+        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings'));
     }
 
     public function store(Request $request)
@@ -60,6 +96,7 @@ class DriverController extends Controller
                 'marital_status_id' =>  'required',
                 'dob' =>  'required|date',
                 'vehicle_id' =>  'required_if:driver_status_id,1|nullable',
+                'shift_timing_id' =>  'required|exists:shift_timing,id',
                 'cnic_no' =>  'required|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -93,6 +130,8 @@ class DriverController extends Controller
                 'dob.required'                      =>  'DOB is required',
                 // 'vehicle_id.required'               =>  'Vehicle Number is required',
                 'vehicle_id.required_if'            => 'Vehicle Number is required.',
+                'shift_timing_id.required'          => 'Shift Timing is required.',
+                'shift_timing_id.exists'            => 'Selected Shift Timing is invalid.',
                 'cnic_no.required'                  =>  'CNIC No is required',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
@@ -121,11 +160,28 @@ class DriverController extends Controller
                 'address.required'                  =>  'Address is required',
             ]
         );
+        
+        // Add custom validation for shift timing conflict
+        $validator->after(function ($validator) use ($request) {
+            if ($request->vehicle_id && $request->shift_timing_id) {
+                $vehicle = Vehicle::find($request->vehicle_id);
+                if ($vehicle && $vehicle->shift_hour_id == 2) {
+                    $existingDriver = Driver::where('vehicle_id', $request->vehicle_id)
+                        ->where('shift_timing_id', $request->shift_timing_id)
+                        ->where('is_active', 1)
+                        ->first();
+                    
+                    if ($existingDriver) {
+                        $validator->errors()->add('shift_timing_id', 'This vehicle already has a driver assigned to this shift timing. Please select a different shift timing.');
+                    }
+                }
+            }
+        });
+
         if ($validator->fails()) {
-            $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
-
+        
         $uploadPath = public_path('uploads/drivers');
 
         if (!file_exists($uploadPath)) {
@@ -144,6 +200,7 @@ class DriverController extends Controller
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
         $driver->vehicle_id             =   $request->vehicle_id;
+        $driver->shift_timing_id        =   $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;
@@ -247,22 +304,50 @@ class DriverController extends Controller
         
         $vehicles = Vehicle::where('is_active', 1)
             ->whereNotIn('id', function ($query) use ($driver) {
-                $query->select('vehicle_id')
-                    ->from('drivers')
-                    ->where('is_active', 1)
-                    ->where('vehicle_id', '!=', $driver->vehicle_id);
+                // Exclude vehicles where shift_hour_id = 1 and already has a driver (except current driver)
+                $query->select('v.id')
+                    ->from('vehicles as v')
+                    ->join('drivers as d', 'v.id', '=', 'd.vehicle_id')
+                    ->where('v.shift_hour_id', 1)
+                    ->where('d.is_active', 1)
+                    ->where('d.id', '!=', $driver->id);
+            })
+            ->whereNotIn('id', function ($query) use ($driver) {
+                // Exclude vehicles where shift_hour_id = 2 and has 2 drivers with different shift_timing_id (except current driver)
+                $query->select('v.id')
+                    ->from('vehicles as v')
+                    ->join('drivers as d', 'v.id', '=', 'd.vehicle_id')
+                    ->where('v.shift_hour_id', 2)
+                    ->where('d.is_active', 1)
+                    ->where('d.id', '!=', $driver->id)
+                    ->groupBy('v.id')
+                    ->havingRaw('COUNT(DISTINCT d.shift_timing_id) >= 2');
             })
             ->orderBy('vehicle_no')
             ->pluck('vehicle_no', 'id');
 
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
+        $shift_timings = ShiftTimings::select('id','name','start_time','end_time')
+            ->where('is_active', 1)
+            ->orderBy('start_time')
+            ->get()
+            ->mapWithKeys(function($shift) {
+                return [
+                    $shift->id => $shift->name . ' (' 
+                        . date('h:i a', strtotime($shift->start_time)) 
+                        . ' - ' 
+                        . date('h:i a', strtotime($shift->end_time)) 
+                        . ')'
+                ];
+            })
+            ->toArray();
         
         $status = array(
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.edit', compact('driver','driver_status','marital_status','licence_category','status','vehicles'));
+        return view('admin.drivers.edit', compact('driver','driver_status','marital_status','licence_category','status','vehicles','shift_timings'));
     }
 
     public function update(Request $request, Driver $driver)
@@ -281,6 +366,7 @@ class DriverController extends Controller
                 'dob' =>  'required|date',
                 // 'vehicle_id' =>  'required',
                 'vehicle_id' =>  'required_if:driver_status_id,1|nullable',
+                'shift_timing_id' =>  'required|exists:shift_timing,id',
                 'cnic_no' =>  'required|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -313,6 +399,8 @@ class DriverController extends Controller
                 'marital_status_id.required'        =>  'Marital Status is required',
                 'dob.required'                      =>  'DOB is required',
                 'vehicle_id.required_if'            => 'Vehicle Number is required.',
+                'shift_timing_id.required'          => 'Shift Timing is required.',
+                'shift_timing_id.exists'            => 'Selected Shift Timing is invalid.',
                 'cnic_no.required'                  =>  'CNIC No is required',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
@@ -341,8 +429,26 @@ class DriverController extends Controller
                 'address.required'                  =>  'Address is required',
             ]
         );
+        
+        // Add custom validation for shift timing conflict (excluding current driver)
+        $validator->after(function ($validator) use ($request, $driver) {
+            if ($request->vehicle_id && $request->shift_timing_id) {
+                $vehicle = Vehicle::find($request->vehicle_id);
+                if ($vehicle && $vehicle->shift_hour_id == 2) {
+                    $existingDriver = Driver::where('vehicle_id', $request->vehicle_id)
+                        ->where('shift_timing_id', $request->shift_timing_id)
+                        ->where('is_active', 1)
+                        ->where('id', '!=', $driver->id)
+                        ->first();
+                    
+                    if ($existingDriver) {
+                        $validator->errors()->add('shift_timing_id', 'This vehicle already has a driver assigned to this shift timing. Please select a different shift timing.');
+                    }
+                }
+            }
+        });
+
         if ($validator->fails()) {
-            $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
@@ -362,6 +468,7 @@ class DriverController extends Controller
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
         $driver->vehicle_id             =   ($request->driver_status_id == 1) ? $request->vehicle_id : NULL;
+        $driver->shift_timing_id        =   ($request->driver_status_id == 1) ? $request->shift_timing_id : NULL;
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;

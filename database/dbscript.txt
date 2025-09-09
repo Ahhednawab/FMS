@@ -1,3 +1,8 @@
-ALTER TABLE `vehicles` CHANGE `ladder_maker_id` `fabrication_vendor_id` INT NULL; 
-ALTER TABLE `vehicles` ADD COLUMN `induction_date` DATE NOT NULL AFTER `next_inspection_date`; 
-ALTER TABLE `drivers` CHANGE `eobi_no` `eobi_no` VARCHAR(20) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci NULL, CHANGE `eobi_start_date` `eobi_start_date` DATE NULL; 
+ALTER TABLE vehicles CHANGE ladder_maker_id fabrication_vendor_id INT NULL; 
+ALTER TABLE vehicles ADD COLUMN induction_date DATE NOT NULL AFTER next_inspection_date; 
+ALTER TABLE drivers CHANGE eobi_no eobi_no VARCHAR(20) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci NULL, CHANGE eobi_start_date eobi_start_date DATE NULL; 
+
+ALTER TABLE drivers CHANGE vehicle_id vehicle_id INT NULL; 
+
+ALTER TABLE vehicles ADD COLUMN shift_hour_id INT(10)  NULL AFTER ownership;
+ALTER TABLE drivers ADD COLUMN shift_timing_id INT(11) NULL AFTER vehicle_id; 

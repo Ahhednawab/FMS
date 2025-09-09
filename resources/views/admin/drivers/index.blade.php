@@ -52,6 +52,7 @@
             <tr>
               <th>Serial No</th>
               <th>Name</th>
+              <th class="text-center">Shift</th>
               <th>Vehicle</th>
               <th>Phone</th>
               <th>Status</th>
@@ -65,6 +66,18 @@
               <tr>
                 <td>{{$value->serial_no}}</td>
                 <td>{{$value->full_name}}</td>
+                <td class="text-center">
+                  @if($value->shiftTiming)
+                    {{ $value->shiftTiming->name }}
+                    ( 
+                      {{ \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') }} 
+                      - 
+                      {{ \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') }} 
+                    )
+                  @else 
+                    N/A 
+                  @endif
+                </td>
                 <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>
                 <td>{{$value->phone}}</td>
                 <td>{{$value->driverStatus->name}}</td>

@@ -10,14 +10,17 @@ use App\Models\Station;
 use App\Models\LadderMaker;
 use App\Models\IbcCenter;
 use App\Models\Vendor;
-
-
+use App\Models\ShiftHours;
 
 class VehicleController extends Controller
 {
     public function index(){
-        $vehicles = Vehicle::with(['vehicleType','station','ibcCenter','fabricationVendor'])->where('is_active',1)->orderby('id','DESC')->get();
-    	return view('admin.vehicles.index', compact('vehicles'));
+        $vehicles = Vehicle::with(['vehicleType','station','ibcCenter','fabricationVendor','shiftHours'])
+            ->where('is_active',1)
+            ->orderby('id','DESC')
+            ->get();
+
+        return view('admin.vehicles.index', compact('vehicles'));
     }
 
     public function create(){
@@ -36,13 +39,13 @@ class VehicleController extends Controller
         $ladder_maker = LadderMaker::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+        $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.create',compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors'));
+        return view('admin.vehicles.create',compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
     }
 
     public function store(Request $request)
@@ -56,11 +59,11 @@ class VehicleController extends Controller
                 'chasis_no'                 =>  'required',
                 'engine_no'                 =>  'required',
                 'ownership'                 =>  'required',
+                'shift_hour_id'             =>  'required',
                 'vehicle_type_id'           =>  'required',
                 'cone'                      =>  'required|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                // 'ladder_maker_id'           =>  'required',
                 'medical_box'               =>  'required',
                 'seat_cover'                =>  'required',
                 'fire_extenguisher'         =>  'required',
@@ -91,11 +94,11 @@ class VehicleController extends Controller
                 'chasis_no.required'                    =>  'Chasis No is required',
                 'engine_no.required'                    =>  'Engine No is required',
                 'ownership.required'                    =>  'Ownership is required',
+                'shift_hour_id.required'                  =>  'Shift Hours is required',
                 'vehicle_type_id.required'              =>  'Vehicle type is required',
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                // 'ladder_maker_id.required'              =>  'Ladder Maker is required',
                 'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
@@ -132,35 +135,36 @@ class VehicleController extends Controller
         }
 
         $vehicle = new Vehicle();
-        $vehicle->serial_no =   $request->serial_no;
-        $vehicle->vehicle_no =   $request->vehicle_no;
-        $vehicle->make =   $request->make;
-        $vehicle->model =   $request->model;
-        $vehicle->chasis_no =   $request->chasis_no;
-        $vehicle->engine_no =   $request->engine_no;
-        $vehicle->ownership =   $request->ownership;
-        $vehicle->vehicle_type_id =   $request->vehicle_type_id;
-        $vehicle->cone =   $request->cone;
-        $vehicle->station_id =   $request->station_id;
-        $vehicle->ibc_center_id =   $request->ibc_center_id;
-        $vehicle->fabrication_vendor_id =   $request->fabrication_vendor_id;
-        $vehicle->medical_box =   $request->medical_box;
-        $vehicle->seat_cover =   $request->seat_cover;
-        $vehicle->fire_extenguisher =   $request->fire_extenguisher;
+        $vehicle->serial_no                 =   $request->serial_no;
+        $vehicle->vehicle_no                =   $request->vehicle_no;
+        $vehicle->make                      =   $request->make;
+        $vehicle->model                     =   $request->model;
+        $vehicle->chasis_no                 =   $request->chasis_no;
+        $vehicle->engine_no                 =   $request->engine_no;
+        $vehicle->ownership                 =   $request->ownership;
+        $vehicle->shift_hour_id             =   $request->shift_hour_id;
+        $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
+        $vehicle->cone                      =   $request->cone;
+        $vehicle->station_id                =   $request->station_id;
+        $vehicle->ibc_center_id             =   $request->ibc_center_id;
+        $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
+        $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->seat_cover                =   $request->seat_cover;
+        $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
-        $vehicle->inspection_date =   $request->inspection_date;
-        $vehicle->next_inspection_date =   $request->next_inspection_date;
-        $vehicle->induction_date =   $request->induction_date;        
-        $vehicle->pso_card =   $request->pso_card;
-        $vehicle->akpl =   $request->akpl;
-        $vehicle->fitness_date =   $request->fitness_date;
-        $vehicle->next_fitness_date =   $request->next_fitness_date;
-        $vehicle->insurance_date =   $request->insurance_date;
-        $vehicle->insurance_expiry_date =   $request->insurance_expiry_date;
-        $vehicle->route_permit_date =   $request->route_permit_date;
-        $vehicle->route_permit_expiry_date =   $request->route_permit_expiry_date;
-        $vehicle->tax_date =   $request->tax_date;
-        $vehicle->next_tax_date =   $request->next_tax_date;
+        $vehicle->inspection_date           =   $request->inspection_date;
+        $vehicle->next_inspection_date      =   $request->next_inspection_date;
+        $vehicle->induction_date            =   $request->induction_date;        
+        $vehicle->pso_card                  =   $request->pso_card;
+        $vehicle->akpl                      =   $request->akpl;
+        $vehicle->fitness_date              =   $request->fitness_date;
+        $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_date            =   $request->insurance_date;
+        $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
+        $vehicle->route_permit_date         =   $request->route_permit_date;
+        $vehicle->route_permit_expiry_date  =   $request->route_permit_expiry_date;
+        $vehicle->tax_date                  =   $request->tax_date;
+        $vehicle->next_tax_date             =   $request->next_tax_date;
         $vehicle->save();
         $vehicle_id = $vehicle->id;
 
@@ -223,6 +227,7 @@ class VehicleController extends Controller
             ->orderBy('area', 'ASC')
             ->get();
 
+        $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ladder_maker = LadderMaker::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -231,7 +236,7 @@ class VehicleController extends Controller
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit',compact('vehicle','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors'));
+        return view('admin.vehicles.edit',compact('vehicle','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -249,7 +254,6 @@ class VehicleController extends Controller
                 'cone'                      =>  'required|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                // 'ladder_maker_id'           =>  'required',
                 'medical_box'               =>  'required',
                 'seat_cover'                =>  'required',
                 'fire_extenguisher'         =>  'required',
@@ -284,7 +288,6 @@ class VehicleController extends Controller
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                // 'ladder_maker_id.required'              =>  'Ladder Maker is required',
                 'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
@@ -320,34 +323,35 @@ class VehicleController extends Controller
             mkdir($uploadPath, 0755, true);
         }
 
-        $vehicle->vehicle_no =   $request->vehicle_no;
-        $vehicle->make =   $request->make;
-        $vehicle->model =   $request->model;
-        $vehicle->chasis_no =   $request->chasis_no;
-        $vehicle->engine_no =   $request->engine_no;
-        $vehicle->ownership =   $request->ownership;
-        $vehicle->vehicle_type_id =   $request->vehicle_type_id;
-        $vehicle->cone =   $request->cone;
-        $vehicle->station_id =   $request->station_id;
-        $vehicle->ibc_center_id =   $request->ibc_center_id;
-        $vehicle->fabrication_vendor_id =   $request->fabrication_vendor_id;
-        $vehicle->medical_box =   $request->medical_box;
-        $vehicle->seat_cover =   $request->seat_cover;
-        $vehicle->fire_extenguisher =   $request->fire_extenguisher;
+        $vehicle->vehicle_no                =   $request->vehicle_no;
+        $vehicle->make                      =   $request->make;
+        $vehicle->model                     =   $request->model;
+        $vehicle->chasis_no                 =   $request->chasis_no;
+        $vehicle->engine_no                 =   $request->engine_no;
+        $vehicle->ownership                 =   $request->ownership;
+        $vehicle->shift_hour_id             =   $request->shift_hour_id;
+        $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
+        $vehicle->cone                      =   $request->cone;
+        $vehicle->station_id                =   $request->station_id;
+        $vehicle->ibc_center_id             =   $request->ibc_center_id;
+        $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
+        $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->seat_cover                =   $request->seat_cover;
+        $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
-        $vehicle->inspection_date =   $request->inspection_date;
-        $vehicle->next_inspection_date =   $request->next_inspection_date;
-        $vehicle->induction_date =   $request->induction_date;
-        $vehicle->pso_card =   $request->pso_card;
-        $vehicle->akpl =   $request->akpl;
-        $vehicle->fitness_date =   $request->fitness_date;
-        $vehicle->next_fitness_date =   $request->next_fitness_date;
-        $vehicle->insurance_date =   $request->insurance_date;
-        $vehicle->insurance_expiry_date =   $request->insurance_expiry_date;
-        $vehicle->route_permit_date =   $request->route_permit_date;
-        $vehicle->route_permit_expiry_date =   $request->route_permit_expiry_date;
-        $vehicle->tax_date =   $request->tax_date;
-        $vehicle->next_tax_date =   $request->next_tax_date;
+        $vehicle->inspection_date           =   $request->inspection_date;
+        $vehicle->next_inspection_date      =   $request->next_inspection_date;
+        $vehicle->induction_date            =   $request->induction_date;
+        $vehicle->pso_card                  =   $request->pso_card;
+        $vehicle->akpl                      =   $request->akpl;
+        $vehicle->fitness_date              =   $request->fitness_date;
+        $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_date            =   $request->insurance_date;
+        $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
+        $vehicle->route_permit_date         =   $request->route_permit_date;
+        $vehicle->route_permit_expiry_date  =   $request->route_permit_expiry_date;
+        $vehicle->tax_date                  =   $request->tax_date;
+        $vehicle->next_tax_date             =   $request->next_tax_date;
         
         $registrationFileName = null;
         if ($request->hasFile('registration_file')) {
