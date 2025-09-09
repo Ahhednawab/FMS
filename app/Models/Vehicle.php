@@ -70,6 +70,13 @@ class Vehicle extends Model
         return $this->belongsTo(Vendor::class, 'fabrication_vendor_id');
     }
 
+    public function shiftHours()
+    {
+        return $this->belongsTo(ShiftHours::class, 'shift_hour_id');
+    }
+
+    
+
     
 
     public static function GetSerialNumber()
