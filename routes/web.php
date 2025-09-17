@@ -34,8 +34,12 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\IbcController;
-
-
+use App\Http\Controllers\Admin\ProductListController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DailyMileageReportController;
+use App\Http\Controllers\Admin\DailyFuelController;
+use App\Http\Controllers\Admin\DailyFuelReportController;
 
 
 Route::get('/', function () {
@@ -79,14 +83,29 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('drivers', DriverController::class);
     Route::resource('vendors', VendorController::class);
 
-    // Inventory
-    Route::resource('products', ProductController::class);
-    Route::resource('inventoryWarehouses', InventoryWarehouseController::class);
+    // Product Management
+    Route::resource('brands', BrandController::class);
+    Route::resource('categories', CategoryController::class);
+    Route::resource('productList', ProductListController::class);
 
     // Fleet Transactions
-    Route::resource('trackerMileages', TrackerMileageController::class);
     Route::resource('dailyMileages', DailyMileageController::class);
-    Route::resource('dailyFuelMileages', DailyFuelMileageController::class);
+    Route::resource('dailyMileageReports', DailyMileageReportController::class);
+    Route::resource('dailyFuels', DailyFuelController::class);
+    Route::resource('dailyFuelReports', DailyFuelReportController::class);
+
+    
+
+    // Inventory
+    Route::resource('products', ProductController::class);
+    Route::get('/get-product-details', [ProductController::class, 'getProductDetails'])->name('get-product-details');
+
+
+
+
+    Route::resource('inventoryWarehouses', InventoryWarehouseController::class);
+
+    
 
     // Inventory Issuance
     Route::resource('inventoryDemands', InventoryDemandController::class);
@@ -124,9 +143,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 Route::get('/clear', function () {
     Auth::logout();
     Session::flush();
+    Artisan::call('config:clear');
+    Artisan::call('route:clear');
     Artisan::call('cache:clear');
     Artisan::call('view:clear');
-    Artisan::call('config:clear');
-
-    return "cleared";
+    return '✅ Config, route, cache & view cleared.';
 });

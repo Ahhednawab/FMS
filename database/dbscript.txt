@@ -6,3 +6,6 @@ ALTER TABLE drivers CHANGE vehicle_id vehicle_id INT NULL;
 
 ALTER TABLE vehicles ADD COLUMN shift_hour_id INT(10)  NULL AFTER ownership;
 ALTER TABLE drivers ADD COLUMN shift_timing_id INT(11) NULL AFTER vehicle_id; 
+
+
+ALTER TABLE vehicles ADD COLUMN kilometer INT DEFAULT 0 NOT NULL AFTER tax_file; 

@@ -10,6 +10,9 @@
     <link href="{{ asset('assets/css/icons/icomoon/styles.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/all.min.css') }}" rel="stylesheet">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png')}}" />
+
     {{-- Core JS --}}
     <script src="{{ asset('assets/js/main/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/main/bootstrap.bundle.min.js') }}"></script>

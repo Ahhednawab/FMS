@@ -36,57 +36,137 @@
     <div class="sidebar-section">
       <ul class="nav nav-sidebar" data-nav-type="accordion">
 
-        <!-- Main -->
-        <li class="nav-item-header"><div class="text-uppercase font-size-xs line-height-xs">Main</div> <i class="icon-menu" title="Main"></i></li>
         <li class="nav-item">
-          <a href="{{ route('admin.index')}}" class="nav-link">
+          <a href="{{ route('admin.index')}}" class="nav-link {{ request()->routeIs('admin.index') ? 'active' : '' }}">
             <i class="icon-home4"></i>
-            <span>
-              Dashboard
-            </span>
+            <span>Dashboard</span>
           </a>
         </li>
-        <li class="nav-item nav-item-submenu">
-          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>General</span></a>
 
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts">
-            <li class="nav-item"><a href="{{ route('admin.users.index')}}" class="nav-link">User Managment</a></li>
-            <li class="nav-item"><a href="{{ route('admin.cities.index')}}" class="nav-link">City Management</a></li>
-            <li class="nav-item"><a href="{{ route('admin.stations.index')}}" class="nav-link">Station Management</a></li>
-            <li class="nav-item"><a href="{{ route('admin.ibcCenters.index')}}" class="nav-link">IBC Center Management</a></li>
-            <li class="nav-item"><a href="{{ route('admin.warehouses.index')}}" class="nav-link">Warehouse Management</a></li>
+        <li class="nav-item nav-item-submenu 
+          {{ request()->routeIs('admin.users.*') 
+          || request()->routeIs('admin.cities.*') 
+          || request()->routeIs('admin.stations.*') 
+          || request()->routeIs('admin.ibcCenters.*') 
+          || request()->routeIs('admin.warehouses.*') 
+            ? 'nav-item-open' : '' }}">
+
+          <a href="#" class="nav-link"><i class="icon-copy"></i><span>General</span></a>
+
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
+            style="{{ request()->routeIs('admin.users.*') 
+            || request()->routeIs('admin.cities.*') 
+            || request()->routeIs('admin.stations.*') 
+            || request()->routeIs('admin.ibcCenters.*') 
+            || request()->routeIs('admin.warehouses.*') 
+              ? 'display:block;' : '' }}">
+              
+            <li class="nav-item">
+              <a href="{{ route('admin.users.index')}}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">User Management</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.cities.index')}}" class="nav-link {{ request()->routeIs('admin.cities.*') ? 'active' : '' }}">City Management</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.stations.index')}}" class="nav-link {{ request()->routeIs('admin.stations.*') ? 'active' : '' }}">Station Management</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.ibcCenters.index')}}" class="nav-link {{ request()->routeIs('admin.ibcCenters.*') ? 'active' : '' }}">IBC Center Management</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.warehouses.index')}}" class="nav-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">Warehouse Management</a>
+            </li>
           </ul>
         </li>
 
-        <li class="nav-item nav-item-submenu">
+
+        <li class="nav-item nav-item-submenu 
+          {{ request()->routeIs('admin.vehicles.*') 
+          || request()->routeIs('admin.drivers.*') 
+          || request()->routeIs('admin.vendors.*') 
+            ? 'nav-item-open' : '' }}">
+          
           <a href="" class="nav-link"><i class="icon-copy"></i> <span>Master Data</span></a>
 
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts">
-            <li class="nav-item"><a href="{{ route('admin.vehicles.index')}}" class="nav-link">Vehicle Master Data</a></li>
-            <li class="nav-item"><a href="{{ route('admin.drivers.index')}}" class="nav-link">Driver Master Data</a></li>
-            <li class="nav-item"><a href="{{ route('admin.vendors.index')}}" class="nav-link">Vendor Management</a></li>
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
+            style="{{ request()->routeIs('admin.vehicles.*') 
+            || request()->routeIs('admin.drivers.*') 
+            || request()->routeIs('admin.vendors.*') 
+              ? 'display:block;' : '' }}">
+
+            <li class="nav-item">
+              <a href="{{ route('admin.vehicles.index')}}" class="nav-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}">Vehicle Master Data</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.drivers.index')}}" class="nav-link {{ request()->routeIs('admin.drivers.*') ? 'active' : '' }}">Driver Master Data</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.vendors.index')}}" class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">Vendor Management</a>
+            </li>
           </ul>
         </li>
 
-        <li class="nav-item nav-item-submenu">
-          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory</span></a>
+        <li class="nav-item nav-item-submenu 
+          {{ request()->routeIs('admin.brands.*') 
+          || request()->routeIs('admin.categories.*') 
+          || request()->routeIs('admin.productList.*') 
+            ? 'nav-item-open' : '' }}">
+          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Product Management</span></a>
 
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts">
-            <li class="nav-item"><a href="{{ route('admin.products.index')}}" class="nav-link">Product master data</a></li>
-            <li class="nav-item"><a href="{{ route('admin.inventoryWarehouses.index')}}" class="nav-link">Warehouse Inventory</a></li>
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
+            style="{{ request()->routeIs('admin.brands.*') 
+            || request()->routeIs('admin.categories.*') 
+            || request()->routeIs('admin.productList.*') 
+              ? 'display:block;' : '' }}">
+
+            <li class="nav-item"><a href="{{ route('admin.brands.index')}}" class="nav-link {{ request()->routeIs('admin.brands.*') ? 'active' : '' }}">Brand Management</a></li>
+            <li class="nav-item"><a href="{{ route('admin.categories.index')}}" class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">Category Management</a></li>
+            <li class="nav-item"><a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">Product Management</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item nav-item-submenu 
+          {{ request()->routeIs('admin.dailyMileages.*') 
+          || request()->routeIs('admin.dailyMileageReports.*')           
+          || request()->routeIs('admin.dailyFuels.*')           
+          || request()->routeIs('admin.dailyFuelReports.*')           
+            ? 'nav-item-open' : '' }}">
+          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Fleet Transaction</span></a>
+
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
+            style="{{ request()->routeIs('admin.dailyMileages.*')
+            || request()->routeIs('admin.dailyMileageReports.*') 
+            || request()->routeIs('admin.dailyFuels.*')
+            || request()->routeIs('admin.dailyFuelReports.*')
+
+              ? 'display:block;' : '' }}">
+
+            <li class="nav-item"><a href="{{ route('admin.dailyMileages.index')}}" class="nav-link {{ request()->routeIs('admin.dailyMileages.*') ? 'active' : '' }}">Daily Mileage</a></li>
+            <li class="nav-item"><a href="{{ route('admin.dailyMileageReports.index')}}" class="nav-link {{ request()->routeIs('admin.dailyMileageReports.*') ? 'active' : '' }}">Mileage Report</a></li>
+            <li class="nav-item"><a href="{{ route('admin.dailyFuels.index')}}" class="nav-link {{ request()->routeIs('admin.dailyFuels.*') ? 'active' : '' }}">Daily Fueling</a></li>
+            <li class="nav-item"><a href="{{ route('admin.dailyFuelReports.index')}}" class="nav-link {{ request()->routeIs('admin.dailyFuelReports.*') ? 'active' : '' }}">Fuel Report</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item nav-item-submenu 
+          {{ request()->routeIs('admin.products.*') 
+          || request()->routeIs('admin.inventoryWarehouses.*')
+            ? 'nav-item-open' : '' }}">
+
+          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
+
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
+            style="{{ request()->routeIs('admin.products.*') 
+            || request()->routeIs('admin.inventoryWarehouses.*') 
+              ? 'display:block;' : '' }}">
+
+            <li class="nav-item"><a href="{{ route('admin.products.index')}}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Product master data</a></li>
+            <li class="nav-item"><a href="{{ route('admin.inventoryWarehouses.index')}}" class="nav-link {{ request()->routeIs('admin.inventoryWarehouses.*') ? 'active' : '' }}">Warehouse Inventory</a></li>
           </ul>
         </li>
 
 
-        <li class="nav-item nav-item-submenu">
-          <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Fleet transaction</span></a>
-
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts">
-            <li class="nav-item"><a href="{{ route('admin.trackerMileages.index')}}" class="nav-link">Daily Mileage (a)</a></li>
-            <li class="nav-item"><a href="{{ route('admin.dailyMileages.index')}}" class="nav-link">Daily Mileage (b)</a></li>
-            <li class="nav-item"><a href="{{ route('admin.dailyFuelMileages.index')}}" class="nav-link">Daily fuel Mileage</a></li>
-          </ul>
-        </li>
+        
 
         <li class="nav-item nav-item-submenu">
           <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory issuance</span></a>

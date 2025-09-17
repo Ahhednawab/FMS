@@ -32,22 +32,11 @@
               @method('PUT')
 
               <div class="row">
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label>Serial NO</label>
-                    <input value="{{$dailyMileage->serial_no}}" name="serial_no" type="text" class="form-control" readonly>
-                  </div>
-                </div>
 
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Vehicle No</label>
-                    <select class="custom-select select2" id="vehicle_id" name="vehicle_id">
-                      <option value="">--Select--</option>
-                      @foreach($vehicles as $key => $value)
-                        <option value="{{$key}}" {{ old('vehicle_id', $dailyMileage->vehicle_id ?? '') == $key ? 'selected' : '' }}>{{$value}}</option>
-                      @endforeach
-                    </select>
+                    <strong>Vehicle No</strong>
+                    <input type="text" class="form-control" name="vehicle_no" value="{{ old('vehicle_id', $dailyMileage->vehicle->vehicle_no ?? '') }}" readonly>
                     @if ($errors->has('vehicle_id'))
                       <label class="text-danger">{{ $errors->first('vehicle_id') }}</label>
                     @endif
@@ -56,96 +45,49 @@
 
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label>Location</label>
-                    <input type="text" class="form-control" name="location" value="{{ old('location', $dailyMileage->location ?? '') }}">
-                    @if ($errors->has('location'))
-                      <label class="text-danger">{{ $errors->first('location') }}</label>
+                    <strong>Report Date</strong>
+                    <input type="date" class="form-control" name="report_date" value="{{ old('report_date', $dailyMileage->report_date ?? '') }}">
+                    @if ($errors->has('report_date'))
+                      <label class="text-danger">{{ $errors->first('report_date') }}</label>
                     @endif
                   </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <div class="form-group">
-                    <label>Remarks</label>
-                    <input type="text" class="form-control" name="remarks" value="{{ old('remarks', $dailyMileage->remarks ?? '') }}">
-                    @if ($errors->has('remarks'))
-                      <label class="text-danger">{{ $errors->first('remarks') }}</label>
-                    @endif
-                  </div>
-                </div>            
-              </div>
-
-              <div class="row">
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" class="form-control" name="date" value="{{ old('date', $dailyMileage->date ?? '') }}">
-                    @if ($errors->has('date'))
-                      <label class="text-danger">{{ $errors->first('date') }}</label>
+                    <strong>Previous Km</strong>
+                    <input type="number" min="0" step="1" class="form-control previous_km" name="previous_km" value="{{ old('previous_km', $dailyMileage->previous_km ?? '') }}" readonly>
+                    @if ($errors->has('previous_km'))
+                      <label class="text-danger">{{ $errors->first('previous_km') }}</label>
                     @endif
                   </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <div class="form-group">
-                    <label>Mileage</label>
-                    <select class="custom-select" name="mileage">
-                      <option value="">--Select--</option>
-                      @foreach($mileages as $key => $value)
-                        <option value="{{ $key }}" {{ old('mileage', $dailyMileage->mileage ?? '') == $key ? 'selected' : '' }}>
-                          {{ $value }}
-                        </option>
-                      @endforeach
-                    </select>
+                    <strong>Current Km</strong>
+                    <input type="number" min="0" step="1" class="form-control current_km" name="current_km" value="{{ old('current_km', $dailyMileage->current_km ?? '') }}">
+                    @if ($errors->has('current_km'))
+                      <label class="text-danger">{{ $errors->first('current_km') }}</label>
+                    @endif
+                  </div>
+                </div>  
+
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <strong>Mileage</strong>
+                    <input type="number" min="0" step="1" class="form-control" name="mileage" value="{{ old('mileage', $dailyMileage->mileage ?? '') }}" readonly>
                     @if ($errors->has('mileage'))
                       <label class="text-danger">{{ $errors->first('mileage') }}</label>
                     @endif
                   </div>
-                </div>
-
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label>Current Month Total KMs ({{$months[3]}})</label>
-                    <input type="number" min="0" step="1" class="form-control" name="last_third_month_km" value="{{ old('last_third_month_km', $dailyMileage->last_third_month_km ?? '') }}">
-                    @if ($errors->has('last_third_month_km'))
-                      <label class="text-danger">{{ $errors->first('last_third_month_km') }}</label>
-                    @endif
-                  </div>
-                </div>
-
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label>Current Month Total KMs ({{$months[2]}})</label>
-                    <input type="number" min="0" step="1" class="form-control" name="last_second_month_km" value="{{ old('last_second_month_km', $dailyMileage->last_second_month_km ?? '') }}">
-                    @if ($errors->has('last_second_month_km'))
-                      <label class="text-danger">{{ $errors->first('last_second_month_km') }}</label>
-                    @endif
-                  </div>
-                </div>
+                </div>          
               </div>
 
               <div class="row">
-                <div class="col-md-3">
-                  <div class="form-group">
-                    <label>Current Month Total KMs ({{$months[1]}})</label>
-                    <input type="number" min="0" step="1" class="form-control" name="last_month_km" value="{{ old('last_month_km', $dailyMileage->last_month_km ?? '') }}">
-                    @if ($errors->has('last_month_km'))
-                      <label class="text-danger">{{ $errors->first('last_month_km') }}</label>
-                    @endif               
-                  </div>
-                </div>
                 
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label>Current Month Total KMs (Particular Month)</label>
-                    <input type="number" min="0" step="1" class="form-control" name="current_month_km" value="{{ old('current_month_km', $dailyMileage->current_month_km ?? '') }}">
-                    @if ($errors->has('current_month_km'))
-                      <label class="text-danger">{{ $errors->first('current_month_km') }}</label>
-                    @endif
-                  </div>
-                </div>
                 
-                <div class="col-md-5">
+                <div class="col-md-12">
                   <label for=""></label>
                   <div class="text-right">
                     <button type="submit" class="btn btn-primary">Update</button>
@@ -165,10 +107,20 @@
 
   <script>
     $(document).ready(function () {
-        $('#vehicle_id').select2({
-            placeholder: "--Select--",
-            allowClear: true,
-            theme: 'bootstrap4'
+        function calculateMileage() {
+            var previous_km = $('.previous_km').val() || 0;
+            var current_km = $('.current_km').val() || 0;
+            var mileage = current_km - previous_km;
+            if (mileage < 0) mileage = 0;
+            if(previous_km){
+              previous_km = current_km;
+            }
+            $('input[name="mileage"]').val(mileage.toFixed(0))
+            
+        }
+
+        $('.current_km').on('input', function(){
+            calculateMileage();
         });
     });
   </script>

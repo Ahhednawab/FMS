@@ -1,19 +1,19 @@
 @extends('layouts.admin')
 
-@section('title', 'Daily Mileage List')
+@section('title', 'Products List')
 
 @section('content')
   <!-- Page header -->
   <div class="page-header page-header-light">
     <div class="page-header-content header-elements-lg-inline">
       <div class="page-title d-flex">
-        <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Daily Mileage List</span></h4>
+        <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Products List</span></h4>
         <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
       </div>
       <div class="header-elements d-none">
         <div class="d-flex justify-content-center">
-          <a href="{{ route('admin.dailyMileages.create') }}" class="btn btn-primary">
-            <span>Add Daily Mileage <i class="icon-plus3 ml-2"></i></span>
+          <a href="{{ route('admin.productList.create') }}" class="btn btn-primary">
+            <span>Add Product <i class="icon-plus3 ml-2"></i></span>
           </a>
         </div>
       </div>
@@ -43,77 +43,29 @@
       </div>
     @endif
 
-    <div class="card">
-      <div class="card-body">
-        <form action="{{ route('admin.dailyMileages.index') }}" method="get">
-        <div class="row">
-          <!-- Vehicle No -->
-          <div class="col-md-3">
-            <div class="form-group">
-              <label class="form-label"><strong>Vehicle No</strong></label>
-              <select class="custom-select select2" name="vehicle_id" id="vehicle_no">
-                <option value="">--Select--</option>
-                @foreach($vehicles as $value)
-                  <option value="{{$value->id}}" {{ request('vehicle_id') == $value->id ? 'selected' : '' }}>{{$value->vehicle_no}}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          @php
-          use Carbon\Carbon;
 
-          $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
-          $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
-          @endphp
-          <!--From Date -->
-          <div class="col-md-3">
-            <div class="form-group">
-              <label><strong>From</strong></label>
-              <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}">
-            </div>
-          </div>   
-          <!--To Date -->
-          <div class="col-md-3">
-            <div class="form-group">
-              <label><strong>To</strong></label>
-              <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}">
-            </div>
-          </div> 
-          <div class="col-md-3 mt-4">
-            <div class="form-group">
-              <button type="submit" class="btn btn-primary">Filter</button>
-              <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-primary">Reset</a>
-            </div>
-          </div>
-          
-        </div>
-        </form>
-        
-      </div>
-    </div>
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
-        
-        <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
+        <table class="table datatable-colvis-basic dataTable">
           <thead>
-            <tr>  
-              <th>Vehicle No</th>
-              <th>Report Date</th>
-              <th>Previous Kms</th>
-              <th>Current Kms</th>
-              <th>Mileage</th>
+            <tr>
+              <th>Serial no</th>
+              <th>Product Name</th>
+              <th>Brand</th>
+              <th>Category</th>
+              <th>Unit</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @foreach($dailyMileages as $key => $value)
+            @foreach($productList as $key => $value)
               <tr>
-                <td>{{$value->vehicle->vehicle_no}}</td>
-                <td>{{ \Carbon\Carbon::parse($value->report_date)->format('d-M-Y') }}</td>
-                <td>{{$value->previous_km}} Km</td>
-                <td>{{$value->current_km}} Km</td>
-                <td>{{$value->mileage}} Km</td>
+                <td>{{$value->serial_no}}</td>
+                <td>{{$value->name}}</td>
+                <td>{{$value->brand->name}}</td>
+                <td>{{$value->productCategory->name}}</td>
+                <td>{{$value->unit->name}}</td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">
@@ -121,16 +73,16 @@
                         <i class="icon-menu9"></i>
                       </a>
                       <div class="dropdown-menu dropdown-menu-right">
-                        <a href="{{ route('admin.dailyMileages.show', $value->id) }}" class="dropdown-item">
+                        <a href="{{ route('admin.productList.show', $value->id) }}" class="dropdown-item">
                           <i class="icon-eye"></i> View Details
                         </a>
-                        <a href="{{ route('admin.dailyMileages.edit', $value->id) }}" class="dropdown-item">
+                        <a href="{{ route('admin.productList.edit', $value->id) }}" class="dropdown-item">
                           <i class="icon-pencil7"></i> Edit
                         </a>
-                        <form action="{{ route('admin.dailyMileages.destroy', $value->id) }}" method="POST">
+                        <form action="{{ route('admin.productList.destroy', $value->id) }}" method="POST">
                           @csrf
                           @method('DELETE')
-                          <button class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete?')">
+                          <button class="dropdown-item text-danger" onclick="return confirm('Are you sure?')">
                             <i class="icon-trash"></i> Delete
                           </button>
                         </form>
@@ -139,7 +91,7 @@
                   </div>
                 </td>
               </tr>
-            @endforeach            
+            @endforeach
           </tbody>
         </table>
       </div>
@@ -155,7 +107,6 @@
   <script>
     $(document).ready(function () {
       $('.datatable-colvis-basic').DataTable();
-
     });
 
     setTimeout(function () {

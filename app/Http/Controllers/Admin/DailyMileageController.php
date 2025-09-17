@@ -7,28 +7,62 @@ use Illuminate\Http\Request;
 use App\Models\DailyMileageReport;
 use App\Models\Vehicle;
 use App\Models\MileageStatus;
+use Carbon\Carbon;
 
 
 class DailyMileageController extends Controller
 {
-    public function index(){
-        $dailyMileages = DailyMileageReport::with(['vehicle','mileageStatus'])->where('is_active',1)->orderby('id','DESC')->get();
+    public function index(Request $request){
+
+        $query = DailyMileageReport::query();
         
-        return view('admin.dailyMileages.index', compact('dailyMileages'));
+        if ($request->filled('vehicle_id')) {
+            $query->whereHas('vehicle', function ($q) use ($request) {
+                $q->where('vehicle_id', $request->vehicle_id);
+            });
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('report_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('report_date', '<=', $request->to_date);
+        }
+        
+        $dailyMileages = $query->where('is_active',1)
+            ->whereRaw('MONTH(report_date) = MONTH(CURRENT_DATE())')
+            ->whereRaw('YEAR(report_date) = YEAR(CURRENT_DATE())')
+            ->whereHas('vehicle', function ($query) {
+                $query->where('is_active', 1);
+            })
+            ->with('vehicle')->orderby('id','DESC')
+            ->get();
+        $vehicles = Vehicle::where('is_active',1)->get();
+        
+        return view('admin.dailyMileages.index', compact('dailyMileages','vehicles'));
     }
 
     public function create(){
-        $serial_no = DailyMileageReport::GetSerialNumber();
-        $vehicles = Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id');
-        $mileages = MileageStatus::where('is_active',1)->orderBy('name','ASC')->pluck('name','id');
-        
-        $months = [];
+        $vehicleData = array();
+        $vehicles = Vehicle::where('is_active', 1)->orderBy('vehicle_no')->select('*')->get();
+        foreach($vehicles as $vehicle){
+            $previousRecord = DailyMileageReport::where('vehicle_id',$vehicle->id)
+                ->where('is_active',1)
+                ->orderBy('id','DESC')
+                ->select('*')
+                ->first();
 
-        for ($i = 0; $i <= 3; $i++) {
-            $months[] = date("F", strtotime("-$i months"));
-        }        
+            $previous_km = ($previousRecord) ? $previousRecord->current_km : $vehicle->kilometer;
 
-        return view('admin.dailyMileages.create',compact('serial_no','mileages','months','vehicles'));
+            $vehicleData[] = array(
+                'vehicle_id'    =>  $vehicle->id,
+                'vehicle_no'    =>  $vehicle->vehicle_no,
+                'previous_km'   =>  $previous_km
+            );
+        }
+
+        return view('admin.dailyMileages.create',compact('vehicles','vehicleData'));
     }
 
     public function store(Request $request)
@@ -36,57 +70,58 @@ class DailyMileageController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'vehicle_id' => 'required',
-                'location' => 'required',
-                'remarks' => 'required',
-                'date' => 'required',
-                'mileage' => 'required',
-                'last_third_month_km' => 'required|numeric',
-                'last_second_month_km' => 'required|numeric',
-                'last_month_km' => 'required|numeric',
-                'current_month_km' => 'required|numeric',
+                'current_km'    => 'array',
+                'current_km.*'  => 'required|numeric|min:0'
             ],
             [
-                'vehicle_id.required'           =>  'Vehicle No is required',
-                'location.required'             =>  'Location is required',
-                'remarks.required'              =>  'Remarks is required',
-                'date.required'                 =>  'Date is required',
-                'mileage.required'              =>  'Mileage is required',
-                'last_third_month_km.required'  =>  'Field is required',
-                'last_third_month_km.numeric'  =>  'Field must be a number',
-                'last_second_month_km.required' =>  'Field is required',
-                'last_second_month_km.numeric' =>  'Field must be a number',
-                'last_month_km.required'        =>  'Field is required',
-                'last_month_km.numeric'        =>  'Field must be a number',
-                'current_month_km.required'     =>  'Field is required',
-                'current_month_km.numeric'     =>  'Field must be a number',
+                'current_km.*.required'     =>  'Current km is required'
             ]
         );
+        
+        $validator->after(function ($validator) use ($request) {
+            $previous_kms = $request->previous_km;
+            $current_kms = $request->current_km;
+            foreach ($current_kms as $index => $current_km){
+                $previous_km = $previous_kms[$index] ?? 0;
+
+                if($current_km < $previous_km){
+                    $validator->errors()->add("current_km.$index", "Current KM must be greater than Previous KM.");
+                }
+            
+            }
+        });
+        
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $dailyMileage = new DailyMileageReport();
-        $dailyMileage->serial_no = $request->serial_no;
-        $dailyMileage->vehicle_id = $request->vehicle_id;
-        $dailyMileage->location = $request->location;
-        $dailyMileage->remarks = $request->remarks;
-        $dailyMileage->date = $request->date;
-        $dailyMileage->mileage = $request->mileage;
-        $dailyMileage->last_third_month_km = $request->last_third_month_km;
-        $dailyMileage->last_second_month_km = $request->last_second_month_km;
-        $dailyMileage->last_month_km = $request->last_month_km;
-        $dailyMileage->current_month_km = $request->current_month_km;
-        $dailyMileage->save();
+        $vehicle_ids    = $request->vehicle_id;
+        $mileages       = $request->mileage;
+        $previous_kms   = $request->previous_km;
+        $current_kms    = $request->current_km;
+
+        foreach ($vehicle_ids as $index => $vehicle_id) {
+            DailyMileageReport::Create(
+                [
+                    'vehicle_id'    =>  $vehicle_id,
+                    'report_date'   =>  Carbon::today()->toDateString(), //'2025-07-16',
+                    'mileage'       =>  $mileages[$index] ?? 0,
+                    'previous_km'   =>  $previous_kms[$index] ?? 0,
+                    'current_km'    =>  $current_kms[$index] ?? 0,
+                ]
+            );
+            
+        }
 
         return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage created successfully.');
     }
 
     public function edit(DailyMileageReport $dailyMileage)
     {
+        
         $vehicles = Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id');
-        $mileages = MileageStatus::where('is_active',1)->orderBy('name','ASC')->pluck('name','id');
+        //$mileages = MileageStatus::where('is_active',1)->orderBy('name','ASC')->pluck('name','id');
 
         $months = [];
 
@@ -94,7 +129,7 @@ class DailyMileageController extends Controller
             $months[] = date("F", strtotime("-$i months"));
         }
 
-        return view('admin.dailyMileages.edit',compact('dailyMileage','mileages','months','vehicles'));
+        return view('admin.dailyMileages.edit',compact('dailyMileage','months','vehicles'));
     }
 
     public function update(Request $request, DailyMileageReport $dailyMileage)
@@ -102,46 +137,34 @@ class DailyMileageController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'vehicle_id' => 'required',
-                'location' => 'required',
-                'remarks' => 'required',
-                'date' => 'required',
-                'mileage' => 'required',
-                'last_third_month_km' => 'required|numeric',
-                'last_second_month_km' => 'required|numeric',
-                'last_month_km' => 'required|numeric',
-                'current_month_km' => 'required|numeric',
+                'report_date' => 'required',
+                'current_km' => 'required|numeric',
             ],
             [
-                'vehicle_id.required'           =>  'Vehicle No is required',
-                'location.required'             =>  'Location is required',
-                'remarks.required'              =>  'Remarks is required',
-                'date.required'                 =>  'Date is required',
-                'mileage.required'              =>  'Mileage is required',
-                'last_third_month_km.required'  =>  'Field is required',
-                'last_third_month_km.numeric'  =>  'Field must be a number',
-                'last_second_month_km.required' =>  'Field is required',
-                'last_second_month_km.numeric' =>  'Field must be a number',
-                'last_month_km.required'        =>  'Field is required',
-                'last_month_km.numeric'        =>  'Field must be a number',
-                'current_month_km.required'     =>  'Field is required',
-                'current_month_km.numeric'     =>  'Field must be a number',
+                'report_date.required'                 =>  'Date is required',
+                'current_km.required'     =>  'Current km is required'
             ]
         );
+
+        $validator->after(function ($validator) use ($request) {
+            $previous_km = $request->previous_km;
+            $current_km = $request->current_km;
+
+            if($current_km < $previous_km){
+                $validator->errors()->add("current_km", "Current KM must be greater than Previous KM.");
+            }
+        
+        });
+
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $dailyMileage->vehicle_id = $request->vehicle_id;
-        $dailyMileage->location = $request->location;
-        $dailyMileage->remarks = $request->remarks;
-        $dailyMileage->date = $request->date;
+        $dailyMileage->report_date = $request->report_date;
         $dailyMileage->mileage = $request->mileage;
-        $dailyMileage->last_third_month_km = $request->last_third_month_km;
-        $dailyMileage->last_second_month_km = $request->last_second_month_km;
-        $dailyMileage->last_month_km = $request->last_month_km;
-        $dailyMileage->current_month_km = $request->current_month_km;
+        $dailyMileage->previous_km = $request->previous_km;
+        $dailyMileage->current_km = $request->current_km;
         $dailyMileage->save();
 
         return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage updated successfully.');

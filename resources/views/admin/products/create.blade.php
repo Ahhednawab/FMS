@@ -37,7 +37,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Product Name</strong>
-                <select class="custom-select" name="product_id">
+                <select class="custom-select" name="product_id" id="product_id">
                   <option value="">-- Select --</option>
                   @foreach($productList as $key => $value)
                     <option value="{{$key}}" {{ old('product_id') == $key ? 'selected' : '' }}>{{$value}}</option>
@@ -50,63 +50,95 @@
             </div>
 
             <!-- Category -->
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="form-group">
                 <strong>Category</strong>
-                <select class="custom-select" name="product_category_id">
-                  <option value="">-- Select --</option>
-                  @foreach($productCategory as $key => $value)
-                    <option value="{{$key}}" {{ old('product_category_id') == $key ? 'selected' : '' }}>{{$value}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('product_category_id'))
-                  <label class="text-danger">{{ $errors->first('product_category_id') }}</label>
-                @endif
+                <input type="text" class="form-control" disabled name="category" id="category">
               </div>
             </div>
 
             <!-- Brands -->
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="form-group">
                 <strong>Brands</strong>
-                <input type="text" class="form-control" name="brands" value="{{ old('brands') }}">
-                @if ($errors->has('brands'))
-                  <label class="text-danger">{{ $errors->first('brands') }}</label>
-                @endif
+                <input type="text" class="form-control" disabled name="brand" id="brand">
+              </div>
+            </div>
+
+            <!-- Unit -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <strong>Unit</strong>
+                <input type="text" class="form-control" disabled name="unit" id="unit">
               </div>
             </div>
           </div>
 
           <div class="row">
             <!-- Quantity -->
-            <div class="col-md-2">
+            <div class="col-md-3">
               <div class="form-group">
                 <strong>Quantity</strong>
-                <input type="number" min="1" step="1" class="form-control" name="quantity" value="{{ old('quantity') }}">
+                <input type="number" min="1" step="1" class="form-control" name="quantity" id="quantity" value="{{ old('quantity') }}">
                 @if ($errors->has('quantity'))
                   <label class="text-danger">{{ $errors->first('quantity') }}</label>
                 @endif
               </div>
             </div>
 
-            <!-- Price -->
-            <div class="col-md-2">
+            <!-- Unit Price -->
+            <div class="col-md-3">
               <div class="form-group">
-                <strong>Price</strong>
-                <input type="number" step="1" min="0" class="form-control" name="price" value="{{ old('price') }}">
-                @if ($errors->has('price'))
-                  <label class="text-danger">{{ $errors->first('price') }}</label>
+                <strong>Unit Price</strong>
+                <input type="number" step="1" min="0" class="form-control" name="unit_price" id="unit_price" value="{{ old('unit_price') }}">
+                @if ($errors->has('unit_price'))
+                  <label class="text-danger">{{ $errors->first('unit_price') }}</label>
+                @endif
+              </div>
+            </div>
+
+            <!-- Total Amount -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>Total Amount</strong>
+                <input type="number" step="1" min="0" class="form-control" name="total_amount" value="{{ old('total_amount') }}" readonly>
+                @if ($errors->has('total_amount'))
+                  <label class="text-danger">{{ $errors->first('total_amount') }}</label>
                 @endif
               </div>
             </div>
 
             <!-- Restock Alarm Quantity -->
-            <div class="col-md-2">
+            <div class="col-md-3">
               <div class="form-group">
                 <strong>Restock Alarm Quantity</strong>
                 <input type="number" min="1" step="1" class="form-control" name="restock_qty_alarm" value="{{ old('restock_qty_alarm') }}">
                 @if ($errors->has('restock_qty_alarm'))
                   <label class="text-danger">{{ $errors->first('restock_qty_alarm') }}</label>
+                @endif
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Procured Date -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>Procured Date</strong>
+                <input type="date" class="form-control" name="procured_date" value="{{ old('procured_date') }}">
+                @if ($errors->has('procured_date'))
+                  <label class="text-danger">{{ $errors->first('procured_date') }}</label>
+                @endif
+              </div>
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>Expiry Date</strong>
+                <input type="date" class="form-control" name="expiry_date" value="{{ old('expiry_date') }}">
+                @if ($errors->has('expiry_date'))
+                  <label class="text-danger">{{ $errors->first('expiry_date') }}</label>
                 @endif
               </div>
             </div>
@@ -142,33 +174,11 @@
                 @endif
               </div>
             </div>
-          </div>
+          </div>   
 
           <div class="row">
-            <!-- Procured Date -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Procured Date</strong>
-                <input type="date" class="form-control" name="procured_date" value="{{ old('procured_date') }}">
-                @if ($errors->has('procured_date'))
-                  <label class="text-danger">{{ $errors->first('procured_date') }}</label>
-                @endif
-              </div>
-            </div>
-
-            <!-- Expiry Date -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Expiry Date</strong>
-                <input type="date" class="form-control" name="expiry_date" value="{{ old('expiry_date') }}">
-                @if ($errors->has('expiry_date'))
-                  <label class="text-danger">{{ $errors->first('expiry_date') }}</label>
-                @endif
-              </div>
-            </div>
-
-            <!-- Product Type -->
-            <div class="col-md-6">
+            <!-- Description -->
+            <div class="col-md-9">
               <div class="form-group">
                 <strong>Description</strong>
                 <textarea class="form-control" name="description" rows="1">{{ old('description') }}</textarea>
@@ -179,18 +189,52 @@
             </div>
 
             <!-- Buttons -->
-            <div class="col-md-2">
+            <div class="col-md-3">
               <label></label>
               <div class="text-right">
                 <button type="submit" class="btn btn-primary">Save</button>
                 <a href="{{ route('admin.products.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>
-          </div>                    
+          </div>                 
         </form>
       </div>
     </div>
   </div>
 
-  
+  <script>
+    $('#product_id').on('change', function () {
+      var productId = $(this).val();
+
+      if (productId) {
+        $.ajax({
+          url: '{{ route("admin.get-product-details") }}',
+          method: 'GET',
+          data: { product_id: productId },
+          success: function (response) {
+            $('#category').val(response.category);
+            $('#brand').val(response.brand);
+            $('#unit').val(response.unit);
+          },
+          error: function () {
+            alert('Something went wrong.');
+          }
+        });
+      } else {
+        $('#product-details').html('');
+      }
+    });
+
+    function calculateTotalAmount() {
+      let quantity = parseFloat($('#quantity').val()) || 0;
+      let unitPrice = parseFloat($('#unit_price').val()) || 0;
+      let total = quantity * unitPrice;
+
+      $('input[name="total_amount"]').val(total.toFixed(0)); 
+    }
+
+    $('#quantity, #unit_price').on('input', function () {
+      calculateTotalAmount();
+    });
+  </script>
 @endsection

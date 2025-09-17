@@ -8,6 +8,7 @@ use App\Models\Warehouse;
 use App\Models\ProductList;
 use App\Models\ProductCategory;
 use App\Models\Vendor;
+use Illuminate\Support\Facades\DB;
 
 
 class ProductController extends Controller
@@ -150,5 +151,22 @@ class ProductController extends Controller
         $product->is_active = 0;
         $product->save();
         return redirect()->route('admin.products.index')->with('delete_msg', 'Product deleted successfully.');
+    }
+
+    public function getProductDetails(Request $request)
+    {
+        $product = DB::table('products_list as p')
+            ->join('product_category as pc', 'pc.id', '=', 'p.product_category_id')
+            ->join('brands as b', 'b.id', '=', 'p.brand_id')
+            ->join('units as u', 'u.id', '=', 'p.unit_id')
+            ->where('p.id', $request->product_id)
+            ->select('p.id as product_id', 'pc.name as category', 'b.name as brand', 'u.name as unit')
+            ->first();
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        return response()->json($product);
     }
 }

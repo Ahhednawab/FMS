@@ -25,12 +25,7 @@
       <div class="card-body">
         <div class="container mt-3">          
           <div class="row">
-            <div class="col-md-3 text-center">
-              <div class="card">
-                <h5 class="m-0">Serial no</h5>
-                <p>{{$dailyMileage->serial_no}}</p>
-              </div>
-            </div>
+            
             <div class="col-md-3 text-center">
               <div class="card">
                 <h5 class="m-0">Vehicle No</h5>
@@ -39,67 +34,27 @@
             </div>
             <div class="col-md-3 text-center">
               <div class="card">
-                <h5 class="m-0">Date</h5>
-                <p>{{\Carbon\Carbon::parse($dailyMileage->date)->format('d-M-Y')}}</p>
+                <h5 class="m-0">Report Date</h5>
+                <p>{{\Carbon\Carbon::parse($dailyMileage->report_date)->format('d-M-Y')}}</p>
               </div>
             </div>
-            <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
               <div class="card">
-                <h5 class="m-0">Month</h5>
-                <p>month</p>
+                <h5 class="m-0">Previous Km</h5>
+                <p>{{$dailyMileage->previous_km}} Km</p>
               </div>
             </div>
-          </div>
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Current Km</h5>
+                <p>{{$dailyMileage->current_km}} Km</p>
+              </div>
+            </div>
 
-          <div class="row">             
-            <div class="col-md-6 text-center">
+            <div class="col-md-2 text-center">
               <div class="card">
-                <h5 class="m-0">Current Month Total KMs (March)</h5>
-                <p>{{$dailyMileage->last_third_month_km}}</p>
-              </div>
-            </div>
-            <div class="col-md-6 text-center">
-              <div class="card">
-                <h5 class="m-0">Current Month Total KMs (April)</h5>
-                <p>{{$dailyMileage->last_second_month_km}}</p>
-              </div>
-            </div>
-            
-          </div>
-
-          <div class="row">
-            
-            <div class="col-md-6 text-center">
-              <div class="card">
-                <h5 class="m-0">Current Month Total KMs (May)</h5>
-                <p>{{$dailyMileage->last_month_km}}</p>
-              </div>
-            </div>
-            <div class="col-md-6 text-center">
-              <div class="card">
-                <h5 class="m-0">Current Month Total KMs (Particular Month)</h5>
-                <p>{{$dailyMileage->current_month_km}}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-3 text-center">
-              <div class="card">
-                <h5 class="m-0">Location</h5>
-                <p>{{$dailyMileage->location}}</p>
-              </div>
-            </div>
-            <div class="col-md-3 text-center">
-              <div class="card">
-                <h5 class="m-0">Remarks</h5>
-                <p>{{$dailyMileage->remarks}}</p>
-              </div>
-            </div>
-            <div class="col-md-3 text-center">
-              <div class="card">
-                <h5 class="m-0">Milage</h5>
-                <p>{{$dailyMileage->mileageStatus->name}}</p>
+                <h5 class="m-0">Mileage</h5>
+                <p>{{$dailyMileage->mileage}} Km</p>
               </div>
             </div>
           </div>

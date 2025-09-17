@@ -1,19 +1,20 @@
 @extends('layouts.admin')
 
-@section('title', 'Products List')
+@section('title', 'Category List')
 
 @section('content')
   <!-- Page header -->
   <div class="page-header page-header-light">
     <div class="page-header-content header-elements-lg-inline">
       <div class="page-title d-flex">
-        <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Products List</span></h4>
+        <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Category List</span></h4>
         <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
       </div>
+
       <div class="header-elements d-none">
         <div class="d-flex justify-content-center">
-          <a href="{{ route('admin.products.create') }}" class="btn btn-primary">
-            <span>Add Product <i class="icon-plus3 ml-2"></i></span>
+          <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
+            <span>Add Category <i class="icon-plus3 ml-2"></i></span>
           </a>
         </div>
       </div>
@@ -43,54 +44,45 @@
       </div>
     @endif
 
-
-    <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
-        <table class="table datatable-colvis-basic dataTable">
+        <table class="table datatable-colvis-basic">
           <thead>
             <tr>
-              <th>Serial no</th>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th>Brands</th>
-              <th>Stock Status</th>
-              <th>Suppliers</th>
-              <th>Warehouse</th>
-              <th>Description</th>
-              <th>Price</th>
-              <th>Purchase Quantity</th>
-              <th>Available Quantity</th>
-              <th>Alarm at</th>
-              <th class="text-center">Actions</th>
+              <th>Serial No</th>
+              <th>Brand</th>
+              <th class="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            
+            @foreach ($categories as $key => $value)
+              <tr>
+                <td>{{ $value->serial_no }}</td>
+                <td>{{ $value->name }}</td>
+                <td class="text-center">
+                  <div class="list-icons">
+                    <div class="dropdown">
+                      <a href="#" class="list-icons-item" data-toggle="dropdown"><i class="icon-menu9"></i></a>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <a href="{{ route('admin.categories.show', $value->id) }}" class="dropdown-item"><i class="icon-eye"></i> View</a>
+                        <a href="{{ route('admin.categories.edit', $value->id) }}" class="dropdown-item"><i class="icon-pencil7"></i> Edit</a>
+                        <form method="POST" action="{{ route('admin.categories.destroy', $value->id) }}" onsubmit="return confirm('Are you sure?');">
+                          @csrf
+                          @method('DELETE')
+                          <button type="submit" class="dropdown-item text-danger"><i class="icon-trash"></i> Delete</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            @endforeach
           </tbody>
         </table>
       </div>
     </div>
-    <!-- /basic datatable -->
   </div>
   <!-- /content area -->
+
   
-  <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
-  <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
-  <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
-
-  <script>
-    $(document).ready(function () {
-      $('.datatable-colvis-basic').DataTable();
-    });
-
-    setTimeout(function () {
-      let alertBox = document.getElementById('alert-message');
-      if (alertBox) {
-        alertBox.style.transition = 'opacity 0.5s ease';
-        alertBox.style.opacity = '0';
-        setTimeout(() => alertBox.remove(), 500);
-      }
-    }, 3000);
-  </script>
 @endsection
