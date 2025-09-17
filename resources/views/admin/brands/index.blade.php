@@ -46,7 +46,7 @@
 
     <div class="card">
       <div class="card-body">
-        <table class="table datatable-colvis-basic">
+        <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
               <th>Serial No</th>
@@ -84,5 +84,22 @@
   </div>
   <!-- /content area -->
 
-  
+  <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
+  <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
+  <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('.datatable-colvis-basic').DataTable();
+    });
+
+    setTimeout(function () {
+      let alertBox = document.getElementById('alert-message');
+      if (alertBox) {
+        alertBox.style.transition = 'opacity 0.5s ease';
+        alertBox.style.opacity = '0';
+        setTimeout(() => alertBox.remove(), 500);
+      }
+    }, 3000);
+  </script>
 @endsection
