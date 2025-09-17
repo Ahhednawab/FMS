@@ -160,7 +160,7 @@
             || request()->routeIs('admin.inventoryWarehouses.*') 
               ? 'display:block;' : '' }}">
 
-            <li class="nav-item"><a href="{{ route('admin.products.index')}}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Product master data</a></li>
+            <li class="nav-item"><a href="{{ route('admin.products.index')}}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Product Inventory</a></li>
             <li class="nav-item"><a href="{{ route('admin.inventoryWarehouses.index')}}" class="nav-link {{ request()->routeIs('admin.inventoryWarehouses.*') ? 'active' : '' }}">Warehouse Inventory</a></li>
           </ul>
         </li>
