@@ -43,6 +43,13 @@
           </a>
         </li>
 
+        <li class="nav-item">
+          <a href="{{ route('admin.drafts.index')}}" class="nav-link {{ request()->routeIs('admin.drafts.*') ? 'active' : '' }}">
+            <i class="icon-save"></i>
+            <span>Drafts</span>
+          </a>
+        </li>
+
         <li class="nav-item nav-item-submenu 
           {{ request()->routeIs('admin.users.*') 
           || request()->routeIs('admin.cities.*') 

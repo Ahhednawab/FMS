@@ -8,11 +8,14 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\City;
 use App\Models\Designation;
+use App\Models\Draft;
+use App\Traits\DraftTrait;
 use Illuminate\Support\Facades\Auth;
 
 
 class UserController extends Controller
 {
+    use DraftTrait;
     public function index()
     {
         // $users = User::with(['designation'])->where('role','!=','admin')->where('is_active',1)->get();
@@ -20,16 +23,23 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $serial_no = User::GetSerialNumber();
         $designation = Designation::where('is_active',1)->orderBy('designation','ASC')->get();
         
-        return view('admin.users.create', compact('serial_no','designation'));
+        $draftData = $this->getDraftDataForView($request, 'users');
+        
+        return view('admin.users.create', compact('serial_no','designation') + $draftData);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'users')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -70,6 +80,9 @@ class UserController extends Controller
         $user->role = 'admin';
         $user->address          =   $request->address;        
         $user->save();
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'users');
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }

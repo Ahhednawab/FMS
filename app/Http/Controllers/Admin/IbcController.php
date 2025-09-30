@@ -2,30 +2,37 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
-
 use App\Models\Station;
 use App\Models\IbcCenter;
-
-
+use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
 
 class IbcController extends Controller
 {
+    use DraftTrait;
     public function index()
     {
     	$ibcCenters = IbcCenter::with(['station'])->where('is_active',1)->get();
     	return view('admin.ibcCenters.index',compact('ibcCenters'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
     	$serial_no = IbcCenter::GetSerialNumber();
         $stations = Station::where('is_active',1)->orderBy('area','ASC')->pluck('area','id');
-        return view('admin.ibcCenters.create',compact('serial_no','stations'));
+        
+        $draftData = $this->getDraftDataForView($request, 'ibc_centers');
+        
+        return view('admin.ibcCenters.create', compact('serial_no','stations') + $draftData);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'ibc_centers')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -48,6 +55,9 @@ class IbcController extends Controller
         $ibcCenter->name		=	$request->name;
         $ibcCenter->save();
 
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'ibc_centers');
+        
         return redirect()->route('admin.ibcCenters.index')->with('success', 'IBC Center created successfully.');
     }
 

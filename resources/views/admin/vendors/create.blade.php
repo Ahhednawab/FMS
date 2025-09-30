@@ -23,6 +23,9 @@
       <div class="card-body">
         <form action="{{ route('admin.vendors.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
+          @if(isset($draftId))
+            <input type="hidden" name="draft_id" value="{{ $draftId }}">
+          @endif
           
           <div class="row">
             <!-- Serial No -->
@@ -37,7 +40,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Name</strong>
-                <input type="text" class="form-control" name="name" value="{{ old('name') }}">
+                <input type="text" class="form-control" name="name" value="{{ $draftData['name'] ?? old('name') }}">
                 @if ($errors->has('name'))
                   <label class="text-danger">{{ $errors->first('name') }}</label>
                 @endif
@@ -49,7 +52,7 @@
               <div class="form-group">
                 <strong>Phone No</strong>
                 <input type="text" name="phone" id="phone" class="form-control"
-                     value="{{ old('phone', '03') }}"
+                     value="{{ $draftData['phone'] ?? old('phone', '03') }}"
                      maxlength="12" placeholder="03xx-xxxxxxx">
                 @if ($errors->has('phone'))
                   <label class="text-danger">{{ $errors->first('phone') }}</label>
@@ -107,7 +110,12 @@
             <div class="col-md-12">
               <label for=""></label>
               <div class="text-right">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                  <i class="icon-save"></i> Draft
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="icon-check"></i> Save
+                </button>
                 <a href="{{ route('admin.vendors.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>            

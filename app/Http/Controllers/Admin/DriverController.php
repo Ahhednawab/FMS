@@ -10,12 +10,12 @@ use App\Models\Vehicle;
 use App\Models\MaritalStatus;
 use App\Models\LicenseCategory;
 use App\Models\ShiftTimings;
-
-
+use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
 
 class DriverController extends Controller
 {
+    use DraftTrait;
     public function index()
     {
         $drivers = Driver::with(['driverStatus','vehicle','maritalStatus','licenseCategory','shiftTiming'])
@@ -30,7 +30,7 @@ class DriverController extends Controller
         return view('admin.drivers.index', compact('drivers'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $serial_no = Driver::GetSerialNumber();
         $driver_status = DriverStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -78,11 +78,18 @@ class DriverController extends Controller
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings'));
+        $draftData = $this->getDraftDataForView($request, 'drivers');
+        
+        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings') + $draftData);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'drivers')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -295,6 +302,9 @@ class DriverController extends Controller
         }
 
         $driver->save();
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'drivers');
 
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully.');
     }

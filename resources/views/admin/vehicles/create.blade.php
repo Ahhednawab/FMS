@@ -23,6 +23,9 @@
       <div class="card-body">
         <form action="{{ route('admin.vehicles.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
+          @if(isset($draftId))
+            <input type="hidden" name="draft_id" value="{{ $draftId }}">
+          @endif
           
           <div class="row">
             <!-- Serial NO -->
@@ -37,7 +40,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Vehicle No</strong>
-                <input type="text" class="form-control" name="vehicle_no" value="{{ old('vehicle_no') }}">
+                <input type="text" class="form-control" name="vehicle_no" value="{{ $draftData['vehicle_no'] ?? old('vehicle_no') }}">
                 @if ($errors->has('vehicle_no'))
                   <label class="text-danger">{{ $errors->first('vehicle_no') }}</label>
                 @endif
@@ -48,7 +51,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Make (Manufacturer)</strong>
-                <input type="text" class="form-control" name="make" value="{{ old('make') }}">
+                <input type="text" class="form-control" name="make" value="{{ $draftData['make'] ?? old('make') }}">
                 @if ($errors->has('make'))
                   <label class="text-danger">{{ $errors->first('make') }}</label>
                 @endif
@@ -62,7 +65,7 @@
                 <select class="custom-select" name="model">
                   <option value="">-- Select Model Year --</option>
                   @for ($year = date('Y'); $year >= 1980; $year--)
-                    <option value="{{ $year }}" {{ old('model') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                    <option value="{{ $year }}" {{ ($draftData['model'] ?? old('model')) == $year ? 'selected' : '' }}>{{ $year }}</option>
                   @endfor
                 </select>
                 @if ($errors->has('model'))
@@ -481,7 +484,12 @@
             <div class="col-md-3">
               <label for=""></label>
               <div class="text-right">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                  <i class="icon-save"></i> Draft
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="icon-check"></i> Save
+                </button>
                 <a href="{{ route('admin.vehicles.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>

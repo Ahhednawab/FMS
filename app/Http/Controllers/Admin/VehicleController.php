@@ -11,9 +11,11 @@ use App\Models\LadderMaker;
 use App\Models\IbcCenter;
 use App\Models\Vendor;
 use App\Models\ShiftHours;
+use App\Traits\DraftTrait;
 
 class VehicleController extends Controller
 {
+    use DraftTrait;
     public function index(){
         $vehicles = Vehicle::with(['vehicleType','station','ibcCenter','fabricationVendor','shiftHours'])
             ->where('is_active',1)
@@ -23,7 +25,7 @@ class VehicleController extends Controller
         return view('admin.vehicles.index', compact('vehicles'));
     }
 
-    public function create(){
+    public function create(Request $request){
     	$serial_no = Vehicle::GetSerialNumber();
         $vehicleTypes = VehicleType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)
@@ -45,11 +47,18 @@ class VehicleController extends Controller
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.create',compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
+        $draftData = $this->getDraftDataForView($request, 'vehicles');
+        
+        return view('admin.vehicles.create', compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftData);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'vehicles')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -210,6 +219,9 @@ class VehicleController extends Controller
         $vehicle->route_permit_file =   $routePermitFileName;
         $vehicle->tax_file          =   $taxFileName;
         $vehicle->save();
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'vehicles');
 
     	return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle created successfully.');
     }

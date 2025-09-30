@@ -137,6 +137,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // Warehouses & Locations
     Route::resource('locations', LocationController::class);
     Route::resource('ledder_makers', LedderMakerController::class);
+
+    // Drafts Management
+    Route::get('/drafts', [App\Http\Controllers\Admin\DraftController::class, 'index'])->name('drafts.index');
+    Route::get('/drafts/{draft}/edit', [App\Http\Controllers\Admin\DraftController::class, 'edit'])->name('drafts.edit');
+    Route::delete('/drafts/{draft}', [App\Http\Controllers\Admin\DraftController::class, 'destroy'])->name('drafts.destroy');
 });
 
 

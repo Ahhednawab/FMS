@@ -34,6 +34,9 @@
       <div class="card-body">
         <form action="{{ route('admin.drivers.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
+          @if(isset($draftId))
+            <input type="hidden" name="draft_id" value="{{ $draftId }}">
+          @endif
           
           <div class="row">
             <!-- Serial No -->
@@ -48,7 +51,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Full Name</strong>
-                <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}">
+                <input type="text" name="full_name" class="form-control" value="{{ $draftData['full_name'] ?? old('full_name') }}">
                 @if ($errors->has('full_name'))
                   <label class="text-danger">{{ $errors->first('full_name') }}</label>
                 @endif
@@ -83,7 +86,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Cell Phone No</strong>
-                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
+                <input type="text" name="phone" id="phone" class="form-control" value="{{ $draftData['phone'] ?? old('phone') }}">
                 @if ($errors->has('phone'))
                   <label class="text-danger">{{ $errors->first('phone') }}</label>
                 @endif
@@ -433,7 +436,12 @@
             <div class="col-md-2">
               <label for=""></label>
               <div class="text-right">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                  <i class="icon-save"></i> Draft
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="icon-check"></i> Save
+                </button>
                 <a href="{{ route('admin.drivers.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>

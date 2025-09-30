@@ -33,8 +33,11 @@
         <!-- Basic layout -->
         <div class="card">
           <div class="card-body">
-            <form method="POST" action="{{ route('admin.cities.store') }}">
-              @csrf              
+        <form method="POST" action="{{ route('admin.cities.store') }}">
+          @csrf
+          @if(isset($draftId))
+            <input type="hidden" name="draft_id" value="{{ $draftId }}">
+          @endif
 
               <div class="row">
                 <!-- Serial No -->
@@ -49,7 +52,7 @@
                 <div class="col-md-3">
                   <div class="form-group">
                     <strong>City</strong>
-                    <input type="text" name="name" value="{{ old('name') }}" class="form-control">
+                    <input type="text" name="name" value="{{ $draftData['name'] ?? old('name') }}" class="form-control">
                     @error('name')
                       <label class="text-danger">{{ $message }}</label>
                     @enderror
@@ -58,7 +61,12 @@
 
                 <!-- Buttons -->
                 <div class="col-md-6 mt-4 text-right">
-                  <button type="submit" class="btn btn-primary">Save</button>
+                  <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                    <i class="icon-save"></i> Draft
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="icon-check"></i> Save
+                  </button>
                   <a href="{{ route('admin.cities.index') }}" class="btn btn-warning">Cancel</a>                  
                 </div>
               </div>

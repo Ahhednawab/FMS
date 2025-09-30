@@ -20,6 +20,7 @@ class CustomLoginController extends Controller
             'password' => 'required',
         ]);
 
+ 
         if (Auth::attempt([
             'email' => $request->email,
             'password' => $request->password,
