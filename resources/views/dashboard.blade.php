@@ -136,9 +136,7 @@
 
 @livewireScripts
 
-<script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
-<script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
+       <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
 
 <script>
     let dataTablesInitialized = false;
