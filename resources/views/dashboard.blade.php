@@ -2,6 +2,55 @@
 
 @section('title', 'Dashboard')
 
+@livewireStyles
+
+<style>
+    .content-wrapper {
+        overflow-y: auto;
+        height: calc(100vh - 60px);
+    }
+    
+    .page-content {
+        min-height: 100%;
+        overflow-y: auto;
+    }
+    
+    .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .dataTables_wrapper {
+        overflow-x: auto;
+    }
+    
+    .dataTables_paginate {
+        margin-top: 10px;
+    }
+    
+    .table td, .table th {
+        white-space: nowrap;
+        word-wrap: break-word;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .table td:hover, .table th:hover {
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: none;
+    }
+    
+    .navbar-collapse {
+        display: block !important;
+    }
+    
+    .navbar-nav {
+        flex-direction: row;
+    }
+</style>
+
 @section('content')
 <div class="page-content">
     <!-- Page Header -->
@@ -16,7 +65,8 @@
     <!-- /Page Header -->
 
     <!-- Main Content -->
-    <div class="content">
+    <div class="content" style="overflow-y: auto; max-height: calc(100vh - 200px);">
+        <!-- Summary Cards -->
         <div class="row">
             <!-- Card 1 -->
             <div class="col-lg-4">
@@ -67,7 +117,122 @@
                 </div>
             </div>
         </div>
+
+        <!-- Live Data Tables -->
+        <div class="row mt-4">
+            <!-- Drivers Table -->
+            <div class="col-lg-6">
+                @livewire('expired-drivers-table')
+            </div>
+
+            <!-- Vehicles Table -->
+            <div class="col-lg-6">
+                @livewire('expired-vehicles-table')
+            </div>
+        </div>
     </div>
     <!-- /Main Content -->
 </div>
+
+@livewireScripts
+
+       <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
+
+<script>
+    let dataTablesInitialized = false;
+
+    function initializeDataTables() {
+        // Only initialize if not already initialized
+        if (dataTablesInitialized) {
+            return;
+        }
+
+        // Check if tables exist
+        if ($('#drivers-table').length === 0 || $('#vehicles-table').length === 0) {
+            return;
+        }
+
+        // Initialize DataTables for drivers table
+        $('#drivers-table').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            "responsive": true,
+            "autoWidth": false,
+            "order": [[0, "asc"]],
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "columnDefs": [
+                { "width": "10%", "targets": 0 },
+                { "width": "25%", "targets": 1 },
+                { "width": "15%", "targets": 2 },
+                { "width": "30%", "targets": 3 },
+                { "width": "20%", "targets": 4 }
+            ],
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "No entries found",
+                "infoFiltered": "(filtered from _MAX_ total entries)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            }
+        });
+
+        // Initialize DataTables for vehicles table
+        $('#vehicles-table').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            "responsive": true,
+            "autoWidth": false,
+            "order": [[0, "asc"]],
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "columnDefs": [
+                { "width": "10%", "targets": 0 },
+                { "width": "20%", "targets": 1 },
+                { "width": "15%", "targets": 2 },
+                { "width": "15%", "targets": 3 },
+                { "width": "15%", "targets": 4 },
+                { "width": "15%", "targets": 5 },
+                { "width": "10%", "targets": 6 }
+            ],
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "No entries found",
+                "infoFiltered": "(filtered from _MAX_ total entries)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            }
+        });
+
+        dataTablesInitialized = true;
+    }
+
+    $(document).ready(function () {
+        // Initialize DataTables after a short delay to ensure Livewire components are loaded
+        setTimeout(function() {
+            initializeDataTables();
+        }, 2000);
+    });
+
+    // Only initialize once when Livewire loads
+    document.addEventListener('livewire:load', function () {
+        setTimeout(function() {
+            initializeDataTables();
+        }, 1000);
+    });
+</script>
 @endsection
