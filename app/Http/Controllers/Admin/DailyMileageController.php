@@ -23,22 +23,15 @@ class DailyMileageController extends Controller
             });
         }
 
-        // Apply date range with defaults:
-        // - from_date: first day of current month if not provided
-        // - to_date: today if not provided
-        $fromDate = $request->filled('from_date')
-            ? \Carbon\Carbon::parse($request->from_date)
-            : \Carbon\Carbon::now()->startOfMonth();
-        $toDate = $request->filled('to_date')
-            ? \Carbon\Carbon::parse($request->to_date)
-            : \Carbon\Carbon::now();
+        $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
+        $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
 
-        $query->whereDate('report_date', '>=', $fromDate->toDateString());
-        $query->whereDate('report_date', '<=', $toDate->toDateString());
+        $query->whereBetween('report_date', [
+            $fromDate->toDateString(),
+            $toDate->toDateString(),
+        ]);
         
         $dailyMileages = $query->where('is_active',1)
-            // ->whereRaw('MONTH(report_date) = MONTH(CURRENT_DATE())')
-            // ->whereRaw('YEAR(report_date) = YEAR(CURRENT_DATE())')
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
@@ -125,15 +118,15 @@ class DailyMileageController extends Controller
 
                 $vehicle_id = $vehicle_ids[$index] ?? null;
                 if ($vehicle_id && isset($current_km)) {
-                    $last = \App\Models\DailyMileageReport::where('vehicle_id', $vehicle_id)
+                    $last = DailyMileageReport::where('vehicle_id', $vehicle_id)
                         ->where('is_active', 1)
                         ->orderBy('report_date', 'desc')
                         ->orderBy('id', 'desc')
                         ->first();
 
                     if ($last) {
-                        if ($report_date && \Carbon\Carbon::parse($report_date)->lt(\Carbon\Carbon::parse($last->report_date))) {
-                            $lastDateFormatted = \Carbon\Carbon::parse($last->report_date)->format('d-M-Y');
+                        if ($report_date && Carbon::parse($report_date)->lt(Carbon::parse($last->report_date))) {
+                            $lastDateFormatted = Carbon::parse($last->report_date)->format('d-M-Y');
                             $validator->errors()->add("current_km.$index", "Report date cannot be earlier than last date ($lastDateFormatted) for this vehicle.");
                         }
 
