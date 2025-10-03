@@ -216,10 +216,6 @@ class DailyFuelController extends Controller
 
     public function show(DailyFuelReport $dailyFuel)
     {
-        // echo "<pre>";
-        // print_r($dailyFuel);
-        // echo "</pre>";
-        // return;
         return view('admin.dailyFuels.show', compact('dailyFuel'));
     }
 
