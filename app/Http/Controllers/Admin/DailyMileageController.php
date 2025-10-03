@@ -23,17 +23,22 @@ class DailyMileageController extends Controller
             });
         }
 
-        if ($request->filled('from_date')) {
-            $query->whereDate('report_date', '>=', $request->from_date);
-        }
+        // Apply date range with defaults:
+        // - from_date: first day of current month if not provided
+        // - to_date: today if not provided
+        $fromDate = $request->filled('from_date')
+            ? \Carbon\Carbon::parse($request->from_date)
+            : \Carbon\Carbon::now()->startOfMonth();
+        $toDate = $request->filled('to_date')
+            ? \Carbon\Carbon::parse($request->to_date)
+            : \Carbon\Carbon::now();
 
-        if ($request->filled('to_date')) {
-            $query->whereDate('report_date', '<=', $request->to_date);
-        }
+        $query->whereDate('report_date', '>=', $fromDate->toDateString());
+        $query->whereDate('report_date', '<=', $toDate->toDateString());
         
         $dailyMileages = $query->where('is_active',1)
-            ->whereRaw('MONTH(report_date) = MONTH(CURRENT_DATE())')
-            ->whereRaw('YEAR(report_date) = YEAR(CURRENT_DATE())')
+            // ->whereRaw('MONTH(report_date) = MONTH(CURRENT_DATE())')
+            // ->whereRaw('YEAR(report_date) = YEAR(CURRENT_DATE())')
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
@@ -172,7 +177,7 @@ class DailyMileageController extends Controller
     
         $months = [];
 
-        for ($i = 0; $i <= 3; $i++) {
+            for ($i = 0; $i <= 3; $i++) {
             $months[] = date("F", strtotime("-$i months"));
         }
 
