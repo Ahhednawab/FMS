@@ -59,24 +59,26 @@
               </select>
             </div>
           </div>
-          @php
-          use Carbon\Carbon;
 
-          $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
-          $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
+          @php
+            use Carbon\Carbon;
+            
+            $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
+            $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
           @endphp
+          
           <!--From Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>From</strong></label>
-              <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}">
+              <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}" max="{{ date('Y-m-d') }}">
             </div>
           </div>   
           <!--To Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>To</strong></label>
-              <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}">
+              <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}" max="{{ date('Y-m-d') }}">
             </div>
           </div> 
           <div class="col-md-3 mt-4">
@@ -91,6 +93,7 @@
         
       </div>
     </div>
+    
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
@@ -99,6 +102,7 @@
           <thead>
             <tr>  
               <th>Vehicle No</th>
+              <th>Station</th>
               <th>Report Date</th>
               <th>Previous Kms</th>
               <th>Current Kms</th>
@@ -110,6 +114,7 @@
             @foreach($dailyMileages as $key => $value)
               <tr>
                 <td>{{$value->vehicle->vehicle_no}}</td>
+                <td>{{$value->vehicle->station->area}}</td>
                 <td>{{ \Carbon\Carbon::parse($value->report_date)->format('d-M-Y') }}</td>
                 <td>{{$value->previous_km}} Km</td>
                 <td>{{$value->current_km}} Km</td>

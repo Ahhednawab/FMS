@@ -23,13 +23,13 @@
           <!-- Vehicle No -->
           <div class="col-md-3">
             <div class="form-group">
-                <label class="form-label"><strong>Vehicle No</strong></label>
-                <select class="custom-select select2" name="vehicle_id" id="vehicle_no">
+              <label class="form-label"><strong>Vehicle No</strong></label>
+              <select class="custom-select select2" name="vehicle_id" id="vehicle_no">
                 <option value="">--Select--</option>
                 @foreach($vehicles as $value)
                     <option value="{{$value->vehicle_no}}" {{ request('vehicle_id') == $value->vehicle_no ? 'selected' : '' }}>{{$value->vehicle_no}}</option>
                 @endforeach
-                </select>
+              </select>
             </div>
           </div>
           @php
@@ -42,14 +42,14 @@
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>From</strong></label>
-              <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}">
+              <input type="date" class="form-control" name="from_date" value="{{ request('from_date') }}" max="{{ date('Y-m-d') }}">
             </div>
           </div>   
           <!--To Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>To</strong></label>
-              <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}">
+              <input type="date" class="form-control" name="to_date" value="{{ request('to_date') }}" max="{{ date('Y-m-d') }}">
             </div>
           </div> 
           <div class="col-md-3 mt-4">
