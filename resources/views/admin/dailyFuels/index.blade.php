@@ -50,22 +50,30 @@
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
-              <th>Serial no</th>
-              <th>Vehicle No</th>
-              <th>Date</th>
-              <th class="text-center">Current Km</th>
-              <th class="text-center">Fuel Taken</th>
+              <th>Vehicle</th>
+              <th>Station</th>
+              <th>Report Date</th>
+              <th>Previous KM</th>
+              <th>Current KM</th>
+              <th>Mileage</th>
+              <th>Fuel Taken</th>
+              <th>Fuel Avg.</th>
+              <th>AKPL</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             @foreach($dailyFuels as $key => $value)
               <tr>
-                <td>{{$value->serial_no}}</td>
-                <td>{{$value->vehicle?->vehicle_no}}</td>
-                <td>{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
-                <td class="text-center">{{$value->current_km}} Km</td>
-                <td class="text-center">{{$value->fuel_taken}} Litre</td>
+                <td>{{$value->vehicle->vehicle_no}}</td>
+                <td>{{$value->vehicle->station->area}}</td>
+                <td>{{ \Carbon\Carbon::parse($value->report_date)->format('d-M-Y') }}</td>
+                <td class="text-center">{{$value->previous_km}} KM</td>
+                <td class="text-center">{{$value->current_km}} KM</td>
+                <td class="text-center">{{$value->mileage}} KM</td>
+                <td class="text-center">{{$value->fuel_taken}} Ltr</td>
+                <td class="text-center">{{$value->fuel_average}} KM/Ltr</td>
+                <td class="text-center">{{$value->vehicle->akpl}} KM/Ltr</td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">
@@ -91,7 +99,7 @@
                   </div>
                 </td>
               </tr>
-            @endforeach            
+            @endforeach     
           </tbody>
         </table>
       </div>

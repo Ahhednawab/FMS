@@ -101,7 +101,7 @@
         <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>  
-              <th>Vehicle No</th>
+              <th>Vehicle</th>
               <th>Station</th>
               <th>Report Date</th>
               <th>Previous Kms</th>

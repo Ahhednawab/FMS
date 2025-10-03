@@ -9,3 +9,21 @@ ALTER TABLE drivers ADD COLUMN shift_timing_id INT(11) NULL AFTER vehicle_id;
 
 
 ALTER TABLE vehicles ADD COLUMN kilometer INT DEFAULT 0 NOT NULL AFTER tax_file; 
+
+
+DROP TABLE IF EXISTS daily_fuel_reports;
+
+CREATE TABLE daily_fuel_reports (
+  id bigint unsigned NOT NULL AUTO_INCREMENT,
+  vehicle_id int NOT NULL,
+  report_date date NOT NULL,
+  previous_km bigint NOT NULL,
+  current_km bigint NOT NULL,
+  mileage bigint NOT NULL,
+  fuel_taken float NOT NULL,
+  fuel_average float NOT NULL,
+  is_active int NOT NULL DEFAULT '1' COMMENT '0=inactive, 1=active',
+  created_at timestamp NULL DEFAULT NULL,
+  updated_at timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
