@@ -37,14 +37,14 @@
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>From</strong></label>
-              <input type="date" class="form-control" name="from_date" value="{{ request('from_date')}}">
+              <input type="date" class="form-control" name="from_date" value="{{ request('from_date')}}" max="{{ date('Y-m-d') }}">
             </div>
           </div>   
           <!--To Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>To</strong></label>
-              <input type="date" class="form-control" name="to_date" value="{{ request('to_date') }}">
+              <input type="date" class="form-control" name="to_date" value="{{ request('to_date') }}" max="{{ date('Y-m-d') }}">
             </div>
           </div> 
           <div class="col-md-3 mt-4">

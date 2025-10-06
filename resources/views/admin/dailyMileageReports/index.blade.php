@@ -32,12 +32,7 @@
               </select>
             </div>
           </div>
-          @php
-          use Carbon\Carbon;
-
-          $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
-          $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
-          @endphp
+          
           <!--From Date -->
           <div class="col-md-3">
             <div class="form-group">
