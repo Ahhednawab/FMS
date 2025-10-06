@@ -10,12 +10,13 @@ use App\Models\Vehicle;
 use App\Models\MaritalStatus;
 use App\Models\LicenseCategory;
 use App\Models\ShiftTimings;
-
-
+use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class DriverController extends Controller
 {
+    use DraftTrait;
     public function index()
     {
         $drivers = Driver::with(['driverStatus','vehicle','maritalStatus','licenseCategory','shiftTiming'])
@@ -30,7 +31,7 @@ class DriverController extends Controller
         return view('admin.drivers.index', compact('drivers'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $serial_no = Driver::GetSerialNumber();
         $driver_status = DriverStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -78,11 +79,42 @@ class DriverController extends Controller
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings'));
+        $draftInfo = $this->getDraftDataForView($request, 'drivers');
+        
+        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings') + $draftInfo);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'drivers')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+        // If coming from a draft, relax file requirements when already attached in draft
+        $draftAttached = [
+            'cnic_file' => false,
+            'eobi_card_file' => false,
+            'picture_file' => false,
+            'medical_report_file' => false,
+            'authority_letter_file' => false,
+            'employee_card_file' => false,
+            'ddc_file' => false,
+            'third_party_driver_file' => false,
+            'license_file' => false,
+        ];
+        $draft = null;
+        if ($request->filled('draft_id')) {
+            $draft = \App\Models\Draft::where('id', $request->draft_id)
+                ->where('created_by', auth()->id())
+                ->where('module', 'drivers')
+                ->first();
+            if ($draft && is_array($draft->file_info)) {
+                foreach ($draftAttached as $field => $v) {
+                    $draftAttached[$field] = isset($draft->file_info[$field]);
+                }
+            }
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -99,21 +131,21 @@ class DriverController extends Controller
                 'shift_timing_id' =>  'required|exists:shift_timing,id',
                 'cnic_no' =>  'required|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
-                'cnic_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'cnic_file' =>  ($draftAttached['cnic_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 // 'eobi_no' =>  'required',
                 // 'eobi_start_date' =>  'required',
                 // 'eobi_card_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'picture_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'picture_file' =>  ($draftAttached['picture_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 // 'medical_report_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'authority_letter_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'authority_letter_file' =>  ($draftAttached['authority_letter_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'employment_date' =>  'required|date',
-                'employee_card_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'ddc_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'employee_card_file' =>  ($draftAttached['employee_card_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'ddc_file' =>  ($draftAttached['ddc_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'license_no' =>  'required',
                 'license_category_id' =>  'required',
                 'license_expiry_date' =>  'required|date',
-                'license_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'license_file' =>  ($draftAttached['license_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'uniform_issue_date'    =>  'required|date',
                 'sandal_issue_date'    =>  'required|date',
                 'address' =>  'required',
@@ -295,6 +327,59 @@ class DriverController extends Controller
         }
 
         $driver->save();
+
+        // If this submission came from a draft and some files were not re-uploaded,
+        // move existing draft files to permanent uploads and attach to the driver
+        if ($request->filled('draft_id')) {
+            $draft = \App\Models\Draft::where('id', $request->draft_id)
+                ->where('created_by', auth()->id())
+                ->where('module', 'drivers')
+                ->first();
+            if ($draft && is_array($draft->file_info)) {
+                $map = [
+                    'cnic_file' => 'cnic_file',
+                    'eobi_card_file' => 'eobi_card_file',
+                    'picture_file' => 'picture_file',
+                    'medical_report_file' => 'medical_report_file',
+                    'authority_letter_file' => 'authority_letter_file',
+                    'employee_card_file' => 'employee_card_file',
+                    'ddc_file' => 'ddc_file',
+                    'third_party_driver_file' => 'third_party_driver_file',
+                    'license_file' => 'license_file',
+                ];
+                $permanentDir = public_path('uploads/drivers');
+                if (!file_exists($permanentDir)) {
+                    @mkdir($permanentDir, 0755, true);
+                }
+                $updated = false;
+                foreach ($map as $field => $attr) {
+                    // Skip if user uploaded a new file already
+                    if (!empty($driver->{$attr})) { continue; }
+                    $info = $draft->file_info[$field] ?? null;
+                    if (!$info || empty($info['path'])) { continue; }
+                    $draftFull = public_path($info['path']);
+                    if (!file_exists($draftFull)) { continue; }
+                    $ext = pathinfo($draftFull, PATHINFO_EXTENSION);
+                    $filename = time() . '_' . $field . '.' . $ext;
+                    $dest = $permanentDir . DIRECTORY_SEPARATOR . $filename;
+                    @rename($draftFull, $dest);
+                    if (!file_exists($dest)) {
+                        @File::copy($draftFull, $dest);
+                        @unlink($draftFull);
+                    }
+                    if (file_exists($dest)) {
+                        $driver->{$attr} = $filename;
+                        $updated = true;
+                    }
+                }
+                if ($updated) {
+                    $driver->save();
+                }
+            }
+        }
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'drivers');
 
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully.');
     }

@@ -24,8 +24,11 @@
       <div class="col-lg-12">
         <div class="card">
           <div class="card-body">
-            <form method="POST" action="{{ route('admin.stations.store') }}">
+            <form method="POST" action="{{ route('admin.stations.store') }}" enctype="multipart/form-data">
               @csrf
+              @if(isset($draftId))
+                <input type="hidden" name="draft_id" value="{{ $draftId }}">
+              @endif
 
               <div class="row">
                 <!-- Serial No -->
@@ -40,7 +43,7 @@
                 <div class="col-md-3">
                   <div class="form-group">
                     <strong>Area</strong>
-                    <input type="text" name="area" class="form-control" value="{{ old('area') }}">
+                    <input type="text" name="area" class="form-control" value="{{ $draftData['area'] ?? old('area') }}">
                     @if ($errors->has('area'))
                       <label class="text-danger">{{ $errors->first('area') }}</label>
                     @endif
@@ -51,7 +54,12 @@
                 <div class="col-md-6">
                   <label for=""></label>
                   <div class="text-right">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                      <i class="icon-save"></i> Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="icon-check"></i> Save
+                    </button>
                     <a href="{{ route('admin.stations.index') }}" class="btn btn-warning">Cancel</a>
                   </div>
                 </div>

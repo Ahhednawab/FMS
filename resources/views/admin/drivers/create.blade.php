@@ -34,6 +34,9 @@
       <div class="card-body">
         <form action="{{ route('admin.drivers.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
+          @if(isset($draftId))
+            <input type="hidden" name="draft_id" value="{{ $draftId }}">
+          @endif
           
           <div class="row">
             <!-- Serial No -->
@@ -48,7 +51,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Full Name</strong>
-                <input type="text" name="full_name" class="form-control" value="{{ old('full_name') }}">
+                <input type="text" name="full_name" class="form-control" value="{{ $draftData['full_name'] ?? old('full_name') }}">
                 @if ($errors->has('full_name'))
                   <label class="text-danger">{{ $errors->first('full_name') }}</label>
                 @endif
@@ -59,7 +62,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Father Name</strong>
-                <input type="text" name="father_name" class="form-control" value="{{ old('father_name') }}">
+                <input type="text" name="father_name" class="form-control" value="{{ $draftData['father_name'] ?? old('father_name') }}">
                 @if ($errors->has('father_name'))
                   <label class="text-danger">{{ $errors->first('father_name') }}</label>
                 @endif
@@ -70,7 +73,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Mother Name</strong>
-                <input type="text" name="mother_name" class="form-control" value="{{ old('mother_name') }}">
+                <input type="text" name="mother_name" class="form-control" value="{{ $draftData['mother_name'] ?? old('mother_name') }}">
                 @if ($errors->has('mother_name'))
                   <label class="text-danger">{{ $errors->first('mother_name') }}</label>
                 @endif
@@ -83,7 +86,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Cell Phone No</strong>
-                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
+                <input type="text" name="phone" id="phone" class="form-control" value="{{ $draftData['phone'] ?? old('phone') }}">
                 @if ($errors->has('phone'))
                   <label class="text-danger">{{ $errors->first('phone') }}</label>
                 @endif
@@ -94,7 +97,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Salary</strong>
-                <input type="number" min="0" step="1" name="salary" class="form-control" value="{{ old('salary') }}">
+                <input type="number" min="0" step="1" name="salary" class="form-control" value="{{ $draftData['salary'] ?? old('salary') }}">
                 @if ($errors->has('salary'))
                   <label class="text-danger">{{ $errors->first('salary') }}</label>
                 @endif
@@ -105,7 +108,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Account No.</strong>
-                <input type="text" name="account_no" class="form-control" value="{{ old('account_no') }}">
+                <input type="text" name="account_no" class="form-control" value="{{ $draftData['account_no'] ?? old('account_no') }}">
                 @if ($errors->has('account_no'))
                   <label class="text-danger">{{ $errors->first('account_no') }}</label>
                 @endif
@@ -119,7 +122,7 @@
                 <select class="custom-select" name="driver_status_id">
                   <option value="">Select Status</option>
                   @foreach($driver_status as $key => $value)
-                    <option value="{{$key}}" {{ old('driver_status_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['driver_status_id'] ?? old('driver_status_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('driver_status_id'))
@@ -137,7 +140,7 @@
                 <select class="custom-select" name="marital_status_id">
                   <option value="">Select Status</option>
                   @foreach($marital_status as $key => $value)
-                    <option value="{{$key}}" {{ old('marital_status_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['marital_status_id'] ?? old('marital_status_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('marital_status_id'))
@@ -150,7 +153,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>DOB</strong>
-                <input type="date" name="dob" class="form-control" value="{{ old('dob') }}">
+                <input type="date" name="dob" class="form-control" value="{{ $draftData['dob'] ?? old('dob') }}">
                 @if ($errors->has('dob'))
                   <label class="text-danger">{{ $errors->first('dob') }}</label>
                 @endif
@@ -164,7 +167,7 @@
                 <select class="custom-select select2 vehicle" id="vehicle_id" name="vehicle_id">
                   <option value="">--Select--</option>
                   @foreach($vehicles as $key => $value)
-                    <option value="{{$key}}" {{ old('vehicle_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['vehicle_id'] ?? old('vehicle_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('vehicle_id'))
@@ -180,7 +183,7 @@
                 <select class="form-control " id="shift_timing_id" name="shift_timing_id">
                   <option value="">--Select--</option>
                   @foreach($shift_timings as $key => $value)
-                    <option value="{{$key}}" {{ old('shift_timing_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['shift_timing_id'] ?? old('shift_timing_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('shift_timing_id'))
@@ -196,7 +199,7 @@
               <div class="form-group">
                 <strong>CNIC No</strong>
                 {{-- <input type="text" name="cnic_no" id="cnic_no" class="form-control" value="{{ old('cnic_no') }}"> --}}
-                <input type="text" name="cnic_no" class="form-control" id="cnic_no" value="{{ old('cnic_no') }}">
+                <input type="text" name="cnic_no" class="form-control" id="cnic_no" value="{{ $draftData['cnic_no'] ?? old('cnic_no') }}">
 
 
                 @if ($errors->has('cnic_no'))
@@ -209,7 +212,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>CNIC Expiry Date</strong>
-                <input type="date" name="cnic_expiry_date" class="form-control" value="{{ old('cnic_expiry_date') }}">
+                <input type="date" name="cnic_expiry_date" class="form-control" value="{{ $draftData['cnic_expiry_date'] ?? old('cnic_expiry_date') }}">
                 @if ($errors->has('cnic_expiry_date'))
                   <label class="text-danger">{{ $errors->first('cnic_expiry_date') }}</label>
                 @endif
@@ -224,6 +227,15 @@
                 @if ($errors->has('cnic_file'))
                   <label class="text-danger">{{ $errors->first('cnic_file') }}</label>
                 @endif
+                @if(isset($draftData['file_info']['cnic_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['cnic_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['cnic_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['cnic_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('cnic_file', this)">×</button>
+                  </div>
+                @endif
               </div>
             </div>
           </div>
@@ -233,7 +245,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>EOBI No</strong>
-                <input type="text" name="eobi_no" class="form-control" value="{{ old('eobi_no') }}">
+                <input type="text" name="eobi_no" class="form-control" value="{{ $draftData['eobi_no'] ?? old('eobi_no') }}">
                 @if ($errors->has('eobi_no'))
                   <label class="text-danger">{{ $errors->first('eobi_no') }}</label>
                 @endif
@@ -244,7 +256,16 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>EOBI Start Date</strong>
-                <input type="date" name="eobi_start_date" class="form-control" value="{{ old('eobi_start_date') }}">
+                <input type="date" name="eobi_start_date" class="form-control" value="{{ $draftData['eobi_start_date'] ?? old('eobi_start_date') }}">
+                @if(isset($draftData['file_info']['eobi_card_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['eobi_card_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['eobi_card_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['eobi_card_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('eobi_card_file', this)">×</button>
+                  </div>
+                @endif
                 @if ($errors->has('eobi_start_date'))
                   <label class="text-danger">{{ $errors->first('eobi_start_date') }}</label>
                 @endif
@@ -272,6 +293,24 @@
                 @if ($errors->has('picture_file'))
                   <label class="text-danger">{{ $errors->first('picture_file') }}</label>
                 @endif
+                @if(isset($draftData['file_info']['picture_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['picture_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['picture_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['picture_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('picture_file', this)">×</button>
+                  </div>
+                @endif
+                @if(isset($draftData['file_info']['medical_report_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['medical_report_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['medical_report_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['medical_report_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('medical_report_file', this)">×</button>
+                  </div>
+                @endif
               </div>
             </div>
 
@@ -294,6 +333,15 @@
                 @if ($errors->has('authority_letter_file'))
                   <label class="text-danger">{{ $errors->first('authority_letter_file') }}</label>
                 @endif
+                @if(isset($draftData['file_info']['authority_letter_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['authority_letter_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['authority_letter_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['authority_letter_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('authority_letter_file', this)">×</button>
+                  </div>
+                @endif
               </div>
             </div>
           </div>
@@ -303,7 +351,34 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Employment Date</strong>
-                <input type="date" name="employment_date" class="form-control" value="{{ old('employment_date') }}">
+                <input type="date" name="employment_date" class="form-control" value="{{ $draftData['employment_date'] ?? old('employment_date') }}">
+                @if(isset($draftData['file_info']['employee_card_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['employee_card_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['employee_card_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['employee_card_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('employee_card_file', this)">×</button>
+                  </div>
+                @endif
+                @if(isset($draftData['file_info']['ddc_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['ddc_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['ddc_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['ddc_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('ddc_file', this)">×</button>
+                  </div>
+                @endif
+                @if(isset($draftData['file_info']['third_party_driver_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['third_party_driver_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['third_party_driver_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['third_party_driver_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('third_party_driver_file', this)">×</button>
+                  </div>
+                @endif
                 @if ($errors->has('employment_date'))
                   <label class="text-danger">{{ $errors->first('employment_date') }}</label>
                 @endif
@@ -349,7 +424,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>License No</strong>
-                <input type="text" name="license_no" class="form-control" value="{{ old('license_no') }}">
+                <input type="text" name="license_no" class="form-control" value="{{ $draftData['license_no'] ?? old('license_no') }}">
                 @if ($errors->has('license_no'))
                   <label class="text-danger">{{ $errors->first('license_no') }}</label>
                 @endif
@@ -363,7 +438,7 @@
                 <select class="custom-select" name="license_category_id">
                   <option value="">Select Category</option>
                   @foreach($licence_category as $key => $value)
-                    <option value="{{$key}}" {{ old('license_category_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['license_category_id'] ?? old('license_category_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('license_category_id'))
@@ -376,7 +451,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>License Expiry Date</strong>
-                <input type="date" name="license_expiry_date" class="form-control" value="{{ old('license_expiry_date') }}">
+                <input type="date" name="license_expiry_date" class="form-control" value="{{ $draftData['license_expiry_date'] ?? old('license_expiry_date') }}">
                 @if ($errors->has('license_expiry_date'))
                   <label class="text-danger">{{ $errors->first('license_expiry_date') }}</label>
                 @endif
@@ -391,6 +466,15 @@
                 @if ($errors->has('license_file'))
                   <label class="text-danger">{{ $errors->first('license_file') }}</label>
                 @endif
+                @if(isset($draftData['file_info']['license_file']))
+                  <div class="mt-2 d-flex align-items-center">
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['license_file']['path'])) }}" target="_blank" class="text-success mr-2" title="View">
+                      <i class="icon-file"></i> {{ $draftData['file_info']['license_file']['original_name'] }}
+                    </a>
+                    <span class="text-muted mr-2">({{ number_format(($draftData['file_info']['license_file']['size'] ?? 0) / 1024, 1) }} KB)</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove" onclick="removeDraftFile('license_file', this)">×</button>
+                  </div>
+                @endif
               </div>
             </div>
           </div>
@@ -400,7 +484,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Uniform Issue Date</strong>
-                <input type="date" name="uniform_issue_date" class="form-control" value="{{ old('uniform_issue_date') }}">
+                <input type="date" name="uniform_issue_date" class="form-control" value="{{ $draftData['uniform_issue_date'] ?? old('uniform_issue_date') }}">
                 @if ($errors->has('uniform_issue_date'))
                   <label class="text-danger">{{ $errors->first('uniform_issue_date') }}</label>
                 @endif
@@ -411,7 +495,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Sandal Issue Date</strong>
-                <input type="date" name="sandal_issue_date" class="form-control" value="{{ old('sandal_issue_date') }}">
+                <input type="date" name="sandal_issue_date" class="form-control" value="{{ $draftData['sandal_issue_date'] ?? old('sandal_issue_date') }}">
                 @if ($errors->has('sandal_issue_date'))
                   <label class="text-danger">{{ $errors->first('sandal_issue_date') }}</label>
                 @endif
@@ -422,7 +506,7 @@
             <div class="col-md-4">
               <div class="form-group">
                 <strong>Address</strong>
-                <input type="text" name="address" class="form-control" value="{{ old('address') }}">
+                <input type="text" name="address" class="form-control" value="{{ $draftData['address'] ?? old('address') }}">
                 @if ($errors->has('address'))
                   <label class="text-danger">{{ $errors->first('address') }}</label>
                 @endif
@@ -430,10 +514,15 @@
             </div>
 
             <!-- Buttons -->
-            <div class="col-md-2">
+            <div class="col-md-12">
               <label for=""></label>
               <div class="text-right">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                  <i class="icon-save"></i> Draft
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="icon-check"></i> Save
+                </button>
                 <a href="{{ route('admin.drivers.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>

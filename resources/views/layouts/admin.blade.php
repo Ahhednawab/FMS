@@ -24,6 +24,7 @@
 
     <script src="{{ asset('assets/js/app.js') }}"></script>
     <script src="{{ asset('assets/js/demo_pages/dashboard.js') }}"></script>
+    <script src="{{ asset('assets/js/draft.js') }}"></script>
 </head>
 <body>
 

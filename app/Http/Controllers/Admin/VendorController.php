@@ -6,25 +6,34 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Vendor;
 use App\Models\VendorType;
-
 use App\Models\City;
+use App\Traits\DraftTrait;
 
 class VendorController extends Controller
 {
+    use DraftTrait;
     public function index(){
     	$vendors = Vendor::with(['city','vendorType'])->where('is_active',1)->orderBy('id','DESC')->get();
     	return view('admin.vendors.index', compact('vendors'));
     }
 
-    public function create(){
+    public function create(Request $request){
     	$serial_no = Vendor::GetSerialNumber();
         $vendor_types = VendorType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $cities = City::where('is_active',1)->orderBy('name','ASC')->get();
-    	return view('admin.vendors.create',compact('serial_no','vendor_types','cities'));
+        
+        $draftInfo = $this->getDraftDataForView($request, 'vendors');
+        
+    	return view('admin.vendors.create', compact('serial_no','vendor_types','cities') + $draftInfo);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'vendors')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -56,6 +65,9 @@ class VendorController extends Controller
         $vendor->city_id        =   $request->city_id;
         $vendor->description    =   $request->description;
         $vendor->save();
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'vendors');
 
     	return redirect()->route('admin.vendors.index')->with('success', 'Vendor created successfully.');
     }

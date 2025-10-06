@@ -29,6 +29,9 @@
 					<div class="card-body">
 						<form action="{{ route('admin.warehouses.store') }}" method="POST">
 							@csrf
+							@if(isset($draftId))
+								<input type="hidden" name="draft_id" value="{{ $draftId }}">
+							@endif
 
 							<div class="row">
 								<!-- Serial No -->
@@ -43,7 +46,7 @@
                 <div class="col-md-3">
 									<div class="form-group">
 										<strong>Warehouse Name</strong>
-										<input type="text" name="name" class="form-control" value="{{ old('name') }}">
+										<input type="text" name="name" class="form-control" value="{{ $draftData['name'] ?? old('name') }}">
 										@if ($errors->has('name'))
                       <label class="text-danger">{{ $errors->first('name') }}</label>
                     @endif
@@ -57,7 +60,7 @@
                     <select name="station_id" id="station_id" class="form-control">
                       <option value="">--Select--</option>
                       @foreach($stations as $key => $value)
-                        <option value="{{ $key }}" {{ old('station_id') == $key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ ($draftData['station_id'] ?? old('station_id')) == $key ? 'selected' : '' }}>
                           {{ $value }}
                         </option>
                       @endforeach
@@ -75,7 +78,7 @@
 										<select name="manager_id" id="manager_id" class="form-control">
                       <option value="">--Select--</option>
                       @foreach($managers as $key => $value)
-                        <option value="{{ $key }}" {{ old('manager_id') == $key ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ ($draftData['manager_id'] ?? old('manager_id')) == $key ? 'selected' : '' }}>
                           {{ $value }}
                         </option>
                       @endforeach
@@ -92,7 +95,12 @@
                 <div class="col-md-12">
                   <label for=""></label>
                   <div class="text-right">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
+                      <i class="icon-save"></i> Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="icon-check"></i> Save
+                    </button>
                     <a href="{{ route('admin.warehouses.index') }}" class="btn btn-warning">Cancel</a>
                   </div>
                 </div>

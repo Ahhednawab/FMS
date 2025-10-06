@@ -2,25 +2,37 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\City;
+use App\Models\Draft;
+use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class CityController extends Controller
 {
+    use DraftTrait;
     public function index()
     {
         $cities = City::where('is_active',1)->get();
         return view('admin.cities.index', compact('cities'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $serial_no = City::GetSerialNumber();
-        return view('admin.cities.create', compact('serial_no'));
+        
+        $draftInfo = $this->getDraftDataForView($request, 'cities');
+        
+        return view('admin.cities.create', compact('serial_no') + $draftInfo);
     }
 
     public function store(Request $request)
     {
+        // Handle draft saving
+        if ($this->handleDraftSave($request, 'cities')) {
+            return redirect()->back()->with('success', 'Draft saved successfully!');
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -39,6 +51,9 @@ class CityController extends Controller
         $city->serial_no = $request->serial_no;
         $city->name = $request->name;
         $city->save();
+
+        // Delete draft if it exists
+        $this->deleteDraftAfterSuccess($request, 'cities');
 
         return redirect()->route('admin.cities.index')->with('success', 'City created successfully.');
     }
