@@ -14,7 +14,8 @@ class DailyMileageReportController extends Controller
     {
         $query = DB::table('daily_mileage_report as d')
             ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
-            ->select('d.vehicle_id','v.vehicle_no', 
+            ->join('stations as s', 's.id', '=', 'v.station_id')
+            ->select('d.vehicle_id','v.vehicle_no', 's.area as station',
                 DB::raw('MIN(d.report_date) as start_date'),
                 DB::raw('MAX(d.report_date) as end_date'),
                 DB::raw('MIN(d.previous_km) AS start_km'),
