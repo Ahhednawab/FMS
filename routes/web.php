@@ -142,6 +142,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/drafts', [App\Http\Controllers\Admin\DraftController::class, 'index'])->name('drafts.index');
     Route::get('/drafts/{draft}/edit', [App\Http\Controllers\Admin\DraftController::class, 'edit'])->name('drafts.edit');
     Route::delete('/drafts/{draft}', [App\Http\Controllers\Admin\DraftController::class, 'destroy'])->name('drafts.destroy');
+    Route::get('/drafts/download/{path}', [App\Http\Controllers\Admin\DraftController::class, 'downloadFile'])->name('drafts.download');
+    Route::get('/drafts/view/{path}', [App\Http\Controllers\Admin\DraftController::class, 'viewFile'])->name('drafts.view');
+    Route::post('/drafts/{draft}/remove-file', [App\Http\Controllers\Admin\DraftController::class, 'removeFile'])->name('drafts.removeFile');
 });
 
 

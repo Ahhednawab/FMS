@@ -13,10 +13,12 @@ class Draft extends Model
         'created_by',
         'module',
         'data',
+        'file_info',
     ];
 
     protected $casts = [
         'data' => 'array',
+        'file_info' => 'array',
     ];
 
     public function user()

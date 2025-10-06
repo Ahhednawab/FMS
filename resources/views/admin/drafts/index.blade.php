@@ -31,6 +31,7 @@
             <tr>
               <th>ID</th>
               <th>Module</th>
+              <th>Files</th>
               <th>Draft At</th>
               <th class="text-center">Actions</th>
             </tr>
@@ -40,6 +41,25 @@
               <tr>
                 <td>{{ $draft->id }}</td>
                 <td>{{ ucfirst(str_replace('_', ' ', $draft->module)) }}</td>
+                <td>
+                  @if($draft->file_info && count($draft->file_info) > 0)
+                    <span class="badge badge-success">{{ count($draft->file_info) }} file(s)</span>
+                    <div class="mt-1">
+                      @foreach($draft->file_info as $fieldName => $fileInfo)
+                        <small class="text-muted d-block">
+                          <i class="icon-file"></i> 
+                          <a href="{{ route('admin.drafts.view', base64_encode($fileInfo['path'])) }}" 
+                             target="_blank" class="text-primary">
+                            {{ $fileInfo['original_name'] }}
+                          </a>
+                          <span class="text-muted">({{ number_format($fileInfo['size'] / 1024, 1) }} KB)</span>
+                        </small>
+                      @endforeach
+                    </div>
+                  @else
+                    <span class="badge badge-secondary">No files</span>
+                  @endif
+                </td>
                 <td>{{ $draft->updated_at->format('Y-m-d H:i:s') }}</td>
                 <td class="text-center">
                   <div class="list-icons">

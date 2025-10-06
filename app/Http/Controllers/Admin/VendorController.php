@@ -22,9 +22,9 @@ class VendorController extends Controller
         $vendor_types = VendorType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $cities = City::where('is_active',1)->orderBy('name','ASC')->get();
         
-        $draftData = $this->getDraftDataForView($request, 'vendors');
+        $draftInfo = $this->getDraftDataForView($request, 'vendors');
         
-    	return view('admin.vendors.create', compact('serial_no','vendor_types','cities') + $draftData);
+    	return view('admin.vendors.create', compact('serial_no','vendor_types','cities') + $draftInfo);
     }
 
     public function store(Request $request)

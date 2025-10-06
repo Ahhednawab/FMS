@@ -21,9 +21,9 @@ class IbcController extends Controller
     	$serial_no = IbcCenter::GetSerialNumber();
         $stations = Station::where('is_active',1)->orderBy('area','ASC')->pluck('area','id');
         
-        $draftData = $this->getDraftDataForView($request, 'ibc_centers');
+        $draftInfo = $this->getDraftDataForView($request, 'ibc_centers');
         
-        return view('admin.ibcCenters.create', compact('serial_no','stations') + $draftData);
+        return view('admin.ibcCenters.create', compact('serial_no','stations') + $draftInfo);
     }
 
     public function store(Request $request)

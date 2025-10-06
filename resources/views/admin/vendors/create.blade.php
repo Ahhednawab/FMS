@@ -67,7 +67,7 @@
                 <select class="custom-select" name="vendor_type_id">
                   <option value="">Select Type</option>
                   @foreach($vendor_types as $key => $value)
-                    <option value="{{$key}}" {{ old('vendor_type_id') == $key ? 'selected' : '' }}>{{$value}}</option>
+                    <option value="{{$key}}" {{ ($draftData['vendor_type_id'] ?? old('vendor_type_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('vendor_type_id'))
@@ -85,7 +85,7 @@
                 <select class="custom-select" name="city_id">
                   <option value="">Select City</option>
                   @foreach($cities as $key => $value)
-                    <option value="{{$value->id}}" {{ old('city_id') == $value->id ? 'selected' : '' }}>{{$value->name}}</option>
+                    <option value="{{$value->id}}" {{ ($draftData['city_id'] ?? old('city_id')) == $value->id ? 'selected' : '' }}>{{$value->name}}</option>
                   @endforeach
                 </select>
                 @if ($errors->has('city_id'))
@@ -98,7 +98,7 @@
             <div class="col-md-6">
               <div class="form-group">
                 <strong>Description</strong>
-                <textarea class="form-control" name="description" rows="1">{{ old('description') }}</textarea>
+                <textarea class="form-control" name="description" rows="1">{{ $draftData['description'] ?? old('description') }}</textarea>
                 @if ($errors->has('description'))
                   <label class="text-danger">{{ $errors->first('description') }}</label>
                 @endif

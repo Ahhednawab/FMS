@@ -26,9 +26,9 @@ class WarehouseController extends Controller
         $managers = User::where('is_active',1)->where('designation_id',3)->where('is_active',1)->orderBy('name','ASC')->pluck('name','id');
         $stations = Station::where('is_active',1)->orderBy('area','ASC')->pluck('area','id');
 
-        $draftData = $this->getDraftDataForView($request, 'warehouses');
+        $draftInfo = $this->getDraftDataForView($request, 'warehouses');
 
-        return view('admin.warehouses.create', compact('serial_no','managers','stations') + $draftData);
+        return view('admin.warehouses.create', compact('serial_no','managers','stations') + $draftInfo);
     }
 
     public function store(Request $request)

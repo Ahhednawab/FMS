@@ -21,9 +21,9 @@ class CityController extends Controller
     {
         $serial_no = City::GetSerialNumber();
         
-        $draftData = $this->getDraftDataForView($request, 'cities');
+        $draftInfo = $this->getDraftDataForView($request, 'cities');
         
-        return view('admin.cities.create', compact('serial_no') + $draftData);
+        return view('admin.cities.create', compact('serial_no') + $draftInfo);
     }
 
     public function store(Request $request)

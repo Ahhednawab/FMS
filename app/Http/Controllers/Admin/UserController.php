@@ -28,9 +28,9 @@ class UserController extends Controller
         $serial_no = User::GetSerialNumber();
         $designation = Designation::where('is_active',1)->orderBy('designation','ASC')->get();
         
-        $draftData = $this->getDraftDataForView($request, 'users');
+        $draftInfo = $this->getDraftDataForView($request, 'users');
         
-        return view('admin.users.create', compact('serial_no','designation') + $draftData);
+        return view('admin.users.create', compact('serial_no','designation') + $draftInfo);
     }
 
     public function store(Request $request)

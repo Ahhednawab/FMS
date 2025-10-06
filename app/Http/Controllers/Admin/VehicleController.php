@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
+use App\Models\Draft;
 use App\Models\VehicleType;
 use App\Models\Station;
 use App\Models\LadderMaker;
@@ -12,6 +13,7 @@ use App\Models\IbcCenter;
 use App\Models\Vendor;
 use App\Models\ShiftHours;
 use App\Traits\DraftTrait;
+use Illuminate\Support\Facades\File;
 
 class VehicleController extends Controller
 {
@@ -47,9 +49,8 @@ class VehicleController extends Controller
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        $draftData = $this->getDraftDataForView($request, 'vehicles');
-        
-        return view('admin.vehicles.create', compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftData);
+        $draftInfo = $this->getDraftDataForView($request, 'vehicles');
+        return view('admin.vehicles.create', compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -59,9 +60,28 @@ class VehicleController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully!');
         }
 
-        $validator = \Validator::make(
-            $request->all(),
-            [
+        // If coming from a draft, relax file requirements when already attached in draft
+        $draftAttached = [
+            'registration_file' => false,
+            'fitness_file' => false,
+            'insurance_file' => false,
+            'route_permit_file' => false,
+            'tax_file' => false,
+        ];
+        $draft = null;
+        if ($request->filled('draft_id')) {
+            $draft = \App\Models\Draft::where('id', $request->draft_id)
+                ->where('created_by', auth()->id())
+                ->where('module', 'vehicles')
+                ->first();
+            if ($draft && is_array($draft->file_info)) {
+                foreach ($draftAttached as $field => $v) {
+                    $draftAttached[$field] = isset($draft->file_info[$field]);
+                }
+            }
+        }
+
+        $rules = [
                 'vehicle_no'                =>  'required',
                 'make'                      =>  'required',
                 'model'                     =>  'required',
@@ -82,20 +102,24 @@ class VehicleController extends Controller
                 'induction_date'            =>  'required|date',
                 'pso_card'                  =>  'required',
                 'akpl'                      =>  'required',
-                'registration_file'         =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'registration_file'         =>  ($draftAttached['registration_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'fitness_date'              =>  'required|date',
                 'next_fitness_date'         =>  'required|date|after:fitness_date',
-                'fitness_file'              =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'fitness_file'              =>  ($draftAttached['fitness_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'insurance_date'            =>  'required|date',
                 'insurance_expiry_date'     =>  'required|date|after:insurance_date',
-                'insurance_file'            =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'insurance_file'            =>  ($draftAttached['insurance_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'route_permit_date'         =>  'required|date',
                 'route_permit_expiry_date'  =>  'required|date|after:route_permit_date',
-                'route_permit_file'         =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+                'route_permit_file'         =>  ($draftAttached['route_permit_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
                 'tax_date'                  =>  'required|date',
                 'next_tax_date'             =>  'required|date|after:tax_date',
-                'tax_file'                  =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
-            ],
+                'tax_file'                  =>  ($draftAttached['tax_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+        ];
+
+        $validator = \Validator::make(
+            $request->all(),
+            $rules,
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
                 'make.required'                         =>  'Make is required',
@@ -219,6 +243,55 @@ class VehicleController extends Controller
         $vehicle->route_permit_file =   $routePermitFileName;
         $vehicle->tax_file          =   $taxFileName;
         $vehicle->save();
+
+        // If this submission came from a draft and some files were not re-uploaded,
+        // move existing draft files to permanent uploads and attach to the vehicle
+        if ($request->filled('draft_id')) {
+            $draft = Draft::where('id', $request->draft_id)
+                ->where('created_by', auth()->id())
+                ->where('module', 'vehicles')
+                ->first();
+            if ($draft && is_array($draft->file_info)) {
+                $map = [
+                    'registration_file' => 'registration_file',
+                    'fitness_file' => 'fitness_file',
+                    'insurance_file' => 'insurance_file',
+                    'route_permit_file' => 'route_permit_file',
+                    'tax_file' => 'tax_file',
+                ];
+                $permanentDir = public_path('uploads/vehicles');
+                if (!file_exists($permanentDir)) {
+                    @mkdir($permanentDir, 0755, true);
+                }
+                $updated = false;
+                foreach ($map as $field => $attr) {
+                    // Skip if user uploaded a new file already
+                    if (!empty($vehicle->{$attr})) { continue; }
+                    $info = $draft->file_info[$field] ?? null;
+                    if (!$info || empty($info['path'])) { continue; }
+                    $draftFull = public_path($info['path']);
+                    if (!file_exists($draftFull)) { continue; }
+                    // Generate permanent filename preserving field extension
+                    $ext = pathinfo($draftFull, PATHINFO_EXTENSION);
+                    $filename = time() . '_' . $field . '.' . $ext;
+                    $dest = $permanentDir . DIRECTORY_SEPARATOR . $filename;
+                    // Move file
+                    @rename($draftFull, $dest);
+                    if (!file_exists($dest)) {
+                        // Fallback to copy if rename across volumes fails
+                        @File::copy($draftFull, $dest);
+                        @unlink($draftFull);
+                    }
+                    if (file_exists($dest)) {
+                        $vehicle->{$attr} = $filename;
+                        $updated = true;
+                    }
+                }
+                if ($updated) {
+                    $vehicle->save();
+                }
+            }
+        }
 
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vehicles');

@@ -23,9 +23,9 @@ class StationController extends Controller
     {
         $serial_no = Station::GetSerialNumber();
         
-        $draftData = $this->getDraftDataForView($request, 'stations');
+        $draftInfo = $this->getDraftDataForView($request, 'stations');
         
-        return view('admin.stations.create', compact('serial_no') + $draftData);
+        return view('admin.stations.create', compact('serial_no') + $draftInfo);
     }
 
     public function store(Request $request)
