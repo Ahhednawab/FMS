@@ -7,21 +7,40 @@ use App\Models\Vehicle;
 use App\Models\Destination;
 use App\Models\FuelStation;
 use App\Models\Station;
+use Carbon\Carbon;
 
 use Illuminate\Http\Request;
 
 class DailyFuelController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
+        $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
+        $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
+        
         $dailyFuels = DailyFuelReport::where('is_active', 1)
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
             ->with(['vehicle.station'])->orderby('id','DESC')
-            ->with('vehicle')
-            ->get();
+            ->with('vehicle');
 
-        return view('admin.dailyFuels.index', compact('dailyFuels'));
+        if ($request->filled('vehicle_id')) {
+            $dailyFuels = $dailyFuels->whereHas('vehicle', function ($q) use ($request) {
+                $q->where('vehicle_id', $request->vehicle_id);
+            });
+        }
+        
+
+        $dailyFuels = $dailyFuels->whereBetween('report_date', [
+            $fromDate->toDateString(),
+            $toDate->toDateString(),
+        ]);
+        $dailyFuels = $dailyFuels->orderBy('id','DESC');
+        $dailyFuels = $dailyFuels->get();
+
+        $vehicles = Vehicle::where('is_active',1)->get();
+
+        return view('admin.dailyFuels.index', compact('dailyFuels','vehicles'));
     }
 
     public function create(Request $request){
@@ -105,7 +124,7 @@ class DailyFuelController extends Controller
                 // current_km must not exceed previous_km
                 if ($hasCurr && $prev !== null && $prev !== '' ) {
                     if (is_numeric($curr) && is_numeric($prev)) {
-                        if ((float)$curr > (float)$prev) {
+                        if ((float)$curr < (float)$prev) {
                             $validator->errors()->add("current_km.$i", 'Current KMs cannot be greater than Previous KMs.');
                         }
                     }

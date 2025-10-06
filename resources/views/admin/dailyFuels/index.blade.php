@@ -43,6 +43,57 @@
       </div>
     @endif
 
+    <div class="card">
+      <div class="card-body">
+        <form action="{{ route('admin.dailyFuels.index') }}" method="get">
+        <div class="row">
+          <!-- Vehicle No -->
+          <div class="col-md-3">
+            <div class="form-group">
+              <label class="form-label"><strong>Vehicle No</strong></label>
+              <select class="custom-select select2" name="vehicle_id" id="vehicle_no">
+                <option value="">--Select--</option>
+                @foreach($vehicles as $value)
+                  <option value="{{$value->id}}" {{ request('vehicle_id') == $value->id ? 'selected' : '' }}>{{$value->vehicle_no}}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          @php
+            use Carbon\Carbon;
+            
+            $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
+            $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
+          @endphp
+          
+          <!--From Date -->
+          <div class="col-md-3">
+            <div class="form-group">
+              <label><strong>From</strong></label>
+              <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}" max="{{ date('Y-m-d') }}">
+            </div>
+          </div>   
+          <!--To Date -->
+          <div class="col-md-3">
+            <div class="form-group">
+              <label><strong>To</strong></label>
+              <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}" max="{{ date('Y-m-d') }}">
+            </div>
+          </div> 
+          <div class="col-md-3 mt-4">
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary">Filter</button>
+              <a href="{{ route('admin.dailyFuels.index') }}" class="btn btn-primary">Reset</a>
+            </div>
+          </div>
+          
+        </div>
+        </form>
+        
+      </div>
+    </div>
+
 
     <!-- Basic datatable -->
     <div class="card">
