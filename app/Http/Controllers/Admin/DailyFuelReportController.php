@@ -27,9 +27,9 @@ class DailyFuelReportController extends Controller
                 DB::raw('Round(SUM(d.fuel_taken),2) as fuel_taken'),
                 DB::raw('Round(AVG(d.fuel_average),2) as fuel_average')
             )
-            ->where('d.is_active', 1)->where('v.is_active', 1)
-            ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
-            ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
+            ->where('d.is_active', 1)->where('v.is_active', 1);
+            // ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
+            // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
 
         if ($request->filled('vehicle_id')) {
             $query->where('v.vehicle_no', $request->vehicle_id);
