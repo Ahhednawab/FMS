@@ -51,7 +51,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label class="form-label"><strong>Vehicle No</strong></label>
-              <select class="custom-select select2" name="vehicle_id" id="vehicle_no">
+              <select class="custom-select select2 vehicle" name="vehicle_id" id="vehicle_no">
                 <option value="">--Select--</option>
                 @foreach($vehicles as $value)
                   <option value="{{$value->id}}" {{ request('vehicle_id') == $value->id ? 'selected' : '' }}>{{$value->vehicle_no}}</option>
@@ -152,6 +152,11 @@
     <!-- /basic datatable -->
   </div>
   <!-- /content area -->
+
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   
   <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
@@ -160,7 +165,11 @@
   <script>
     $(document).ready(function () {
       $('.datatable-colvis-basic').DataTable();
-
+      $('.vehicle').select2({
+        placeholder: "--Select--",
+        allowClear: true,
+        theme: 'bootstrap4'
+      });
     });
 
     setTimeout(function () {
