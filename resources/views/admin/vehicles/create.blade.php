@@ -531,7 +531,7 @@
             </div>
 
             <!-- Buttons -->
-            <div class="col-md-3">
+            <div class="col-md-12">
               <label for=""></label>
               <div class="text-right">
                 <button type="submit" name="save_draft" value="1" class="btn btn-secondary">
