@@ -11,9 +11,12 @@ class DailyFuelReport extends Model
     protected $table = 'daily_fuel_reports'; 
     protected $fillable = [
         'vehicle_id',
-        'date',
+        'report_date',
+        'previous_km',
         'current_km',
+        'mileage',
         'fuel_taken',
+        'fuel_average',
     ];
 
     public function vehicle()

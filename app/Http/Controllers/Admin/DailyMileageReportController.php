@@ -14,16 +14,15 @@ class DailyMileageReportController extends Controller
     {
         $query = DB::table('daily_mileage_report as d')
             ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
-            ->select('d.vehicle_id','v.vehicle_no', 
+            ->join('stations as s', 's.id', '=', 'v.station_id')
+            ->select('d.vehicle_id','v.vehicle_no', 's.area as station',
                 DB::raw('MIN(d.report_date) as start_date'),
                 DB::raw('MAX(d.report_date) as end_date'),
                 DB::raw('MIN(d.previous_km) AS start_km'),
                 DB::raw('MAX(d.current_km) as end_km'),
                 DB::raw('SUM(d.mileage) as total_mileage'))
-            ->where('d.is_active',1)->where('v.is_active',1)
-            ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
-            ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');;
-          
+            ->where('d.is_active',1)->where('v.is_active',1);
+            
         if ($request->filled('vehicle_id')) {
             $query->where('v.vehicle_no', $request->vehicle_id);
         
@@ -39,7 +38,7 @@ class DailyMileageReportController extends Controller
 
         $dailyMileages = $query->groupby('d.vehicle_id', 'v.vehicle_no')->orderby('v.vehicle_no','ASC')->get();
         $vehicles = Vehicle::where('is_active',1)->get();
-        //echo $dailyMileages;return;
+        
         return view('admin.dailyMileageReports.index', compact('dailyMileages','vehicles'));
     }
 

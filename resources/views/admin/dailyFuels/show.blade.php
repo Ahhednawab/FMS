@@ -25,27 +25,41 @@
       <div class="card-body">
         <div class="container mt-3">          
           <div class="row">
-            <div class="col-md-2 text-center">
+            <div class="col-md-4 text-center">
               <div class="card">
-                <h5 class="m-0">Serial no</h5>
-                <p>{{$dailyFuel->serial_no}}</p>
+                <h5 class="m-0">Station</h5>
+                <p>{{$dailyFuel->vehicle->station->area}}</p>
               </div>
             </div>
-            <div class="col-md-2 text-center">
+            <div class="col-md-4 text-center">
               <div class="card">
                 <h5 class="m-0">Vehicle No</h5>
                 <p>{{$dailyFuel->vehicle->vehicle_no}}</p>
               </div>
             </div>
-            <div class="col-md-2 text-center">
+            <div class="col-md-4 text-center">
               <div class="card">
-                <h5 class="m-0">Date</h5>
-                <p>{{\Carbon\Carbon::parse($dailyFuel->date)->format('d-M-Y')}}</p>
+                <h5 class="m-0">Report Date</h5>
+                <p>{{\Carbon\Carbon::parse($dailyFuel->report_date)->format('d-M-Y')}}</p>
               </div>
             </div>
             <div class="col-md-2 text-center">
               <div class="card">
+                <h5 class="m-0">Previous Km</h5>
+                <p>{{$dailyFuel->previous_km}} Km</p>
+              </div>
+            </div>
+
+            <div class="col-md-2 text-center">
+              <div class="card">
                 <h5 class="m-0">Current Km</h5>
+                <p>{{$dailyFuel->current_km}} Km</p>
+              </div>
+            </div>
+
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Mileage</h5>
                 <p>{{$dailyFuel->current_km}} Km</p>
               </div>
             </div>
@@ -56,7 +70,21 @@
                 <h5 class="m-0">Fuel Taken</h5>
                 <p>{{$dailyFuel->fuel_taken}} Litre</p>
               </div>
-            </div>       
+            </div>   
+
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Fuel Avg.</h5>
+                <p>{{$dailyFuel->fuel_average}} Km/Ltr</p>
+              </div>
+            </div> 
+
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">AKPL</h5>
+                <p>{{$dailyFuel->vehicle->akpl}} Km/Ltr</p>
+              </div>
+            </div>    
           </div>
           <!-- /basic datatable -->
           <div class="col-md-12">

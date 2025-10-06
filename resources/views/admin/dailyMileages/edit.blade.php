@@ -37,13 +37,10 @@
                   <div class="form-group">
                     <strong>Vehicle No</strong>
                     <input type="text" class="form-control" name="vehicle_no" value="{{ old('vehicle_id', $dailyMileage->vehicle->vehicle_no ?? '') }}" readonly>
-                    @if ($errors->has('vehicle_id'))
-                      <label class="text-danger">{{ $errors->first('vehicle_id') }}</label>
-                    @endif
                   </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <div class="form-group">
                     <strong>Report Date</strong>
                     <input type="date" class="form-control" name="report_date" value="{{ old('report_date', $dailyMileage->report_date ?? '') }}">
@@ -57,9 +54,6 @@
                   <div class="form-group">
                     <strong>Previous Km</strong>
                     <input type="number" min="0" step="1" class="form-control previous_km" name="previous_km" value="{{ old('previous_km', $dailyMileage->previous_km ?? '') }}" readonly>
-                    @if ($errors->has('previous_km'))
-                      <label class="text-danger">{{ $errors->first('previous_km') }}</label>
-                    @endif
                   </div>
                 </div>
 
@@ -77,16 +71,11 @@
                   <div class="form-group">
                     <strong>Mileage</strong>
                     <input type="number" min="0" step="1" class="form-control" name="mileage" value="{{ old('mileage', $dailyMileage->mileage ?? '') }}" readonly>
-                    @if ($errors->has('mileage'))
-                      <label class="text-danger">{{ $errors->first('mileage') }}</label>
-                    @endif
                   </div>
                 </div>          
               </div>
 
               <div class="row">
-                
-                
                 <div class="col-md-12">
                   <label for=""></label>
                   <div class="text-right">
@@ -107,21 +96,20 @@
 
   <script>
     $(document).ready(function () {
-        function calculateMileage() {
-            var previous_km = $('.previous_km').val() || 0;
-            var current_km = $('.current_km').val() || 0;
-            var mileage = current_km - previous_km;
-            if (mileage < 0) mileage = 0;
-            if(previous_km){
-              previous_km = current_km;
-            }
-            $('input[name="mileage"]').val(mileage.toFixed(0))
-            
+      function calculateMileage() {
+        var previous_km = $('.previous_km').val() || 0;
+        var current_km = $('.current_km').val() || 0;
+        var mileage = current_km - previous_km;
+        if (mileage < 0) mileage = 0;
+        if(previous_km){
+          previous_km = current_km;
         }
+        $('input[name="mileage"]').val(mileage.toFixed(0))          
+      }
 
-        $('.current_km').on('input', function(){
-            calculateMileage();
-        });
+      $('.current_km').on('input', function(){
+        calculateMileage();
+      });
     });
   </script>
 @endsection

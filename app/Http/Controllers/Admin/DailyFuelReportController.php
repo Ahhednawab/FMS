@@ -13,27 +13,34 @@ class DailyFuelReportController extends Controller
     {
         $query = DB::table('daily_fuel_reports as d')
             ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
+            ->join('stations as s', 's.id', '=', 'v.station_id')
             ->select(
                 'd.vehicle_id',
                 'v.vehicle_no',
-                DB::raw('MIN(d.date) as start_date'),
-                DB::raw('MAX(d.date) as end_date'),
-                DB::raw('Round(SUM(d.fuel_taken),2) as fuel_taken')
+                's.area as station',
+                'v.akpl',
+                DB::raw('MIN(d.report_date) as start_date'),
+                DB::raw('MIN(d.previous_km) as start_km'),
+                DB::raw('MAX(d.report_date) as end_date'),
+                DB::raw('MAX(d.current_km) as end_km'),
+                DB::raw('SUM(d.mileage) as mileage'),
+                DB::raw('Round(SUM(d.fuel_taken),2) as fuel_taken'),
+                DB::raw('Round(AVG(d.fuel_average),2) as fuel_average')
             )
-            ->where('d.is_active', 1)->where('v.is_active', 1)
-            ->whereRaw('MONTH(d.date) = MONTH(CURRENT_DATE())')
-            ->whereRaw('YEAR(d.date) = YEAR(CURRENT_DATE())');
+            ->where('d.is_active', 1)->where('v.is_active', 1);
+            // ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
+            // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
 
         if ($request->filled('vehicle_id')) {
             $query->where('v.vehicle_no', $request->vehicle_id);
         }
 
         if ($request->filled('from_date')) {
-            $query->whereDate('d.date', '>=', $request->from_date);
+            $query->whereDate('d.report_date', '>=', $request->from_date);
         }
 
         if ($request->filled('to_date')) {
-            $query->whereDate('d.date', '<=', $request->to_date);
+            $query->whereDate('d.report_date', '<=', $request->to_date);
         }
 
         $dailyFuelReports = $query->groupby('d.vehicle_id', 'v.vehicle_no')->orderby('v.vehicle_no', 'ASC')->get();
