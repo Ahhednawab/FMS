@@ -26,61 +26,56 @@
         <div class="container mt-3">
           
           <div class="row">
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Serial No</h5>
-                                    <p>13364</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Farther Name</h5>
-                                    <p>Name</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Shift Time</h5>
-                                    <p>21/12/2024</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Vehicle No</h5>
-                                    <p>Driver</p>
-                                    </div>
-                                </div>
-                            </div>
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Driver</h5>
+                <p>{{$driverAttendance->driver->full_name}}</p>
+              </div>
+            </div>
 
-                            <div class="row">
-                               
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Remarks</h5>
-                                    <p>21/12/2024</p>
-                                    </div>
-                                </div>
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Status</h5>
+                <p>{{$driverAttendance->driver->driverStatus->name}}</p>
+              </div>
+            </div>
 
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Date</h5>
-                                    <p>21/12/2024</p>
-                                    </div>
-                                </div>
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Shift</h5>
+                <p>
+                  @php($st = $driverAttendance->driver->shiftTiming)
+                  @if($st)
+                    {{$st->name}} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($st->end_time)->format('h:i A') }})
+                  @else
+                    N/A
+                  @endif
+                </p>
+              </div>
+            </div>
 
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Date</h5>
+                <p>{{ \Carbon\Carbon::parse($driverAttendance->date)->format('d-M-Y') }}</p>
+              </div>
+            </div>
 
-                              
-                                <div class="col-md-3 text-center">
+            <div class="col-md-2 text-center">
+              <div class="card">
+                <h5 class="m-0">Attendance</h5>
+                <p>{{ $driverAttendance->driverAttendanceStatus->name }}</p>
+              </div>
+            </div>
+          </div>
+
                             
-
-                            </div>
-          <!-- /basic datatable -->
           <div class="col-md-12">
             <label for=""></label>
             <div class="text-right">
-              <a href="#" class="btn btn-warning">Edit</a>
+              <a href="{{ route('admin.driverAttendances.edit', $driverAttendance->id) }}" class="btn btn-warning">Edit</a>
                 <a href="{{ route('admin.driverAttendances.index') }}" class="btn btn-secondary">Back</a>
-                <form action="{{ route('admin.driverAttendances.destroy', 1) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this Driver Attendance?');">
+                <form action="{{ route('admin.driverAttendances.destroy', $driverAttendance->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this Driver Attendance?');">
                   @csrf
                   @method('DELETE')
                   <button class="btn btn-danger">Delete</button>

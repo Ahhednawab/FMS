@@ -50,36 +50,55 @@
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
-              <th>Serial No </th>
-              <th>Farther Name</th>
-              <th>Shift Time</th>
-              <th>Vehicle No</th>
-              <th>Remarks</th>
+              <th>Driver</th>
+              <th class="text-center">Status</th>
+              <th class="text-center">Shift</th>
+              <th class="text-center">Date</th>
+              <th class="text-center">Attendance Status</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>2365</td>
-              <td>None</td>
-              <td>Pakistan</td>
-              <td>Suspended</td>
-              <td>Karachi</td>   
-              <td class="text-center">
-                <div class="list-icons">
-                  <div class="dropdown">
-                    <a href="#" class="list-icons-item" data-toggle="dropdown">
-                      <i class="icon-menu9"></i>
-                    </a>
-
-                    <div class="dropdown-menu dropdown-menu-right">
-                      <a href="{{ route('admin.driverAttendances.show', 1) }}" class="dropdown-item"><i class="icon-file-pdf"></i> View Details</a>
-                      
+            @foreach($driverAttendances as $key => $value)
+              <tr>
+                <td>{{$value->driver->full_name}}</td>
+                <td class="text-center">{{$value->driver->driverStatus->name}}</td>
+                <td class="text-center">
+                  @php($st = $value->driver->shiftTiming)
+                  @if($st)
+                    {{$st->name}} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($st->end_time)->format('h:i A') }})
+                  @else
+                    N/A
+                  @endif
+                </td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
+                <td class="text-center">{{$value->driverAttendanceStatus->name}}</td>
+                <td class="text-center">
+                  <div class="list-icons">
+                    <div class="dropdown">
+                      <a href="#" class="list-icons-item" data-toggle="dropdown">
+                        <i class="icon-menu9"></i>
+                      </a>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <a href="{{ route('admin.driverAttendances.show', $value->id) }}" class="dropdown-item">
+                          <i class="icon-eye"></i> View Details
+                        </a>
+                        <a href="{{ route('admin.driverAttendances.edit', $value->id) }}" class="dropdown-item">
+                          <i class="icon-pencil7"></i> Edit
+                        </a>
+                        <form action="{{ route('admin.driverAttendances.destroy', $value->id) }}" method="POST">
+                          @csrf
+                          @method('DELETE')
+                          <button class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete?')">
+                            <i class="icon-trash"></i> Delete
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td> 
-            </tr>
+                </td>
+              </tr>
+            @endforeach
           </tbody>
         </table>
       </div>

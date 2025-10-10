@@ -94,6 +94,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('dailyFuels', DailyFuelController::class);
     Route::resource('dailyFuelReports', DailyFuelReportController::class);
 
+    // Attendance
+    // Filter (POST) route to reuse create() for filtering
+    Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
+    Route::resource('driverAttendances', DriversAttendanceController::class);
+    Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
+
     
 
     // Inventory

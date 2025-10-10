@@ -27,3 +27,36 @@ CREATE TABLE daily_fuel_reports (
   updated_at timestamp NULL DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+DROP TABLE IF EXISTS driver_attendance_status;
+
+CREATE TABLE driver_attendance_status (
+  id int NOT NULL AUTO_INCREMENT,
+  name varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  is_active int DEFAULT '1' COMMENT '0=inactive, 1=active',
+  created_at timestamp NULL DEFAULT NULL,
+  updated_at timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/*Data for the table driver_attendance_status */
+
+insert  into driver_attendance_status(id,name,is_active,created_at,updated_at) values 
+(1,'Present',1,'2025-10-08 14:54:07','2025-10-08 14:54:07'),
+(2,'Absent',1,'2025-10-08 14:54:07','2025-10-08 14:54:07'),
+(3,'Leave',1,'2025-10-08 14:54:07','2025-10-08 14:54:07');
+
+
+DROP TABLE IF EXISTS drivers_attendances;
+
+CREATE TABLE drivers_attendances (
+  id bigint unsigned NOT NULL AUTO_INCREMENT,
+  driver_id bigint NOT NULL,
+  date date NOT NULL,
+  status tinyint(1) DEFAULT '1' COMMENT '1=present, 2=absent, 3=leave',
+  is_active tinyint(1) DEFAULT '1' COMMENT '0=inactive, 1=active',
+  created_at timestamp NULL DEFAULT NULL,
+  updated_at timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

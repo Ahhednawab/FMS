@@ -216,13 +216,19 @@
           </ul> 
         </li>
 
-        <li class="nav-item nav-item-submenu">
+        <li class="nav-item nav-item-submenu
+          {{ request()->routeIs('admin.driverAttendances.*') 
+          || request()->routeIs('admin.vehicleAttendances.*')
+            ? 'nav-item-open' : '' }}">
+
           <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Attendece</span></a>
 
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts">
-            <li class="nav-item"><a href="{{ route('admin.driverAttendances.index')}}" class="nav-link">Driver Attendance</a></li>
-            <li class="nav-item"><a href="{{ route('admin.vehicleAttendances.index')}}" class="nav-link">Vehicle Attendance</a></li>
-
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+            style="{{ request()->routeIs('admin.driverAttendances.*') 
+            || request()->routeIs('admin.vehicleAttendances.*') 
+              ? 'display:block;' : '' }}">
+            <li class="nav-item"><a href="{{ route('admin.driverAttendances.index')}}" class="nav-link {{ request()->routeIs('admin.driverAttendances.*') ? 'active' : '' }}">Driver Attendance</a></li>
+            <li class="nav-item"><a href="{{ route('admin.vehicleAttendances.index')}}" class="nav-link {{ request()->routeIs('admin.vehicleAttendances.*') ? 'active' : '' }}">Vehicle Attendance</a></li>
           </ul>
         </li>
       </ul>
