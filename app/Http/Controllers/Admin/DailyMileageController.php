@@ -206,11 +206,19 @@ class DailyMileageController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $dailyMileage->report_date = $request->report_date;
-        $dailyMileage->mileage = $request->mileage;
+        $dailyMileage->report_date  = $request->report_date;
+        $dailyMileage->mileage      = $request->mileage;
         $dailyMileage->previous_km = $request->previous_km;
         $dailyMileage->current_km = $request->current_km;
         $dailyMileage->save();
+
+        $succeded_record = DailyMileageReport::where('vehicle_id',$dailyMileage->vehicle_id)->where('id','>',$dailyMileage->id)->first();
+
+        if (isset($succeded_record)) {
+            $succeded_record->previous_km =  $request->current_km;
+            $succeded_record->mileage = ($succeded_record->current_km - $request->current_km);
+            $succeded_record->save();
+        }
 
         return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage updated successfully.');
     }
