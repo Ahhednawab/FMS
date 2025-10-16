@@ -179,6 +179,7 @@ class DailyMileageController extends Controller
 
     public function update(Request $request, DailyMileageReport $dailyMileage)
     {
+        echo "update";return;
         $validator = \Validator::make(
             $request->all(),
             [
