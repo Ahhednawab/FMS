@@ -64,7 +64,7 @@
             <div class="col-md-2 text-center">
               <div class="card">
                 <h5 class="m-0">Attendance</h5>
-                <p>{{ $driverAttendance->driverAttendanceStatus->name }}</p>
+                <p>{{ $driverAttendance->attendanceStatus->name }}</p>
               </div>
             </div>
           </div>

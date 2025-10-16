@@ -18,9 +18,9 @@ class DriversAttendance extends Model
         return $this->belongsTo(Driver::class, 'driver_id');
     }
 
-    public function driverAttendanceStatus()
+    public function attendanceStatus()
     {
-        return $this->belongsTo(DriverAttendanceStatus::class, 'status');
+        return $this->belongsTo(AttendanceStatus::class, 'status');
     }
 
 

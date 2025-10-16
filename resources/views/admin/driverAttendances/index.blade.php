@@ -72,7 +72,7 @@
                   @endif
                 </td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
-                <td class="text-center">{{$value->driverAttendanceStatus->name}}</td>
+                <td class="text-center">{{$value->attendanceStatus->name}}</td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">

@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-class DriverAttendanceStatus extends Model
+class AttendanceStatus extends Model
 {
-    protected $table = 'driver_attendance_status';
+    protected $table = 'attendance_status';
     protected $fillable = ['name'];
 }

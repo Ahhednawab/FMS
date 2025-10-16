@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\DriversAttendance;
 use App\Models\Driver;
 use App\Models\DriverStatus;
-use App\Models\DriverAttendanceStatus;
+use App\Models\AttendanceStatus;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DriversAttendanceController extends Controller
 {
     public function index(){
-        $driverAttendances = DriversAttendance::with(['driver.shiftTiming','driver.driverStatus','driver','driverAttendanceStatus'])
+        $driverAttendances = DriversAttendance::with(['driver.shiftTiming','driver.driverStatus','driver','attendanceStatus'])
             ->where('is_active',1)
             ->orderBy('id','DESC')
             ->get();
@@ -30,7 +30,7 @@ class DriversAttendanceController extends Controller
             ->orderBy('name')
             ->pluck('name', 'id');
 
-        $driver_attendance_status = DriverAttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
+        $driver_attendance_status = AttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
         
         $drivers = Driver::with(['driverStatus','shiftTiming']);
         $drivers = $drivers->where('is_active', 1);
@@ -106,9 +106,9 @@ class DriversAttendanceController extends Controller
     }
 
     public function edit(DriversAttendance $driverAttendance){ 
-        $driver_attendance_status = DriverAttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
+        $driver_attendance_status = AttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
         
-        $driverAttendance->load(['driver.shiftTiming','driver','driverAttendanceStatus']);
+        $driverAttendance->load(['driver.shiftTiming','driver','attendanceStatus']);
 
         return view('admin.driverAttendances.edit',compact('driverAttendance','driver_attendance_status'));
     }
@@ -116,7 +116,7 @@ class DriversAttendanceController extends Controller
     public function update(Request $request, DriversAttendance $driverAttendance){
         $validated = $request->validate([
             'date'   => ['required', 'date', 'before_or_equal:today'],
-            'status' => ['required', 'exists:driver_attendance_status,id'],
+            'status' => ['required', 'exists:attendance_status,id'],
         ]);
 
         $date = $validated['date'];
@@ -145,7 +145,7 @@ class DriversAttendanceController extends Controller
     }
 
     public function show(DriversAttendance $driverAttendance){
-        $driverAttendance->load(['driver.shiftTiming','driver','driverAttendanceStatus']);
+        $driverAttendance->load(['driver.shiftTiming','driver','attendanceStatus']);
         return view('admin.driverAttendances.show', compact('driverAttendance'));
     }
 
