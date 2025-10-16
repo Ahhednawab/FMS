@@ -191,14 +191,23 @@ class DailyMileageController extends Controller
             ]
         );
 
-        $validator->after(function ($validator) use ($request) {
+        $validator->after(function ($validator) use ($request, $dailyMileage) {
             $previous_km = $request->previous_km;
             $current_km = $request->current_km;
 
             if($current_km < $previous_km){
                 $validator->errors()->add("current_km", "Current KM must be greater than Previous KM.");
             }
-        
+
+            $exists = DailyMileageReport::where('vehicle_id', $dailyMileage->vehicle_id)
+                ->where('is_active', 1)
+                ->where('id', '!=', $dailyMileage->id)
+                ->whereDate('report_date', $request->report_date)
+                ->exists();
+
+            if ($exists) {
+                $validator->errors()->add('report_date', 'A report for this date already exists for this vehicle.');
+            }
         });
 
         if ($validator->fails()) {
@@ -208,19 +217,17 @@ class DailyMileageController extends Controller
 
         $dailyMileage->report_date  = $request->report_date;
         $dailyMileage->mileage      = $request->mileage;
-        $dailyMileage->previous_km = $request->previous_km;
-        $dailyMileage->current_km = $request->current_km;
+        $dailyMileage->previous_km  = $request->previous_km;
+        $dailyMileage->current_km   = $request->current_km;
         $dailyMileage->save();
 
         $succeded_record = DailyMileageReport::where('vehicle_id',$dailyMileage->vehicle_id)->where('id','>',$dailyMileage->id)->first();
 
         if (isset($succeded_record)) {
-            // echo "if";return;
-            $succeded_record->previous_km =  $request->current_km;
-            $succeded_record->mileage = ($succeded_record->current_km - $request->current_km);
+            $succeded_record->previous_km   =  $request->current_km;
+            $succeded_record->mileage       = ($succeded_record->current_km - $request->current_km);
             $succeded_record->save();
         }
-        // echo "<br><br>out";return;
 
         return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage updated successfully.');
     }
