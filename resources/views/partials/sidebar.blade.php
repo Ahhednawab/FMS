@@ -45,7 +45,7 @@
 
         <li class="nav-item">
           <a href="{{ route('admin.drafts.index')}}" class="nav-link {{ request()->routeIs('admin.drafts.*') ? 'active' : '' }}">
-            <i class="icon-save"></i>
+            <i class="icon-copy"></i>
             <span>Drafts</span>
           </a>
         </li>

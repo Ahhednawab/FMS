@@ -50,32 +50,54 @@
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
-              <th>Serial No </th>
-              <th>Vehicle No</th>
-              <th>Date</th>
+              <th>Vehicle</th>
+              <th class="text-center">Station</th>
+              <th class="text-center">Shift</th>
+              <th class="text-center">Date</th>
+              <th class="text-center">Attendance Status</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>2365</td>
-              <td>2365</td>
-              <td>None</td>       
-              <td class="text-center">
-                <div class="list-icons">
-                  <div class="dropdown">
-                    <a href="#" class="list-icons-item" data-toggle="dropdown">
-                      <i class="icon-menu9"></i>
-                    </a>
-
-                    <div class="dropdown-menu dropdown-menu-right">
-                      <a href="{{ route('admin.vehicleAttendances.show', 1) }}" class="dropdown-item"><i class="icon-file-pdf"></i> View Details</a>
-                      
+            @foreach($vehicleAttendances as $key => $value)
+              <tr>
+                <td>{{$value->vehicle->vehicle_no}}</td>
+                <td class="text-center">{{$value->vehicle->station->area}}</td>
+                <td class="text-center">
+                  @if($value->vehicle->ShiftHours)
+                    {{$value->vehicle->ShiftHours->name}}
+                  @else
+                    N/A
+                  @endif
+                </td>
+                <td class="text-center">{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
+                <td class="text-center">{{$value->attendanceStatus->name}}</td>
+                <td class="text-center">
+                  <div class="list-icons">
+                    <div class="dropdown">
+                      <a href="#" class="list-icons-item" data-toggle="dropdown">
+                        <i class="icon-menu9"></i>
+                      </a>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <a href="{{ route('admin.vehicleAttendances.show', $value->id) }}" class="dropdown-item">
+                          <i class="icon-eye"></i> View Details
+                        </a>
+                        <a href="{{ route('admin.vehicleAttendances.edit', $value->id) }}" class="dropdown-item">
+                          <i class="icon-pencil7"></i> Edit
+                        </a>
+                        <form action="{{ route('admin.vehicleAttendances.destroy', $value->id) }}" method="POST">
+                          @csrf
+                          @method('DELETE')
+                          <button class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete?')">
+                            <i class="icon-trash"></i> Delete
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td> 
-            </tr>
+                </td>
+              </tr>
+            @endforeach
           </tbody>
         </table>
       </div>

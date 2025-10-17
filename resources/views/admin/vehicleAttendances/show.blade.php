@@ -24,35 +24,64 @@
     <div class="card">
       <div class="card-body">
         <div class="container mt-3">
-          
           <div class="row">
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Serial No</h5>
-                                    <p>13364</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Vehicle No</h5>
-                                    <p>Name</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <div class="card">
-                                    <h5 class="m-0">Date</h5>
-                                    <p>21/12/2024</p>
-                                    </div>
-                                </div>
-                              
-                            </div>
-          <!-- /basic datatable -->
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Vehicle No</h5>
+                <p>{{$vehicleAttendance->vehicle->vehicle_no}}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Station</h5>
+                <p>{{$vehicleAttendance->vehicle->station->area}}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">IBC Center</h5>
+                <p>{{$vehicleAttendance->vehicle->ibcCenter->name}}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Make (Manufacturer)</h5>
+                <p>{{$vehicleAttendance->vehicle->make}}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Shift</h5>
+                <p>{{$vehicleAttendance->vehicle->ShiftHours->name}}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Date</h5>
+                <p>{{ \Carbon\Carbon::parse($vehicleAttendance->date)->format('d-M-Y') }}</p>
+              </div>
+            </div>
+
+            <div class="col-md-3 text-center">
+              <div class="card">
+                <h5 class="m-0">Attendance</h5>
+                <p>{{ $vehicleAttendance->attendanceStatus->name }}</p>
+              </div>
+            </div>
+
+          </div>
+          
           <div class="col-md-12">
             <label for=""></label>
             <div class="text-right">
-              <a href="#" class="btn btn-warning">Edit</a>
+              <a href="{{ route('admin.vehicleAttendances.edit', $vehicleAttendance->id) }}" class="btn btn-warning">Edit</a>
                 <a href="{{ route('admin.vehicleAttendances.index') }}" class="btn btn-secondary">Back</a>
-                <form action="{{ route('admin.vehicleAttendances.destroy', 1) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this Vehicle Attendance?');">
+                <form action="{{ route('admin.vehicleAttendances.destroy', $vehicleAttendance->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this Vehicle Attendance?');">
                   @csrf
                   @method('DELETE')
                   <button class="btn btn-danger">Delete</button>
@@ -60,8 +89,6 @@
             </div>
             <br>
           </div>
-          
-          
         </div>
       </div>
     </div>

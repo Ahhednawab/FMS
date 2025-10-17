@@ -98,6 +98,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     // Filter (POST) route to reuse create() for filtering
     Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
     Route::resource('driverAttendances', DriversAttendanceController::class);
+
+    Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
     Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
 
     
