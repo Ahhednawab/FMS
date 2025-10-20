@@ -17,32 +17,43 @@ class ExpiredVehiclesTable extends Component
 
     public function loadExpiredVehicles()
     {
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
         $this->expiredVehicles = Vehicle::where('is_active', 1)
-            ->where(function($query) {
-                $query->where('next_inspection_date', '<', Carbon::now())
-                      ->orWhere('next_fitness_date', '<', Carbon::now())
-                      ->orWhere('insurance_expiry_date', '<', Carbon::now())
-                      ->orWhere('route_permit_expiry_date', '<', Carbon::now())
-                      ->orWhere('next_tax_date', '<', Carbon::now());
+            ->where(function($query) use ($nextMonthEnd) {
+                $query->where('next_inspection_date', '<=', $nextMonthEnd)
+                      ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
+                      ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
+                      ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
+                      ->orWhere('next_tax_date', '<=', $nextMonthEnd);
             })
             ->with(['vehicleType', 'station'])
             ->get()
-            ->map(function($vehicle) {
+            ->map(function($vehicle) use ($nextMonthEnd) {
                 $reasons = [];
-                if ($vehicle->next_inspection_date && Carbon::parse($vehicle->next_inspection_date)->isPast()) {
-                    $reasons[] = 'Next Inspection Date';
+                // if ($vehicle->next_inspection_date && Carbon::parse($vehicle->next_inspection_date)->isPast()) {
+                if ($vehicle->next_inspection_date && ($vehicle->next_inspection_date <= $nextMonthEnd)) {
+                    $formatted = Carbon::parse($vehicle->next_inspection_date)->format('d-M-Y');
+                    $reasons[] = "Next Inspection Date ({$formatted})";
                 }
-                if ($vehicle->next_fitness_date && Carbon::parse($vehicle->next_fitness_date)->isPast()) {
-                    $reasons[] = 'Next Fitness Date';
+                // if ($vehicle->next_fitness_date && Carbon::parse($vehicle->next_fitness_date)->isPast()) {
+                if ($vehicle->next_fitness_date && ($vehicle->next_fitness_date <= $nextMonthEnd)) {
+                    $formatted = Carbon::parse($vehicle->next_fitness_date)->format('d-M-Y');
+                    $reasons[] = "Next Fitness Date ({$formatted})";
                 }
-                if ($vehicle->insurance_expiry_date && Carbon::parse($vehicle->insurance_expiry_date)->isPast()) {
-                    $reasons[] = 'Insurance Expiry Date';
+                // if ($vehicle->insurance_expiry_date && Carbon::parse($vehicle->insurance_expiry_date)->isPast()) {
+                if ($vehicle->insurance_expiry_date && ($vehicle->insurance_expiry_date <= $nextMonthEnd)) {
+                    $formatted = Carbon::parse($vehicle->insurance_expiry_date)->format('d-M-Y');
+                    $reasons[] = "Insurance Expiry Date ({$formatted})";
                 }
-                if ($vehicle->route_permit_expiry_date && Carbon::parse($vehicle->route_permit_expiry_date)->isPast()) {
-                    $reasons[] = 'Route Permit Expiry Date';
+                // if ($vehicle->route_permit_expiry_date && Carbon::parse($vehicle->route_permit_expiry_date)->isPast()) {
+                if ($vehicle->route_permit_expiry_date && ($vehicle->route_permit_expiry_date <= $nextMonthEnd)) {
+                    $formatted = Carbon::parse($vehicle->route_permit_expiry_date)->format('d-M-Y');
+                    $reasons[] = "Route Permit Expiry Date ({$formatted})";
                 }
-                if ($vehicle->next_tax_date && Carbon::parse($vehicle->next_tax_date)->isPast()) {
-                    $reasons[] = 'Next Tax Date';
+                // if ($vehicle->next_tax_date && Carbon::parse($vehicle->next_tax_date)->isPast()) {
+                if ($vehicle->next_tax_date && ($vehicle->next_tax_date <= $nextMonthEnd)) {
+                    $formatted = Carbon::parse($vehicle->next_tax_date)->format('d-M-Y');
+                    $reasons[] = "Next Tax Date ({$formatted})";
                 }
                 
                 return [
@@ -51,7 +62,7 @@ class ExpiredVehiclesTable extends Component
                     'vehicle_no' => $vehicle->vehicle_no,
                     'model' => $vehicle->model,
                     'type' => $vehicle->vehicleType ? $vehicle->vehicleType->name : 'N/A',
-                    'station' => $vehicle->station ? $vehicle->station->name : 'N/A',
+                    'station' => $vehicle->station ? $vehicle->station->area : 'N/A',
                     'reason' => implode(', ', $reasons),
                 ];
             })->toArray();
