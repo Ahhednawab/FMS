@@ -80,6 +80,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     
     // Master Data
     Route::resource('vehicles', VehicleController::class);
+    Route::post('vehicles/destroyMultiple', [VehicleController::class, 'destroyMultiple'])->name('vehicles.destroyMultiple');
     Route::resource('drivers', DriverController::class);
     Route::resource('vendors', VendorController::class);
 

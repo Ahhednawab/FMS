@@ -198,7 +198,7 @@
                 <!-- CNIC No -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>CNIC No</strong>
+                    <strong>CNIC No <span class="text-danger">*</span></strong>
                     {{-- <input type="text" name="cnic_no" id="cnic_no" class="form-control" value="{{ old('cnic_no') }}"> --}}
                     <input type="text" name="cnic_no" class="form-control" id="cnic_no" value="{{ old('cnic_no', $driver->cnic_no ?? '') }}">
                     @if ($errors->has('cnic_no'))
@@ -210,7 +210,7 @@
                 <!-- CNIC Expiry Date -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>CNIC Expiry Date</strong>
+                    <strong>CNIC Expiry Date <span class="text-danger">*</span></strong>
                     <input type="date" name="cnic_expiry_date" class="form-control" value="{{ old('cnic_expiry_date', $driver->cnic_expiry_date ?? '') }}">
                     @if ($errors->has('cnic_expiry_date'))
                       <label class="text-danger">{{ $errors->first('cnic_expiry_date') }}</label>
@@ -350,7 +350,7 @@
                 <!-- License No -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>License No</strong>
+                    <strong>License No <span class="text-danger">*</span></strong>
                     <input type="text" name="license_no" class="form-control" value="{{ old('license_no', $driver->license_no ?? '') }}">
                     @if ($errors->has('license_no'))
                       <label class="text-danger">{{ $errors->first('license_no') }}</label>
@@ -361,7 +361,7 @@
                 <!-- License Category -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>License Category</strong>
+                    <strong>License Category <span class="text-danger">*</span></strong>
                     <select class="custom-select" name="license_category_id">
                       <option value="">Select Category</option>
                       @foreach($licence_category as $key => $value)
@@ -377,7 +377,7 @@
                 <!-- License Expiry Date -->
                 <div class="col-md-3">
                   <div class="form-group">
-                    <strong>License Expiry Date</strong>
+                    <strong>License Expiry Date <span class="text-danger">*</span></strong>
                     <input type="date" name="license_expiry_date" class="form-control" value="{{ old('license_expiry_date', $driver->license_expiry_date ?? '') }}">
                     @if ($errors->has('license_expiry_date'))
                       <label class="text-danger">{{ $errors->first('license_expiry_date') }}</label>

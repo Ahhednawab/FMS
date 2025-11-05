@@ -30,6 +30,9 @@ class ExpiredDriversTable extends Component
                 });
             })
             ->with(['driverStatus', 'vehicle'])
+            ->whereHas('driverStatus', function($query) {
+                $query->where('name', '!=', 'Left');
+            })
             ->get()
             ->map(function($driver) {
                 $reasons = [];

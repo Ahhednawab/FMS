@@ -88,14 +88,16 @@ class VehicleController extends Controller
                 'chasis_no'                 =>  'required',
                 'engine_no'                 =>  'required',
                 'ownership'                 =>  'required',
+                'pool_vehicle'              =>  'required',
                 'shift_hour_id'             =>  'required',
                 'vehicle_type_id'           =>  'required',
-                'cone'                      =>  'required|numeric|min:0',
+                'cone'                      =>  'nullable|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
                 'medical_box'               =>  'required',
-                'seat_cover'                =>  'required',
-                'fire_extenguisher'         =>  'required',
+                'on_duty_status'            =>  'required',
+                'seat_cover'                =>  'nullable',
+                'fire_extenguisher'         =>  'nullable',
                 'tracker_installation_date' =>  'required|date',
                 'inspection_date'           =>  'required|date',
                 'next_inspection_date'      =>  'required|date|after:inspection_date',
@@ -127,6 +129,8 @@ class VehicleController extends Controller
                 'chasis_no.required'                    =>  'Chasis No is required',
                 'engine_no.required'                    =>  'Engine No is required',
                 'ownership.required'                    =>  'Ownership is required',
+                'pool_vehicle.required'                 =>  'Pool Vehicle is required',
+                'on_duty_status.required'               =>  'On Duty Status is required',
                 'shift_hour_id.required'                  =>  'Shift Hours is required',
                 'vehicle_type_id.required'              =>  'Vehicle type is required',
                 'cone.required'                         =>  'Cone is required',
@@ -175,6 +179,7 @@ class VehicleController extends Controller
         $vehicle->chasis_no                 =   $request->chasis_no;
         $vehicle->engine_no                 =   $request->engine_no;
         $vehicle->ownership                 =   $request->ownership;
+        $vehicle->pool_vehicle              =   $request->pool_vehicle;
         $vehicle->shift_hour_id             =   $request->shift_hour_id;
         $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
         $vehicle->cone                      =   $request->cone;
@@ -182,6 +187,7 @@ class VehicleController extends Controller
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
         $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
@@ -335,13 +341,15 @@ class VehicleController extends Controller
                 'chasis_no'                 =>  'required',
                 'engine_no'                 =>  'required',
                 'ownership'                 =>  'required',
+                'pool_vehicle'              =>  'required',
+                'on_duty_status'            =>  'required',
                 'vehicle_type_id'           =>  'required',
-                'cone'                      =>  'required|numeric|min:0',
+                'cone'                      =>  'nullable|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
                 'medical_box'               =>  'required',
-                'seat_cover'                =>  'required',
-                'fire_extenguisher'         =>  'required',
+                'seat_cover'                =>  'nullable',
+                'fire_extenguisher'         =>  'nullable',
                 'tracker_installation_date' =>  'required|date',
                 'inspection_date'           =>  'required|date',
                 'next_inspection_date'      =>  'required|date|after:inspection_date',
@@ -369,6 +377,8 @@ class VehicleController extends Controller
                 'chasis_no.required'                    =>  'Chasis No is required',
                 'engine_no.required'                    =>  'Engine No is required',
                 'ownership.required'                    =>  'Ownership is required',
+                'pool_vehicle.required'                 =>  'Pool Vehicle is required',
+                'on_duty_status.required'               =>  'On Duty Status is required',
                 'vehicle_type_id.required'              =>  'Vehicle type is required',
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
@@ -414,6 +424,7 @@ class VehicleController extends Controller
         $vehicle->chasis_no                 =   $request->chasis_no;
         $vehicle->engine_no                 =   $request->engine_no;
         $vehicle->ownership                 =   $request->ownership;
+        $vehicle->pool_vehicle              =   $request->pool_vehicle;
         $vehicle->shift_hour_id             =   $request->shift_hour_id;
         $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
         $vehicle->cone                      =   $request->cone;
@@ -421,6 +432,7 @@ class VehicleController extends Controller
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
         $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
@@ -502,5 +514,19 @@ class VehicleController extends Controller
         $vehicle->save();
         
         return redirect()->route('admin.vehicles.index')->with('delete_msg', 'Vehicle deleted successfully.');
+    }
+    public function destroyMultiple(Request $request)
+    {
+        $vehicleIds = $request->ids;
+        foreach ($vehicleIds as $vehicleId) {
+            $vehicle = Vehicle::find($vehicleId);
+            $vehicle->is_active = 0;
+            $vehicle->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vehicle deleted successfully.'
+        ]);
     }
 }

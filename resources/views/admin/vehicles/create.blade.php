@@ -108,9 +108,30 @@
                 @endif
               </div>
             </div>
+            <!-- Pool Vehicle -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>Pool Vehicle</strong>
+                <div class="d-flex align-items-center mt-2">
+                  <div class="form-check mr-3">
+                    <input class="form-check-input" type="radio" name="pool_vehicle" id="pool_yes" value="1" {{ (isset($draftData['pool_vehicle']) && $draftData['pool_vehicle'] == 1) || old('pool_vehicle') == '1' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="pool_yes">Yes</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="pool_vehicle" id="pool_no" value="0" {{ (isset($draftData['pool_vehicle']) && $draftData['pool_vehicle'] == 0) || old('pool_vehicle') == '0' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="pool_no">No</label>
+                  </div>
+                </div>
+                @if ($errors->has('pool_vehicle'))
+                  <div class="mt-1">
+                    <label class="text-danger">{{ $errors->first('pool_vehicle') }}</label>
+                  </div>
+                @endif                
+              </div>
+            </div>
 
             <!-- Cone -->
-            <div class="col-md-3">
+            <div class="col-md-3 d-none">
               <div class="form-group">
                 <strong>Cone</strong>
                 <input type="number" min="0" step="1" class="form-control" name="cone" value="{{ $draftData['cone'] ?? old('cone') }}">
@@ -250,8 +271,30 @@
               </div>
             </div>
 
+            <!-- On Duty Status -->
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>On Duty Status</strong>
+                <div class="d-flex align-items-center mt-2">
+                  <div class="form-check mr-3">
+                    <input class="form-check-input" type="radio" name="on_duty_status" id="on_duty_status_yes" value="1" {{ (isset($draftData['on_duty_status']) && $draftData['on_duty_status'] == 1) || old('on_duty_status') == '1' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="on_duty_status_yes">Yes</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="on_duty_status" id="on_duty_status_no" value="0" {{ (isset($draftData['on_duty_status']) && $draftData['on_duty_status'] == 0) || old('on_duty_status') == '0' ? 'checked' : '' }}>
+                    <label class="form-check-label" for="on_duty_status_no">No</label>
+                  </div>
+                </div>
+                @if ($errors->has('on_duty_status'))
+                  <div class="mt-1">
+                    <label class="text-danger">{{ $errors->first('on_duty_status') }}</label>
+                  </div>
+                @endif                
+              </div>
+            </div>
+
             <!-- Seat Cover -->
-            <div class="col-md-2">
+            <div class="col-md-2 d-none">
               <div class="form-group">
                 <strong>Seat Cover</strong>
                 <select class="custom-select" name="seat_cover">
@@ -267,7 +310,7 @@
             </div>
 
             <!-- Fire Extinguisher -->
-            <div class="col-md-2">
+            <div class="col-md-2 d-none">
               <div class="form-group">
                 <strong>Fire Extinguisher</strong>
                 <select class="custom-select" name="fire_extenguisher">
