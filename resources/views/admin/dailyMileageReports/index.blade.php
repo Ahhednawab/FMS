@@ -202,55 +202,6 @@
   <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
 
   <script>
-    // $(document).ready(function () {
-    //   // Initialize DataTable with original configuration
-    //   var table = $('.datatable-colvis-basic').DataTable();
-      
-    //   // Initialize buttons
-    //   new $.fn.dataTable.Buttons(table, {
-    //     buttons: [
-    //       {
-    //         extend: 'print',
-    //         text: 'Print',
-    //         className: 'd-none',
-    //         exportOptions: {
-    //           modifier: {
-    //             page: 'current'
-    //           }
-    //         }
-    //       },
-    //       {
-    //         extend: 'pdfHtml5',
-    //         text: 'PDF',
-    //         className: 'd-none',
-    //         exportOptions: {
-    //           modifier: {
-    //             page: 'current'
-    //           }
-    //         }
-    //       }
-    //     ]
-    //   });
-
-    //   // Print button click handler
-    //   $('#printBtn').on('click', function() {
-    //     table.button('.buttons-print').trigger();
-    //   });
-
-    //   // PDF button click handler
-    //   $('#pdfBtn').on('click', function() {
-    //     table.button('.buttons-pdf').trigger();
-    //   });
-
-    //   // Initialize select2
-    //   $('.vehicle').select2({
-    //     placeholder: "--Select--",
-    //     allowClear: true,
-    //     theme: 'bootstrap4'
-    //   });
-    // });
-
-
     $(document).ready(function () {
         // Initialize DataTable
         var table = $('.datatable-colvis-basic').DataTable({

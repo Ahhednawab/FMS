@@ -97,6 +97,71 @@
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center">
+                <div class="input-group" style="width: 250px;">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-right-0">
+                            <i class="icon-search4"></i>
+                        </span>
+                    </div>
+                    <input type="text" id="customSearch" class="form-control border-left-0" placeholder="Search...">
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-light" id="printBtn" title="Print">
+                    <i class="icon-printer"></i> Print
+                </button>
+                <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
+                    <i class="icon-file-pdf"></i> PDF
+                </button>
+                <div class="btn-group ml-2">
+                    <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <i class="icon-grid7"></i> Columns Visibility<span class="caret"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" id="column-visibility">
+                        <h6 class="dropdown-header">Show/Hide Columns</h6>
+                        <div class="dropdown-divider"></div>
+                        <div class="px-3">
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col1" data-column="0" checked>
+                                <label class="custom-control-label" for="col1">Vehicle</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col2" data-column="1" checked>
+                                <label class="custom-control-label" for="col2">Station</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col3" data-column="2" checked>
+                                <label class="custom-control-label" for="col3">Report Date</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col4" data-column="3" checked>
+                                <label class="custom-control-label" for="col4">Previous Kms</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col5" data-column="4" checked>
+                                <label class="custom-control-label" for="col5">Current Kms</label>
+                            </div>
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col6" data-column="5" checked>
+                                <label class="custom-control-label" for="col6">Mileage</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input column-toggle" id="col7" data-column="6" checked>
+                                <label class="custom-control-label" for="col7">Actions</label>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+                </div>
+            </div>
+        </div>
         
         <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
           <thead>
@@ -158,18 +223,118 @@
 
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   
-  <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
+  <!-- <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
-  <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
+  <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script> -->
+
+  <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
+  <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
 
   <script>
+    // $(document).ready(function () {
+    //   $('.datatable-colvis-basic').DataTable();
+      
+      
+      
+      
+    //   $('.vehicle').select2({
+    //     placeholder: "--Select--",
+    //     allowClear: true,
+    //     theme: 'bootstrap4'
+    //   });
+    // });
+
+
     $(document).ready(function () {
-      $('.datatable-colvis-basic').DataTable();
-      $('.vehicle').select2({
-        placeholder: "--Select--",
-        allowClear: true,
-        theme: 'bootstrap4'
-      });
+        // Initialize DataTable
+        var table = $('.datatable-colvis-basic').DataTable({
+            dom: "lrtip",
+            pageLength: 10,
+            language: {
+                search: "",
+                searchPlaceholder: "Search...",
+                paginate: {
+                    previous: '<i class="icon-arrow-left8"></i>',
+                    next: '<i class="icon-arrow-right8"></i>'
+                }
+            },
+            columns: [
+                { visible: true }, // Vehicle
+                { visible: true }, // Station
+                { visible: true }, // Report Date
+                { visible: true }, // Previous Kms
+                { visible: true }, // Current Kms
+                { visible: true }, // Mileage
+                { visible: true }  // Actions
+            ]
+        });
+
+
+         // PDF button
+        $('#pdfBtn').on('click', function() {
+            table.button('.buttons-pdf').trigger();
+        });
+
+        // Custom search input
+        $('#customSearch').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+
+        // Initialize buttons
+        new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'print',
+                    text: 'Print',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: {
+                            page: 'current'
+                        }
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: 'PDF',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: {
+                            page: 'current'
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Print button
+        $('#printBtn').on('click', function() {
+            table.button('.buttons-print').trigger();
+        });
+
+        // Initialize select2
+        $('.vehicle').select2({
+            placeholder: "--Select--",
+            allowClear: true,
+            theme: 'bootstrap4'
+        });
+
+        // Add this after your DataTable initialization
+        $('.column-toggle').on('change', function() {
+          var column = table.column($(this).data('column'));
+          column.visible(!column.visible());
+          $(this).prop('checked', column.visible());
+        });
+
+        // Initialize column visibility based on current state
+        table.columns().every(function() {
+          $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
+        });
+
     });
 
     setTimeout(function () {
