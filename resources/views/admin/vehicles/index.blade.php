@@ -272,13 +272,6 @@
       });
 
       // Toggle all checkboxes
-      // $('#selectAll').on('change', function() {
-      //   var isChecked = this.checked;
-      //   $('.select-checkbox').each(function() {
-      //       $(this).prop('checked', isChecked).trigger('change');
-      //   });
-      //   updateBulkActions();
-      // });
       $('#selectAll').on('change', function() {
         var isChecked = $(this).prop('checked');
         $('.select-checkbox').prop('checked', isChecked).each(function() {
@@ -286,12 +279,6 @@
         });
         updateBulkActions();
       });
-      // Update select all checkbox when individual checkboxes change
-      // $(document).on('change', '.select-checkbox', function() {
-      //   var allChecked = $('.select-checkbox:checked').length === $('.select-checkbox').length;
-      //   $('#selectAll').prop('checked', allChecked);
-      //   updateBulkActions();
-      // });
       
       // Handle individual checkbox changes
       $(document).on('change', '.select-checkbox', function() {

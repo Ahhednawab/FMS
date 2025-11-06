@@ -82,6 +82,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('vehicles', VehicleController::class);
     Route::post('vehicles/destroyMultiple', [VehicleController::class, 'destroyMultiple'])->name('vehicles.destroyMultiple');
     Route::resource('drivers', DriverController::class);
+    Route::post('drivers/destroyMultiple', [DriverController::class, 'destroyMultiple'])->name('drivers.destroyMultiple');
     Route::resource('vendors', VendorController::class);
 
     // Product Management

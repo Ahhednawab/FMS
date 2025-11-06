@@ -667,4 +667,11 @@ class DriverController extends Controller
 
         return redirect()->route('admin.drivers.index')->with('delete_msg', 'Driver deleted successfully.');
     }
+    
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->ids;
+        Driver::whereIn('id', $ids)->update(['is_active' => 0]);
+        return response()->json(['success' => true]);
+    }
 }
