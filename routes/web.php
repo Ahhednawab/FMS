@@ -49,9 +49,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('run-migration/{migration}', function ($migration) {
-    $response = Artisan::call('migrate', ['--path' => "database/migrations/{$migration}.php"]);
-    return '✅ Migration run successfully.' . $response;
+Route::get('/run-migration/{name}', function ($name) {
+    // Execute the migration command
+    $output = Artisan::call("migrate --path=database/migrations/$name.php");
+
+    return response()->json([
+        'message' => "Migration $name executed successfully!",
+        'output' => Artisan::output()
+    ]);
 });
 
 Route::middleware('guest')->group(function () {
