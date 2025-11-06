@@ -49,6 +49,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('run-migration/{migration}', function ($migration) {
+    $response = Artisan::call('migrate', ['--path' => "database/migrations/{$migration}.php"]);
+    return '✅ Migration run successfully.' . $response;
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {
         if (Auth::check()) {
