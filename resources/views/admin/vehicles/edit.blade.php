@@ -424,6 +424,21 @@
               </div>
 
               <div class="row">
+                <!-- Insurance Company -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Insurance Company</strong>
+                    <select class="custom-select" name="insurance_company_id">
+                      <option value="">Select Insurance Company</option>
+                      @foreach($insurance_companies as $key => $value)
+                        <option value="{{$value->id}}" {{ old('insurance_company_id', $vehicle->insurance_company_id ?? '') == $value->id ? 'selected' : '' }}>{{$value->name}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('insurance_company_id'))
+                      <label class="text-danger">{{ $errors->first('insurance_company_id') }}</label>
+                    @endif
+                  </div>
+                </div>
                 <!-- Insurance Date -->
                 <div class="col-md-3">
                   <div class="form-group">

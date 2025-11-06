@@ -12,8 +12,10 @@ use App\Models\LadderMaker;
 use App\Models\IbcCenter;
 use App\Models\Vendor;
 use App\Models\ShiftHours;
+use App\Models\InsuranceCompany;
 use App\Traits\DraftTrait;
 use Illuminate\Support\Facades\File;
+
 
 class VehicleController extends Controller
 {
@@ -29,6 +31,7 @@ class VehicleController extends Controller
 
     public function create(Request $request){
     	$serial_no = Vehicle::GetSerialNumber();
+        $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $vehicleTypes = VehicleType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)
             ->whereHas('ibcCenter', function ($query) {
@@ -50,7 +53,7 @@ class VehicleController extends Controller
             '2' =>  'No',
         );
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
-        return view('admin.vehicles.create', compact('serial_no','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no','insurance_companies','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -108,6 +111,7 @@ class VehicleController extends Controller
                 'fitness_date'              =>  'required|date',
                 'next_fitness_date'         =>  'required|date|after:fitness_date',
                 'fitness_file'              =>  ($draftAttached['fitness_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'insurance_company_id'      =>  'required',
                 'insurance_date'            =>  'required|date',
                 'insurance_expiry_date'     =>  'required|date|after:insurance_date',
                 'insurance_file'            =>  ($draftAttached['insurance_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -149,6 +153,7 @@ class VehicleController extends Controller
                 'fitness_date.required'                 =>  'Fitness Date is required',
                 'next_fitness_date.required'            =>  'Next fitness date is required',
                 'fitness_file.required'                 =>  'Fitness Attachment is required',
+                'insurance_company_id.required'         =>  'Insurance Company is required',
                 'insurance_date.required'               =>  'Insurance Date is required',
                 'insurance_expiry_date.required'        =>  'Insurance Expiry Date is required',
                 'insurance_file.required'               =>  'Insurance Attachment is required',
@@ -198,6 +203,7 @@ class VehicleController extends Controller
         $vehicle->akpl                      =   $request->akpl;
         $vehicle->fitness_date              =   $request->fitness_date;
         $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_company_id      =   $request->insurance_company_id;
         $vehicle->insurance_date            =   $request->insurance_date;
         $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
         $vehicle->route_permit_date         =   $request->route_permit_date;
@@ -322,12 +328,13 @@ class VehicleController extends Controller
         $ladder_maker = LadderMaker::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+        $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
+
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit',compact('vehicle','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
+        return view('admin.vehicles.edit',compact('vehicle','insurance_companies','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -360,6 +367,7 @@ class VehicleController extends Controller
                 'fitness_date'              =>  'required|date',
                 'next_fitness_date'         =>  'required|date|after:fitness_date',
                 'fitness_file'              =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'insurance_company_id'      =>  'required',
                 'insurance_date'            =>  'required|date',
                 'insurance_expiry_date'     =>  'required|date|after:insurance_date',
                 'insurance_file'            =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -396,6 +404,7 @@ class VehicleController extends Controller
                 'fitness_date.required'                 =>  'Fitness Date is required',
                 'next_fitness_date.required'            =>  'Next fitness date is required',
                 'fitness_file.required'                 =>  'Fitness Attachment is required',
+                'insurance_company_id.required'         =>  'Insurance Company is required',
                 'insurance_date.required'               =>  'Insurance Date is required',
                 'insurance_expiry_date.required'        =>  'Insurance Expiry Date is required',
                 'insurance_file.required'               =>  'Insurance Attachment is required',
@@ -443,6 +452,7 @@ class VehicleController extends Controller
         $vehicle->akpl                      =   $request->akpl;
         $vehicle->fitness_date              =   $request->fitness_date;
         $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_company_id      =   $request->insurance_company_id;
         $vehicle->insurance_date            =   $request->insurance_date;
         $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
         $vehicle->route_permit_date         =   $request->route_permit_date;

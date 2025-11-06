@@ -36,6 +36,7 @@ class Vehicle extends Model
         'fitness_date',
         'next_fitness_date',
         'fitness_file',
+        'insurance_company_id',
         'insurance_date',
         'insurance_expiry_date',
         'insurance_file',
