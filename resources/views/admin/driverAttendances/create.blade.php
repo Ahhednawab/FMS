@@ -55,66 +55,88 @@
           @csrf
           
 
-          <div class="row">
+          <div class="row mb-3">
             <!-- Date -->
             <div class="col-md-2">
               <div class="form-group">
                 <strong>Date </strong>
-                <input type="date" class="form-control" name="date" value="{{ old('date') }}" max="{{ date('Y-m-d') }}">
+                <input type="date" class="form-control @error('date') is-invalid @enderror" name="date" value="{{ old('date') }}" max="{{ date('Y-m-d') }}">
                 @error('date')
                   <label class="text-danger">{{ $message }}</label>
                 @enderror
               </div>
             </div>
-          </div>
-          
-          @foreach($drivers as $i => $value)
-            <div class="row">
-              <input type="hidden" class="form-control" name="driver_id[]" value="{{ $value->id }}">
-
-              <!-- Driver -->
-              <div class="col-md-3">
-                <div class="form-group">
-                  <strong>Driver</strong>
-                  <input type="text" class="form-control" name="full_name[]" value="{{ $value->full_name }}" readonly>
+            
+            <!-- Bulk Actions -->
+            <div class="col-md-10">
+              <div class="form-group">
+                <div class="mb-2">
+                  <strong>Bulk Actions:</strong>
                 </div>
-              </div>
-
-              
-
-              <!-- Shift -->
-              <div class="col-md-3">
-                <div class="form-group">
-                  <strong>Shift</strong>
-                  <input type="text" class="form-control" name="shift[]" value="{{ $value->shiftTiming ? $value->shiftTiming->name . ' (' . \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}" readonly>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  @foreach($driver_attendance_status as $id => $status)
+                    <button type="button" class="btn btn-sm btn-outline-primary status-btn" data-status-id="{{ $id }}">
+                      {{ $status }}
+                    </button>
+                  @endforeach
                 </div>
-              </div>
-
-              <!-- Status -->
-              <div class="col-md-2">
-                <div class="form-group">
-                  <strong>Status</strong>
-                  <input type="text" class="form-control" name="driverStatus[]" value="{{ $value->driverStatus->name }}" readonly>
-                </div>
-              </div>
-
-              <!-- Attendance -->
-              <div class="col-md-2">
-                <div class="form-group">
-                  <strong>Attendance</strong>
-                  <select class="custom-select" name="status[]">
-                    <option value="">Select</option>
-                    @foreach($driver_attendance_status as $statusKey => $statusLabel)
-                      <option value="{{$statusKey}}" {{ old('status.'.$i) == (string)$statusKey ? 'selected' : '' }}>{{$statusLabel}}</option>
-                    @endforeach
-                  </select>
-                  @error("status.$i")
-                    <label class="text-danger">{{ $message }}</label>
-                  @enderror
-                  
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="selectAll">
+                  <label class="form-check-label font-weight-bold" for="selectAll">Select All Drivers</label>
                 </div>
               </div>
             </div>
+          </div>
+          
+          @foreach($drivers as $i => $value)
+              <div class="row align-items-center mb-3">
+                <div class="col-auto pr-0 d-flex align-items-center">
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input driver-checkbox" data-driver-id="{{ $i }}" style="margin-top: 0;">
+                  </div>
+                </div>
+                <input type="hidden" class="form-control" name="driver_id[]" value="{{ $value->id }}">
+
+                <!-- Driver -->
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <strong>Driver</strong>
+                    <input type="text" class="form-control" name="full_name[]" value="{{ $value->full_name }}" readonly>
+                  </div>
+                </div>
+
+                <!-- Shift -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <strong>Shift</strong>
+                    <input type="text" class="form-control" name="shift[]" value="{{ $value->shiftTiming ? $value->shiftTiming->name . ' (' . \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}" readonly>
+                  </div>
+                </div>
+
+                <!-- Status -->
+                <div class="col-md-1">
+                  <div class="form-group">
+                    <strong>Status</strong>
+                    <input type="text" class="form-control" name="driverStatus[]" value="{{ $value->driverStatus->name }}" readonly>
+                  </div>
+                </div>
+
+                <!-- Attendance -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Attendance</strong>
+                    <select class="custom-select @error('status.' . $i) is-invalid @enderror" name="status[]" data-driver-idx="{{ $i }}">
+                      <option value="">Select</option>
+                      @foreach($driver_attendance_status as $statusKey => $statusLabel)
+                        <option value="{{$statusKey}}" {{ old('status.'.$i) == (string)$statusKey ? 'selected' : '' }}>{{$statusLabel}}</option>
+                      @endforeach
+                    </select>
+                    @error("status.$i")
+                      <label class="text-danger">{{ $message }}</label>
+                    @enderror
+                  </div>
+                </div>
+              </div>
           @endforeach
 
           <div class="row">            
@@ -131,3 +153,58 @@
     </div>
   </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Handle status button clicks
+    $('.status-btn').on('click', function() {
+        const statusId = $(this).data('status-id');
+        const statusName = $(this).text().trim();
+        
+        // Find all checked checkboxes
+        const $checkedBoxes = $('.driver-checkbox:checked');
+        
+        if ($checkedBoxes.length === 0) {
+            // Show error if no drivers are selected
+            new Noty({
+                type: 'error',
+                text: 'Please select at least one driver',
+                timeout: 3000
+            }).show();
+            return;
+        }
+        
+        // Update status for each selected driver
+        $checkedBoxes.each(function() {
+            const driverIdx = $(this).data('driver-id');
+            $(`select[name='status[]'][data-driver-idx='${driverIdx}']`).val(statusId);
+        });
+        
+        // Show success message
+        new Noty({
+            type: 'success',
+            text: `Updated attendance to ${statusName} for ${$checkedBoxes.length} driver(s)`,
+            timeout: 3000
+        }).show();
+    });
+    
+    // Select All functionality
+    $('#selectAll').on('change', function() {
+        $('.driver-checkbox').prop('checked', $(this).prop('checked'));
+    });
+    
+    // Uncheck "Select All" if any checkbox is unchecked
+    $('.driver-checkbox').on('change', function() {
+        if (!$(this).prop('checked')) {
+            $('#selectAll').prop('checked', false);
+        } else {
+            // If all checkboxes are checked, check "Select All"
+            if ($('.driver-checkbox:not(:checked)').length === 0) {
+                $('#selectAll').prop('checked', true);
+            }
+        }
+    });
+});
+</script>
+@endpush

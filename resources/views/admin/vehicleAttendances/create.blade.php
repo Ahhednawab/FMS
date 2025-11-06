@@ -54,7 +54,7 @@
         <form action="{{ route('admin.vehicleAttendances.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
           
-          <div class="row">
+          <div class="row mb-3">
             <!-- Date -->
             <div class="col-md-2">
               <div class="form-group">
@@ -63,6 +63,26 @@
                 @error('date')
                   <label class="text-danger">{{ $message }}</label>
                 @enderror
+              </div>
+            </div>
+            
+            <!-- Bulk Actions -->
+            <div class="col-md-10">
+              <div class="form-group">
+                <div class="mb-2">
+                  <strong>Bulk Actions:</strong>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  @foreach($attendanceStatus as $id => $status)
+                    <button type="button" class="btn btn-sm btn-outline-primary status-btn" data-status-id="{{ $id }}">
+                      {{ $status }}
+                    </button>
+                  @endforeach
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="selectAll">
+                  <label class="form-check-label font-weight-bold" for="selectAll">Select All Vehicles</label>
+                </div>
               </div>
             </div>
           </div>
@@ -82,18 +102,21 @@
             </div>
 
             @foreach($vehicles as $i => $value)
-              <div class="row">
+              <div class="row align-items-center">
+                <div class="col-auto pr-0">
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input vehicle-checkbox" data-vehicle-id="{{ $value['vehicle_id'] }}">
+                  </div>
+                </div>
                 <input type="hidden" class="form-control" name="vehicle_id[]" value="{{ $value['vehicle_id'] }}">
                 
                 <!-- Vehicle No -->
-                <div class="col-md-2">
+                <div class="col-md-2 pl-0">
                   <div class="form-group">
                     <strong>Vehicle No</strong>
                     <input type="text" class="form-control" name="vehicle_no" value="{{ $value['vehicle_no'] }}" readonly>
                   </div>
                 </div>
-
-                
 
                 <!-- Make (Manufacturer) -->
                 <div class="col-md-2">
@@ -110,8 +133,6 @@
                     <input type="text" class="form-control" name="shift" value="{{ $value['shift'] }}" readonly>
                   </div>
                 </div>
-
-                
 
                 <!-- IBC Center -->
                 <div class="col-md-2">
@@ -160,3 +181,58 @@
     </div>
   </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Handle status button clicks
+    $('.status-btn').on('click', function() {
+        const statusId = $(this).data('status-id');
+        const statusName = $(this).text().trim();
+        
+        // Find all checked checkboxes
+        const $checkedBoxes = $('.vehicle-checkbox:checked');
+        
+        if ($checkedBoxes.length === 0) {
+            // Show error if no vehicles are selected
+            new Noty({
+                type: 'error',
+                text: 'Please select at least one vehicle',
+                timeout: 3000
+            }).show();
+            return;
+        }
+        
+        // Update status for each selected vehicle
+        $checkedBoxes.each(function() {
+            const vehicleId = $(this).data('vehicle-id');
+            $(`select[name='status[${vehicleId}]']`).val(statusId);
+        });
+        
+        // Show success message
+        new Noty({
+            type: 'success',
+            text: `Updated status to ${statusName} for ${$checkedBoxes.length} vehicle(s)`,
+            timeout: 3000
+        }).show();
+    });
+    
+    // Select All functionality
+    $('#selectAll').on('change', function() {
+        $('.vehicle-checkbox').prop('checked', $(this).prop('checked'));
+    });
+    
+    // Uncheck "Select All" if any checkbox is unchecked
+    $('.vehicle-checkbox').on('change', function() {
+        if (!$(this).prop('checked')) {
+            $('#selectAll').prop('checked', false);
+        } else {
+            // If all checkboxes are checked, check "Select All"
+            if ($('.vehicle-checkbox:not(:checked)').length === 0) {
+                $('#selectAll').prop('checked', true);
+            }
+        }
+    });
+});
+</script>
+@endpush
