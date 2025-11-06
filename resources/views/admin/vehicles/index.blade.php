@@ -265,11 +265,13 @@
   <script>
     $(document).ready(function () {
       // Initialize DataTable
-      var table = $('.datatable-colvis-basic').DataTable({
-        columnDefs: [
-          { orderable: false, targets: [0, 8] } // Disable sorting on checkbox and action columns
-        ]
-      });
+      var table = $('.datatable-colvis-basic').DataTable();
+      //   {
+      //   columnDefs: [
+      //     { orderable: false, targets: [0, 8] } // Disable sorting on checkbox and action columns
+      //   ]
+      // }
+    // );
 
       // Toggle all checkboxes
       $('#selectAll').on('change', function() {
