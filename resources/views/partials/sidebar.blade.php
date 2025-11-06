@@ -99,6 +99,7 @@
             style="{{ request()->routeIs('admin.vehicles.*') 
             || request()->routeIs('admin.drivers.*') 
             || request()->routeIs('admin.vendors.*') 
+            || request()->routeIs('admin.insurance-companies.*')
               ? 'display:block;' : '' }}">
 
             <li class="nav-item">
@@ -109,6 +110,9 @@
             </li>
             <li class="nav-item">
               <a href="{{ route('admin.vendors.index')}}" class="nav-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">Vendor Management</a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('admin.insurance-companies.index')}}" class="nav-link {{ request()->routeIs('admin.insurance-companies.*') ? 'active' : '' }}">Insurance Company Management</a>
             </li>
           </ul>
         </li>

@@ -40,7 +40,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DailyMileageReportController;
 use App\Http\Controllers\Admin\DailyFuelController;
 use App\Http\Controllers\Admin\DailyFuelReportController;
-
+use App\Http\Controllers\Admin\InsuranceCompanyController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -84,6 +84,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('drivers', DriverController::class);
     Route::post('drivers/destroyMultiple', [DriverController::class, 'destroyMultiple'])->name('drivers.destroyMultiple');
     Route::resource('vendors', VendorController::class);
+
+    // Insurance Companies
+    Route::resource('insurance-companies', InsuranceCompanyController::class);
 
     // Product Management
     Route::resource('brands', BrandController::class);
