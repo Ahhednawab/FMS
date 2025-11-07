@@ -12,9 +12,16 @@ use Carbon\Carbon;
 
 class DriversAttendanceController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
+        $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
+        $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
+        
         $driverAttendances = DriversAttendance::with(['driver.shiftTiming','driver.driverStatus','driver','attendanceStatus'])
             ->where('is_active',1)
+            ->whereBetween('date', [
+                $fromDate->toDateString(),
+                $toDate->toDateString(),
+            ])
             ->orderBy('id','DESC')
             ->get();
         return view('admin.driverAttendances.index', compact('driverAttendances'));
