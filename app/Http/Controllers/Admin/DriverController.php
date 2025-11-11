@@ -438,6 +438,10 @@ class DriverController extends Controller
 
     public function update(Request $request, Driver $driver)
     {
+        \Log::info('Driver update request', [
+            'driver' => $driver,
+            'request_data' => $request->all()
+        ]);
         $validator = \Validator::make(
             $request->all(),
             [
@@ -452,14 +456,14 @@ class DriverController extends Controller
                 'dob' =>  'nullable|date',
                 'vehicle_id' => [
                     'nullable',
-                    Rule::unique('drivers', 'vehicle_id')->ignore($driver->id),
+                    Rule::unique('drivers', 'vehicle_id')->ignore($driver?->id, 'id'),
                 ],
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
                 'cnic_no' =>  [
                     'nullable',
                     'string',
                     'size:15',
-                    Rule::unique('drivers', 'cnic_no')->ignore($driver->id),
+                    Rule::unique('drivers', 'cnic_no')->ignore($driver?->id, 'id'),
                 ],
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -476,7 +480,7 @@ class DriverController extends Controller
                 'license_no' =>  [
                     'nullable',
                     'string',
-                    'unique:drivers,license_no,' . $driver->id,
+                    Rule::unique('drivers', 'license_no')->ignore($driver?->id, 'id'),
                 ],
                 'license_category_id' =>  'required',
                 'license_expiry_date' =>  'required|date',
