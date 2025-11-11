@@ -451,12 +451,12 @@ class DriverController extends Controller
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
                 'vehicle_id' => [
-                    'required',
+                    'nullable',
                     Rule::unique('drivers', 'vehicle_id')->ignore($driver->id),
                 ],
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
                 'cnic_no' =>  [
-                    'required',
+                    'nullable',
                     'string',
                     'size:15',
                     Rule::unique('drivers', 'cnic_no')->ignore($driver->id),
@@ -474,7 +474,7 @@ class DriverController extends Controller
                 'ddc_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'license_no' =>  [
-                    'required',
+                    'nullable',
                     'string',
                     'unique:drivers,license_no,' . $driver->id,
                 ],
