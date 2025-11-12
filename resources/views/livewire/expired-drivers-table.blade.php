@@ -7,8 +7,12 @@
                 <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
             </div>
             <div class="header-elements d-none">
-                <div class="d-flex justify-content-center">
+                <div class="d-flex justify-content-center align-items-center">
                     <span class="badge badge-danger mr-2">{{ count($expiredDrivers) }} Expired</span>
+                    <!-- View Button -->
+                    <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#allDriversModal">
+                        View
+                    </button>
                 </div>
             </div>
         </div>
@@ -23,25 +27,25 @@
                 <div class="card-body">
                     <table class="table table-striped table-hover table-sm" id="drivers-table">
                         <thead class="thead-light">
-                            <tr>
-                                <th class="font-size-sm">Serial No</th>
-                                <th class="font-size-sm">Name</th>
-                                <th class="font-size-sm">Status</th>
-                                <th class="font-size-sm">Reason</th>
-                                <th class="text-center font-size-sm">Actions</th>
-                            </tr>
+                        <tr>
+                            <th class="font-size-sm">Serial No</th>
+                            <th class="font-size-sm">Name</th>
+                            <th class="font-size-sm">Status</th>
+                            <th class="font-size-sm">Reason</th>
+                            <th class="text-center font-size-sm">Actions</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @foreach($expiredDrivers as $driver)
-                                <tr>
-                                    <td class="font-size-sm">{{ $driver['serial_no'] }}</td>
-                                    <td class="font-size-sm">{{ $driver['name'] }}</td>
-                                    <td>
-                                        <span class="badge badge-warning badge-sm">{{ $driver['status'] }}</span>
-                                    </td>
-                                    <td class="font-size-sm">
-                                        <span class="text-danger">{{ $driver['reason'] }}</span>
-                                    </td>
+                        @foreach($expiredDrivers as $driver)
+                            <tr>
+                                <td class="font-size-sm">{{ $driver['serial_no'] }}</td>
+                                <td class="font-size-sm">{{ $driver['name'] }}</td>
+                                <td>
+                                    <span class="badge badge-warning badge-sm">{{ $driver['status'] }}</span>
+                                </td>
+                                <td class="font-size-sm">
+                                    <span class="text-danger">{{ $driver['reason'] }}</span>
+                                </td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">
@@ -56,11 +60,11 @@
                                         </div>
                                     </div>
                                 </td>
-                                </tr>
-                            @endforeach
+                            </tr>
+                        @endforeach
                         </tbody>
                     </table>
-                    
+
                 </div>
             </div>
             <!-- /basic datatable -->
@@ -75,4 +79,43 @@
         @endif
     </div>
     <!-- /content area -->
+
+    <!-- Modal for showing all expired drivers -->
+    <div class="modal fade" id="allDriversModal" tabindex="-1" role="dialog" aria-labelledby="allDriversModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="allDriversModalLabel">Expired Drivers List</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>Serial No</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($expiredDrivers as $driver)
+                            <tr>
+                                <td>{{ $driver['serial_no'] }}</td>
+                                <td>{{ $driver['name'] }}</td>
+                                <td><span class="badge badge-warning">{{ $driver['status'] }}</span></td>
+                                <td><span class="text-danger">{{ $driver['reason'] }}</span></td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

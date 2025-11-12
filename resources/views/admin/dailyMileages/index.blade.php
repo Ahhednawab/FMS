@@ -62,38 +62,38 @@
 
           @php
             use Carbon\Carbon;
-            
+
             $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
             $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
           @endphp
-          
+
           <!--From Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>From</strong></label>
               <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}" max="{{ date('Y-m-d') }}">
             </div>
-          </div>   
+          </div>
           <!--To Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>To</strong></label>
               <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}" max="{{ date('Y-m-d') }}">
             </div>
-          </div> 
+          </div>
           <div class="col-md-3 mt-4">
             <div class="form-group">
               <button type="submit" class="btn btn-primary">Filter</button>
               <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-primary">Reset</a>
             </div>
           </div>
-          
+
         </div>
         </form>
-        
+
       </div>
     </div>
-    
+
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
@@ -109,9 +109,13 @@
                 </div>
             </div>
             <div>
+                <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+                    <i class="icon-file-excel"></i> Excel
+                </button>
                 <button class="btn btn-light" id="printBtn" title="Print">
                     <i class="icon-printer"></i> Print
                 </button>
+
                 <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
                     <i class="icon-file-pdf"></i> PDF
                 </button>
@@ -162,10 +166,10 @@
                 </div>
             </div>
         </div>
-        
+
         <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
           <thead>
-            <tr>  
+            <tr>
               <th>Vehicle</th>
               <th>Station</th>
               <th>Report Date</th>
@@ -209,7 +213,7 @@
                   </div>
                 </td>
               </tr>
-            @endforeach            
+            @endforeach
           </tbody>
         </table>
       </div>
@@ -234,10 +238,10 @@
   <script>
     // $(document).ready(function () {
     //   $('.datatable-colvis-basic').DataTable();
-      
-      
-      
-      
+
+
+
+
     //   $('.vehicle').select2({
     //     placeholder: "--Select--",
     //     allowClear: true,
@@ -270,18 +274,7 @@
             ]
         });
 
-
-         // PDF button
-        $('#pdfBtn').on('click', function() {
-            table.button('.buttons-pdf').trigger();
-        });
-
-        // Custom search input
-        $('#customSearch').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-
-        // Initialize buttons
+        // Initialize DataTable Buttons
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {
@@ -289,9 +282,7 @@
                     text: 'Print',
                     className: 'd-none',
                     exportOptions: {
-                        modifier: {
-                            page: 'current'
-                        }
+                        modifier: { page: 'current' }
                     }
                 },
                 {
@@ -299,9 +290,15 @@
                     text: 'PDF',
                     className: 'd-none',
                     exportOptions: {
-                        modifier: {
-                            page: 'current'
-                        }
+                        modifier: { page: 'current' }
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: { page: 'current' }
                     }
                 }
             ]
@@ -312,6 +309,21 @@
             table.button('.buttons-print').trigger();
         });
 
+        // PDF button
+        $('#pdfBtn').on('click', function() {
+            table.button('.buttons-pdf').trigger();
+        });
+
+        // Excel button
+        $('#excelBtn').on('click', function() {
+            table.button('.buttons-excel').trigger();
+        });
+
+        // Custom search input
+        $('#customSearch').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+
         // Initialize select2
         $('.vehicle').select2({
             placeholder: "--Select--",
@@ -319,19 +331,19 @@
             theme: 'bootstrap4'
         });
 
-        // Add this after your DataTable initialization
+        // Column toggle
         $('.column-toggle').on('change', function() {
-          var column = table.column($(this).data('column'));
-          column.visible(!column.visible());
-          $(this).prop('checked', column.visible());
+            var column = table.column($(this).data('column'));
+            column.visible(!column.visible());
+            $(this).prop('checked', column.visible());
         });
 
-        // Initialize column visibility based on current state
+        // Sync checkbox state
         table.columns().every(function() {
-          $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
+            $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
         });
-
     });
+
 
     setTimeout(function () {
       let alertBox = document.getElementById('alert-message');

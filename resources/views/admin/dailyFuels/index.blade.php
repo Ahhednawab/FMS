@@ -62,35 +62,35 @@
 
           @php
             use Carbon\Carbon;
-            
+
             $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
             $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
           @endphp
-          
+
           <!--From Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>From</strong></label>
               <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}" max="{{ date('Y-m-d') }}">
             </div>
-          </div>   
+          </div>
           <!--To Date -->
           <div class="col-md-3">
             <div class="form-group">
               <label><strong>To</strong></label>
               <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}" max="{{ date('Y-m-d') }}">
             </div>
-          </div> 
+          </div>
           <div class="col-md-3 mt-4">
             <div class="form-group">
               <button type="submit" class="btn btn-primary">Filter</button>
               <a href="{{ route('admin.dailyFuels.index') }}" class="btn btn-primary">Reset</a>
             </div>
           </div>
-          
+
         </div>
         </form>
-        
+
       </div>
     </div>
 
@@ -110,6 +110,9 @@
                 </div>
             </div>
             <div>
+                <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+                    <i class="icon-file-excel"></i> Excel
+                </button>
                 <button class="btn btn-light" id="printBtn" title="Print">
                     <i class="icon-printer"></i> Print
                 </button>
@@ -224,7 +227,7 @@
                   </div>
                 </td>
               </tr>
-            @endforeach     
+            @endforeach
           </tbody>
         </table>
       </div>
@@ -237,7 +240,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  
+
   <!-- <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
   <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script> -->
@@ -288,46 +291,46 @@
             ]
         });
 
-
-         // PDF button
-        $('#pdfBtn').on('click', function() {
-            table.button('.buttons-pdf').trigger();
-        });
-
-        // Custom search input
-        $('#customSearch').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-
-        // Initialize buttons
+        // Initialize DataTable Buttons
         new $.fn.dataTable.Buttons(table, {
             buttons: [
                 {
                     extend: 'print',
                     text: 'Print',
                     className: 'd-none',
-                    exportOptions: {
-                        modifier: {
-                            page: 'current'
-                        }
-                    }
+                    exportOptions: { modifier: { page: 'current' } }
                 },
                 {
                     extend: 'pdfHtml5',
                     text: 'PDF',
                     className: 'd-none',
-                    exportOptions: {
-                        modifier: {
-                            page: 'current'
-                        }
-                    }
+                    exportOptions: { modifier: { page: 'current' } }
+                },
+                {
+                    extend: 'excelHtml5',   // <<< Excel button added
+                    text: 'Excel',
+                    className: 'd-none',
+                    exportOptions: { modifier: { page: 'current' } }
                 }
             ]
         });
 
-        // Print button
+        // Button triggers
         $('#printBtn').on('click', function() {
             table.button('.buttons-print').trigger();
+        });
+
+        $('#pdfBtn').on('click', function() {
+            table.button('.buttons-pdf').trigger();
+        });
+
+        $('#excelBtn').on('click', function() {   // <<< Excel trigger
+            table.button('.buttons-excel').trigger();
+        });
+
+        // Custom search input
+        $('#customSearch').on('keyup', function() {
+            table.search(this.value).draw();
         });
 
         // Initialize select2
@@ -337,19 +340,19 @@
             theme: 'bootstrap4'
         });
 
-        // Add this after your DataTable initialization
+        // Column toggle
         $('.column-toggle').on('change', function() {
-          var column = table.column($(this).data('column'));
-          column.visible(!column.visible());
-          $(this).prop('checked', column.visible());
+            var column = table.column($(this).data('column'));
+            column.visible(!column.visible());
+            $(this).prop('checked', column.visible());
         });
 
-        // Initialize column visibility based on current state
+        // Sync checkbox state
         table.columns().every(function() {
-          $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
+            $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
         });
-
     });
+
 
 
     setTimeout(function () {
