@@ -72,7 +72,7 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="icon-checkmark-circle text-success" style="font-size: 4rem;"></i>
-                    <h4 class="text-muted mt-3">All drivers have valid documents!</h4>
+                    <h4 class="text-muted mt-3"> All drivers have valid documents!</h4>
                     <p class="text-muted">No expired documents found.</p>
                 </div>
             </div>
