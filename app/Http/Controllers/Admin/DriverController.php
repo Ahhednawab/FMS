@@ -66,10 +66,10 @@ class DriverController extends Controller
             ->get()
             ->mapWithKeys(function($shift) {
                 return [
-                    $shift->id => $shift->name . ' (' 
-                        . date('h:i a', strtotime($shift->start_time)) 
-                        . ' - ' 
-                        . date('h:i a', strtotime($shift->end_time)) 
+                    $shift->id => $shift->name . ' ('
+                        . date('h:i a', strtotime($shift->start_time))
+                        . ' - '
+                        . date('h:i a', strtotime($shift->end_time))
                         . ')'
                 ];
             })
@@ -80,7 +80,7 @@ class DriverController extends Controller
             'no'    =>  'No',
         );
         $draftInfo = $this->getDraftDataForView($request, 'drivers');
-        
+
         return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings') + $draftInfo);
     }
 
@@ -165,6 +165,7 @@ class DriverController extends Controller
                 'shift_timing_id.required'          => 'Shift Timing is required.',
                 'shift_timing_id.exists'            => 'Selected Shift Timing is invalid.',
                 'cnic_no.required'                  =>  'CNIC No is required',
+                    'cnic_no.unique'                     => 'This CNIC number already exists.',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
                 'cnic_file.mimes'                   =>  'File must be type: pdf, doc, docx, jpg, jpeg, png.',
@@ -192,7 +193,7 @@ class DriverController extends Controller
                 'address.required'                  =>  'Address is required',
             ]
         );
-        
+
         // Add custom validation for shift timing conflict
         $validator->after(function ($validator) use ($request) {
             if ($request->vehicle_id && $request->shift_timing_id) {
@@ -202,7 +203,7 @@ class DriverController extends Controller
                         ->where('shift_timing_id', $request->shift_timing_id)
                         ->where('is_active', 1)
                         ->first();
-                    
+
                     if ($existingDriver) {
                         $validator->errors()->add('shift_timing_id', 'This vehicle already has a driver assigned to this shift timing. Please select a different shift timing.');
                     }
@@ -213,7 +214,7 @@ class DriverController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        
+
         $uploadPath = public_path('uploads/drivers');
 
         if (!file_exists($uploadPath)) {
@@ -244,7 +245,7 @@ class DriverController extends Controller
         $driver->uniform_issue_date    =   $request->uniform_issue_date;
         $driver->sandal_issue_date    =   $request->sandal_issue_date;
         $driver->address                =   $request->address;
-        
+
         $cnicFileName = null;
         if ($request->hasFile('cnic_file')) {
             $cnic = $request->file('cnic_file');
@@ -386,7 +387,7 @@ class DriverController extends Controller
 
     public function edit(Driver $driver){
         $driver_status = DriverStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+
         $vehicles = Vehicle::where('is_active', 1)
             ->whereNotIn('id', function ($query) use ($driver) {
                 // Exclude vehicles where shift_hour_id = 1 and already has a driver (except current driver)
@@ -419,15 +420,15 @@ class DriverController extends Controller
             ->get()
             ->mapWithKeys(function($shift) {
                 return [
-                    $shift->id => $shift->name . ' (' 
-                        . date('h:i a', strtotime($shift->start_time)) 
-                        . ' - ' 
-                        . date('h:i a', strtotime($shift->end_time)) 
+                    $shift->id => $shift->name . ' ('
+                        . date('h:i a', strtotime($shift->start_time))
+                        . ' - '
+                        . date('h:i a', strtotime($shift->end_time))
                         . ')'
                 ];
             })
             ->toArray();
-        
+
         $status = array(
             'yes'   =>  'Yes',
             'no'    =>  'No',
@@ -448,7 +449,7 @@ class DriverController extends Controller
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
                 // 'vehicle_id' =>  'required',
-                
+
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
                 // 'cnic_no' =>  'required|string|size:15|unique:drivers,cnic_no,' . $driver->id,
                 'cnic_expiry_date' =>  'required|date',
@@ -533,7 +534,7 @@ class DriverController extends Controller
                 'address.required'                  =>  'Address is required',
             ]
         );
-        
+
         // Add custom validation for shift timing conflict (excluding current driver)
         $validator->after(function ($validator) use ($request, $driver) {
             if ($request->vehicle_id && $request->shift_timing_id) {
@@ -544,7 +545,7 @@ class DriverController extends Controller
                         ->where('is_active', 1)
                         ->where('id', '!=', $driver->id)
                         ->first();
-                    
+
                     if ($existingDriver) {
                         $validator->errors()->add('shift_timing_id', 'This vehicle already has a driver assigned to this shift timing. Please select a different shift timing.');
                     }
@@ -584,7 +585,7 @@ class DriverController extends Controller
         $driver->uniform_issue_date    =   $request->uniform_issue_date;
         $driver->sandal_issue_date    =   $request->sandal_issue_date;
         $driver->address                =   $request->address;
-        
+
         $cnicFileName = null;
         if ($request->hasFile('cnic_file')) {
             $cnic = $request->file('cnic_file');
@@ -686,7 +687,7 @@ class DriverController extends Controller
 
         return redirect()->route('admin.drivers.index')->with('delete_msg', 'Driver deleted successfully.');
     }
-    
+
     public function destroyMultiple(Request $request)
     {
         $ids = $request->ids;

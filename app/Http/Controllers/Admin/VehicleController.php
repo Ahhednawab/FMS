@@ -47,7 +47,7 @@ class VehicleController extends Controller
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
+
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
@@ -85,7 +85,7 @@ class VehicleController extends Controller
         }
 
         $rules = [
-                'vehicle_no'                =>  'required',
+                'vehicle_no'                =>  'required|unique:vehicles,vehicle_no',
                 'make'                      =>  'required',
                 'model'                     =>  'required',
                 'chasis_no'                 =>  'required',
@@ -97,7 +97,7 @@ class VehicleController extends Controller
                 'cone'                      =>  'nullable|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                'medical_box'               =>  'required',
+                'medical_box'               =>  'nullable',
                 'on_duty_status'            =>  'required',
                 'seat_cover'                =>  'nullable',
                 'fire_extenguisher'         =>  'nullable',
@@ -117,10 +117,10 @@ class VehicleController extends Controller
                 'insurance_file'            =>  ($draftAttached['insurance_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'route_permit_date'         =>  'required|date',
                 'route_permit_expiry_date'  =>  'required|date|after:route_permit_date',
-                'route_permit_file'         =>  ($draftAttached['route_permit_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+                'route_permit_file'         =>  ($draftAttached['route_permit_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'tax_date'                  =>  'required|date',
                 'next_tax_date'             =>  'required|date|after:tax_date',
-                'tax_file'                  =>  ($draftAttached['tax_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+                'tax_file'                  =>  ($draftAttached['tax_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ];
 
         $validator = \Validator::make(
@@ -128,6 +128,7 @@ class VehicleController extends Controller
             $rules,
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
+                'vehicle_no.unique'   => 'This vehicle number already exists.',
                 'make.required'                         =>  'Make is required',
                 'model.required'                        =>  'Model is required',
                 'chasis_no.required'                    =>  'Chasis No is required',
@@ -140,7 +141,6 @@ class VehicleController extends Controller
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
                 'tracker_installation_date.required'    =>  'Tracker Installation Date is required',
@@ -191,14 +191,14 @@ class VehicleController extends Controller
         $vehicle->station_id                =   $request->station_id;
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
-        $vehicle->medical_box               =   $request->medical_box;
+//        $vehicle->medical_box               =   $request->medical_box;
         $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
         $vehicle->tracker_installation_date =   $request->tracker_installation_date;
         $vehicle->inspection_date           =   $request->inspection_date;
         $vehicle->next_inspection_date      =   $request->next_inspection_date;
-        $vehicle->induction_date            =   $request->induction_date;        
+        $vehicle->induction_date            =   $request->induction_date;
         $vehicle->pso_card                  =   $request->pso_card;
         $vehicle->akpl                      =   $request->akpl;
         $vehicle->fitness_date              =   $request->fitness_date;
@@ -342,7 +342,7 @@ class VehicleController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'vehicle_no'                =>  'required',
+                'vehicle_no'                =>  'required|unique:vehicles,vehicle_no',
                 'make'                      =>  'required',
                 'model'                     =>  'required',
                 'chasis_no'                 =>  'required',
@@ -354,7 +354,7 @@ class VehicleController extends Controller
                 'cone'                      =>  'nullable|numeric|min:0',
                 'station_id'                =>  'required',
                 'ibc_center_id'             =>  'required',
-                'medical_box'               =>  'required',
+                'medical_box'               =>  'nullable',
                 'seat_cover'                =>  'nullable',
                 'fire_extenguisher'         =>  'nullable',
                 'tracker_installation_date' =>  'required|date',
@@ -373,13 +373,14 @@ class VehicleController extends Controller
                 'insurance_file'            =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'route_permit_date'         =>  'required|date',
                 'route_permit_expiry_date'  =>  'required|date|after:route_permit_date',
-                'route_permit_file'         =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+                'route_permit_file'         =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'tax_date'                  =>  'required|date',
                 'next_tax_date'             =>  'required|date|after:tax_date',
-                'tax_file'                  =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',  
+                'tax_file'                  =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
             ],
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
+                'vehicle_no.unique'   => 'This vehicle number already exists.',
                 'make.required'                         =>  'Make is required',
                 'model.required'                        =>  'Model is required',
                 'chasis_no.required'                    =>  'Chasis No is required',
@@ -391,7 +392,6 @@ class VehicleController extends Controller
                 'cone.required'                         =>  'Cone is required',
                 'station_id.required'                   =>  'Station is required',
                 'ibc_center_id.required'                =>  'IBC Center is required',
-                'medical_box.required'                  =>  'Medical Box is required',
                 'seat_cover.required'                   =>  'Seat Cover is required',
                 'fire_extenguisher.required'            =>  'Fire Extinguisher is required',
                 'tracker_installation_date.required'    =>  'Tracker Installation Date is required',
@@ -440,7 +440,7 @@ class VehicleController extends Controller
         $vehicle->station_id                =   $request->station_id;
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
-        $vehicle->medical_box               =   $request->medical_box;
+//        $vehicle->medical_box               =   $request->medical_box;
         $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
@@ -459,7 +459,7 @@ class VehicleController extends Controller
         $vehicle->route_permit_expiry_date  =   $request->route_permit_expiry_date;
         $vehicle->tax_date                  =   $request->tax_date;
         $vehicle->next_tax_date             =   $request->next_tax_date;
-        
+
         $registrationFileName = null;
         if ($request->hasFile('registration_file')) {
             $picture = $request->file('registration_file');
@@ -522,7 +522,7 @@ class VehicleController extends Controller
     {
         $vehicle->is_active = 0;
         $vehicle->save();
-        
+
         return redirect()->route('admin.vehicles.index')->with('delete_msg', 'Vehicle deleted successfully.');
     }
     public function destroyMultiple(Request $request)

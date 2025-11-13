@@ -3,28 +3,45 @@
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
             <div class="page-title d-flex">
-                <h5><i class="icon-user mr-2"></i> <span class="font-weight-semibold">Drivers with Expired Documents</span></h5>
+                <h5><i class="icon-user mr-2"></i>
+                    <span class="font-weight-semibold">Drivers with Expired Documents</span>
+                </h5>
                 <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center align-items-center">
-                    <span class="badge badge-danger mr-2">{{ count($expiredDrivers) }} Expired</span>
-                    <!-- View Button -->
+                    <span class="badge badge-danger mr-2">{{ $expiredDrivers->total() }} Expired</span>
                     <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#allDriversModal">
-                        View
+                        View All
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- /page header -->
 
-    <!-- Content area -->
+    <!-- /page header -->
     <div>
-        @if(count($expiredDrivers) > 0)
-            <!-- Basic datatable -->
+        @if($expiredDrivers->total() > 0)
             <div class="card">
                 <div class="card-body">
+
+                    <!-- ✅ Date Filters above the table -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="font-size-sm">From Date:</label>
+                            <input type="date" class="form-control form-control-sm" wire:model.lazy="fromDate" wire:change="filterDrivers">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="font-size-sm">To Date:</label>
+                            <input type="date" class="form-control form-control-sm" wire:model.lazy="toDate" wire:change="filterDrivers">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button wire:click="clearFilters" class="btn btn-secondary btn-sm w-100">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+
                     <table class="table table-striped table-hover table-sm" id="drivers-table">
                         <thead class="thead-light">
                         <tr>
@@ -40,18 +57,12 @@
                             <tr>
                                 <td class="font-size-sm">{{ $driver['serial_no'] }}</td>
                                 <td class="font-size-sm">{{ $driver['name'] }}</td>
-                                <td>
-                                    <span class="badge badge-warning badge-sm">{{ $driver['status'] }}</span>
-                                </td>
-                                <td class="font-size-sm">
-                                    <span class="text-danger">{{ $driver['reason'] }}</span>
-                                </td>
+                                <td><span class="badge badge-warning badge-sm">{{ $driver['status'] }}</span></td>
+                                <td class="font-size-sm"><span class="text-danger">{{ $driver['reason'] }}</span></td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">
-                                            <a href="#" class="list-icons-item" data-toggle="dropdown">
-                                                <i class="icon-menu9"></i>
-                                            </a>
+                                            <a href="#" class="list-icons-item" data-toggle="dropdown"><i class="icon-menu9"></i></a>
                                             <div class="dropdown-menu dropdown-menu-right">
                                                 <a href="{{ route('admin.drivers.edit', $driver['id']) }}" class="dropdown-item font-size-sm">
                                                     <i class="icon-pencil7"></i> Edit Driver
@@ -65,23 +76,25 @@
                         </tbody>
                     </table>
 
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $expiredDrivers->links() }}
+                    </div>
                 </div>
             </div>
-            <!-- /basic datatable -->
         @else
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="icon-checkmark-circle text-success" style="font-size: 4rem;"></i>
-                    <h4 class="text-muted mt-3"> All drivers have valid documents!</h4>
+                    <h4 class="text-muted mt-3">All drivers have valid documents!</h4>
                     <p class="text-muted">No expired documents found.</p>
                 </div>
             </div>
         @endif
     </div>
-    <!-- /content area -->
 
-    <!-- Modal for showing all expired drivers -->
-    <div class="modal fade" id="allDriversModal" tabindex="-1" role="dialog" aria-labelledby="allDriversModalLabel" aria-hidden="true">
+    <!-- Modal (same as before) -->
+    <div class="modal fade" id="allDriversModal" tabindex="-1" role="dialog"
+         aria-labelledby="allDriversModalLabel" aria-hidden="true" wire:ignore.self>
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -111,6 +124,9 @@
                         @endforeach
                         </tbody>
                     </table>
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $expiredDrivers->links() }}
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -119,3 +135,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $('#allDriversModal').on('hidden.bs.modal', function () {
+            const cleanUrl = '/admin/dashboard';
+            window.history.replaceState({}, document.title, cleanUrl);
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
+        });
+    });
+</script>

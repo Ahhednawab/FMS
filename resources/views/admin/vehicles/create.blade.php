@@ -26,7 +26,7 @@
           @if(isset($draftId))
             <input type="hidden" name="draft_id" value="{{ $draftId }}">
           @endif
-          
+
           <div class="row">
             <!-- Serial NO -->
             <div class="col-md-3">
@@ -83,7 +83,7 @@
                 <input type="text" class="form-control" name="chasis_no" value="{{ $draftData['chasis_no'] ?? old('chasis_no') }}">
                 @if ($errors->has('chasis_no'))
                   <label class="text-danger">{{ $errors->first('chasis_no') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -94,7 +94,7 @@
                 <input type="text" class="form-control" name="engine_no" value="{{ $draftData['engine_no'] ?? old('engine_no') }}">
                 @if ($errors->has('engine_no'))
                   <label class="text-danger">{{ $errors->first('engine_no') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -126,7 +126,7 @@
                   <div class="mt-1">
                     <label class="text-danger">{{ $errors->first('pool_vehicle') }}</label>
                   </div>
-                @endif                
+                @endif
               </div>
             </div>
 
@@ -137,7 +137,7 @@
                 <input type="number" min="0" step="1" class="form-control" name="cone" value="{{ $draftData['cone'] ?? old('cone') }}">
                 @if ($errors->has('cone'))
                   <label class="text-danger">{{ $errors->first('cone') }}</label>
-                @endif                
+                @endif
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@
                 <input type="text" class="form-control" name="pso_card" value="{{ $draftData['pso_card'] ?? old('pso_card') }}">
                 @if ($errors->has('pso_card'))
                   <label class="text-danger">{{ $errors->first('pso_card') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -161,7 +161,7 @@
                 <input type="text" class="form-control" name="akpl" value="{{ $draftData['akpl'] ?? old('akpl') }}">
                 @if ($errors->has('akpl'))
                   <label class="text-danger">{{ $errors->first('akpl') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -209,7 +209,7 @@
                 </select>
                 @if ($errors->has('fabrication_vendor_id'))
                   <label class="text-danger">{{ $errors->first('fabrication_vendor_id') }}</label>
-                @endif                
+                @endif
               </div>
             </div>
           </div>
@@ -253,23 +253,23 @@
                   <label class="text-danger">{{ $errors->first('ibc_center_id') }}</label>
                 @endif
               </div>
-            </div>            
+            </div>
 
             <!-- Medical Box -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Medical Box</strong>
-                <select class="custom-select" name="medical_box">
-                  <option value="">-- Select --</option>
-                  @foreach($status as $key => $value)
-                    <option value="{{$key}}" {{ ($draftData['medical_box'] ?? old('medical_box')) == $key ? 'selected' : '' }}>{{$value}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('medical_box'))
-                  <label class="text-danger">{{ $errors->first('medical_box') }}</label>
-                @endif
-              </div>
-            </div>
+{{--            <div class="col-md-2">--}}
+{{--              <div class="form-group">--}}
+{{--                <strong>Medical Box</strong>--}}
+{{--                <select class="custom-select" name="medical_box">--}}
+{{--                  <option value="">-- Select --</option>--}}
+{{--                  @foreach($status as $key => $value)--}}
+{{--                    <option value="{{$key}}" {{ ($draftData['medical_box'] ?? old('medical_box')) == $key ? 'selected' : '' }}>{{$value}}</option>--}}
+{{--                  @endforeach--}}
+{{--                </select>--}}
+{{--                @if ($errors->has('medical_box'))--}}
+{{--                  <label class="text-danger">{{ $errors->first('medical_box') }}</label>--}}
+{{--                @endif--}}
+{{--              </div>--}}
+{{--            </div>--}}
 
             <!-- On Duty Status -->
             <div class="col-md-3">
@@ -289,7 +289,7 @@
                   <div class="mt-1">
                     <label class="text-danger">{{ $errors->first('on_duty_status') }}</label>
                   </div>
-                @endif                
+                @endif
               </div>
             </div>
 
@@ -381,7 +381,7 @@
                 <input type="date" class="form-control" name="fitness_date" value="{{ $draftData['fitness_date'] ?? old('fitness_date') }}">
                 @if ($errors->has('fitness_date'))
                   <label class="text-danger">{{ $errors->first('fitness_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -392,7 +392,7 @@
                 <input type="date" class="form-control" name="next_fitness_date" value="{{ $draftData['next_fitness_date'] ?? old('next_fitness_date') }}">
                 @if ($errors->has('next_fitness_date'))
                   <label class="text-danger">{{ $errors->first('next_fitness_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -406,7 +406,7 @@
                 @endif
                 @if(isset($draftData['file_info']['fitness_file']))
                   <div class="mt-2 d-flex align-items-center">
-                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['fitness_file']['path'])) }}" 
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['fitness_file']['path'])) }}"
                        target="_blank" class="text-success mr-2" title="View">
                       <i class="icon-file"></i> {{ $draftData['file_info']['fitness_file']['original_name'] }}
                     </a>
@@ -427,7 +427,7 @@
                 @endif
                 @if(isset($draftData['file_info']['registration_file']))
                   <div class="mt-2 d-flex align-items-center">
-                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['registration_file']['path'])) }}" 
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['registration_file']['path'])) }}"
                        target="_blank" class="text-success mr-2" title="View">
                       <i class="icon-file"></i> {{ $draftData['file_info']['registration_file']['original_name'] }}
                     </a>
@@ -487,7 +487,7 @@
                 @endif
                 @if(isset($draftData['file_info']['insurance_file']))
                   <div class="mt-2 d-flex align-items-center">
-                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['insurance_file']['path'])) }}" 
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['insurance_file']['path'])) }}"
                        target="_blank" class="text-success mr-2" title="View">
                       <i class="icon-file"></i> {{ $draftData['file_info']['insurance_file']['original_name'] }}
                     </a>
@@ -507,7 +507,7 @@
                 <input type="date" class="form-control" name="route_permit_date" value="{{ $draftData['route_permit_date'] ?? old('route_permit_date') }}">
                 @if ($errors->has('route_permit_date'))
                   <label class="text-danger">{{ $errors->first('route_permit_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -518,7 +518,7 @@
                 <input type="date" class="form-control" name="route_permit_expiry_date" value="{{ $draftData['route_permit_expiry_date'] ?? old('route_permit_expiry_date') }}">
                 @if ($errors->has('route_permit_expiry_date'))
                   <label class="text-danger">{{ $errors->first('route_permit_expiry_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -532,7 +532,7 @@
                 @endif
                 @if(isset($draftData['file_info']['route_permit_file']))
                   <div class="mt-2 d-flex align-items-center">
-                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['route_permit_file']['path'])) }}" 
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['route_permit_file']['path'])) }}"
                        target="_blank" class="text-success mr-2" title="View">
                       <i class="icon-file"></i> {{ $draftData['file_info']['route_permit_file']['original_name'] }}
                     </a>
@@ -552,7 +552,7 @@
                 <input type="date" class="form-control" name="tax_date" value="{{ $draftData['tax_date'] ?? old('tax_date') }}">
                 @if ($errors->has('tax_date'))
                   <label class="text-danger">{{ $errors->first('tax_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -563,7 +563,7 @@
                 <input type="date" class="form-control" name="next_tax_date" value="{{ $draftData['next_tax_date'] ?? old('next_tax_date') }}">
                 @if ($errors->has('next_tax_date'))
                   <label class="text-danger">{{ $errors->first('next_tax_date') }}</label>
-                @endif 
+                @endif
               </div>
             </div>
 
@@ -577,7 +577,7 @@
                 @endif
                 @if(isset($draftData['file_info']['tax_file']))
                   <div class="mt-2 d-flex align-items-center">
-                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['tax_file']['path'])) }}" 
+                    <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['tax_file']['path'])) }}"
                        target="_blank" class="text-success mr-2" title="View">
                       <i class="icon-file"></i> {{ $draftData['file_info']['tax_file']['original_name'] }}
                     </a>
@@ -601,7 +601,7 @@
                 <a href="{{ route('admin.vehicles.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>
-          </div>                    
+          </div>
         </form>
       </div>
     </div>

@@ -38,16 +38,16 @@
                 </select>
               </div>
             </div>
-            
+
             <div class="col-md-3 mt-4">
               <div class="form-group">
                 <button type="submit" class="btn btn-primary">Filter</button>
                 <a href="{{ route('admin.dailyMileages.create') }}" class="btn btn-primary">Reset</a>
               </div>
             </div>
-            
+
           </div>
-        </form>        
+        </form>
       </div>
     </div>
 
@@ -104,12 +104,12 @@
                   <input type="number" min="0" step="1" class="form-control previous_km" name="previous_km[]" value="{{ $value['previous_km'] }}" readonly>
                 </div>
               </div>
-              
+
               <!-- Current KMs -->
               <div class="col-md-2">
                 <div class="form-group">
                   <strong>Current KMs</strong>
-                  <input type="number" min="0" step="1" class="form-control current_km" name="current_km[{{ $loop->index }}]" value="{{ old('current_km.' . $loop->index) }}">
+                  <input type="number" min="0" step="1" class="form-control current_km" name="current_km[{{ $loop->index }}]" value="{{ old('current_km.' . $loop->index) }}" required>
                   @error('current_km.' . $loop->index)
                     <label class="text-danger">{{ $message }}</label>
                   @enderror
@@ -134,7 +134,7 @@
                 <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>
-          </div>                    
+          </div>
         </form>
       </div>
     </div>
@@ -162,6 +162,6 @@
       $('.current_km').on('input', function(){
         calculateMileage();
       });
-    });    
+    });
   </script>
 @endsection

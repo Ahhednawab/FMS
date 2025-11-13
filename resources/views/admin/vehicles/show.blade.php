@@ -24,7 +24,7 @@
     <div class="card">
       <div class="card-body">
         <div class="container mt-3">
-          
+
           <div class="row">
             <!-- Serial NO -->
             <div class="col-md-3 text-center">
@@ -153,12 +153,12 @@
             </div>
 
             <!-- Medical Box -->
-            <div class="col-md-2 text-center">
-              <div class="card">
-                <h5 class="m-0">Medical Box</h5>
-                <p>{{$vehicle->medical_box == 1 ? 'Yes' : 'No'}}</p>
-              </div>
-            </div>
+{{--            <div class="col-md-2 text-center">--}}
+{{--              <div class="card">--}}
+{{--                <h5 class="m-0">Medical Boxxxx</h5>--}}
+{{--                <p>{{$vehicle->medical_box == 1 ? 'Yes' : 'No'}}</p>--}}
+{{--              </div>--}}
+{{--            </div>--}}
 
             <!-- Seat Cover -->
             <div class="col-md-2 text-center">
@@ -208,7 +208,7 @@
                 <h5 class="m-0">Induction Date</h5>
                 <p>{{ ($vehicle->induction_date && $vehicle->induction_date !== '0000-00-00')  ? \Carbon\Carbon::parse($vehicle->induction_date)->format('d-M-Y')  : 'N/A' }} </p>
               </div>
-            </div>            
+            </div>
           </div>
 
           <div class="row">
@@ -323,7 +323,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-12">
           <label for=""></label>
           <div class="text-right">
@@ -337,7 +337,7 @@
           </div>
           <br>
         </div>
-        
+
       </div>
     </div>
   </div>

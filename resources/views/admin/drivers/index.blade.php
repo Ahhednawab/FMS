@@ -80,6 +80,7 @@
               <th>Serial No</th>
               <th>Name</th>
               <th class="text-center">Shift</th>
+                <th>Station</th>
               <th>Vehicle</th>
               <th>Phone</th>
               <th>Status</th>
@@ -102,15 +103,16 @@
                 <td class="text-center">
                   @if($value->shiftTiming)
                     {{ $value->shiftTiming->name }}
-                    ( 
-                      {{ \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') }} 
-                      - 
-                      {{ \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') }} 
+                    (
+                      {{ \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') }}
+                      -
+                      {{ \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') }}
                     )
-                  @else 
-                    N/A 
+                  @else
+                    N/A
                   @endif
                 </td>
+                  <td>{{ $value->vehicle?->station?->area ?? 'N/A' }}</td>
                 <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>
                 <td>{{$value->phone}}</td>
                 <td>{{$value->driverStatus->name}}</td>
@@ -140,7 +142,7 @@
     <!-- /basic datatable -->
   </div>
   <!-- /content area -->
-  
+
   <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
   <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
@@ -158,16 +160,16 @@
       });
       updateBulkActions();
     });
-    
+
     // Handle individual checkbox changes
     $(document).on('change', '.select-checkbox', function() {
         var isChecked = $(this).prop('checked');
         $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
-        
+
         // Update select all checkbox
         var allChecked = $('.select-checkbox:checked').length === $('.select-checkbox').length;
         $('#selectAll').prop('checked', allChecked);
-        
+
         updateBulkActions();
     });
 
@@ -182,7 +184,7 @@
     $('#deleteSelected').on('click', function(e) {
       e.preventDefault();
       var selectedIds = getSelectedIds();
-      
+
       if (selectedIds.length === 0) {
         alert('Please select at least one driver to delete.');
         return;
@@ -192,7 +194,7 @@
         // Add your delete logic here
         // console.log('Deleting drivers:', selectedIds);
         // Example AJAX call:
-        
+
         $.ajax({
           url: "{{ route('admin.drivers.destroyMultiple') }}",
           type: 'POST',
@@ -208,7 +210,7 @@
             }
           }
         });
-        
+
       }
     });
 
@@ -216,7 +218,7 @@
     $('#exportSelected').on('click', function(e) {
       e.preventDefault();
       var selectedIds = getSelectedIds();
-      
+
       if (selectedIds.length === 0) {
         alert('Please select at least one driver to export.');
         return;
@@ -238,7 +240,7 @@
     function updateBulkActions() {
       var selectedCount = $('.select-checkbox:checked').length;
       $('#selectedCount').text(selectedCount);
-      
+
       if (selectedCount > 0) {
         $('#bulkActions').addClass('show');
       } else {
