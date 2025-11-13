@@ -437,9 +437,7 @@ class DriverController extends Controller
 
     public function update(Request $request, Driver $driver)
     {
-        $validator = \Validator::make(
-            $request->all(),
-            [
+        $rules = [
                 'full_name' =>  'nullable',
                 'father_name' =>  'nullable',
                 'mother_name' =>  'nullable',
@@ -450,9 +448,9 @@ class DriverController extends Controller
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
                 // 'vehicle_id' =>  'required',
-                'vehicle_id' =>  'nullable|unique:drivers,vehicle_id,' . $driver->id,
+                
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
-                'cnic_no' =>  'required|string|size:15|unique:drivers,cnic_no,' . $driver->id,
+                // 'cnic_no' =>  'required|string|size:15|unique:drivers,cnic_no,' . $driver->id,
                 'cnic_expiry_date' =>  'required|date',
                 'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 // 'eobi_no' =>  'required',
@@ -465,14 +463,35 @@ class DriverController extends Controller
                 'employee_card_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'ddc_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'license_no' =>  'required |unique:drivers,license_no,' . $driver->id,
+                // 'license_no' =>  'required |unique:drivers,license_no,' . $driver->id,
                 'license_category_id' =>  'required',
                 'license_expiry_date' =>  'required|date',
                 'license_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'uniform_issue_date'    =>  'nullable|date',
                 'sandal_issue_date'    =>  'nullable|date',
                 'address' =>  'nullable',
-            ],
+            ];
+            if ($request->has('vehicle_id') && $request->vehicle_id != $driver->vehicle_id) {
+                $rules['vehicle_id'] = 'nullable|unique:drivers,vehicle_id';
+            } else {
+                $rules['vehicle_id'] = 'nullable';
+            }
+            if ($request->has('cnic_no') && $request->cnic_no != $driver->cnic_no) {
+                $rules['cnic_no'] = 'required|string|size:15|unique:drivers,cnic_no';
+            } else {
+                $rules['cnic_no'] = 'required|string|size:15';
+            }
+            if ($request->has('license_no') && $request->license_no != $driver->license_no) {
+                $rules['license_no'] = 'required|unique:drivers,license_no';
+            } else {
+                $rules['license_no'] = 'required';
+            }
+
+
+
+        $validator = \Validator::make(
+            $request->all(),
+            $rules,
             [
                 'full_name.required'                =>  'Full Name is required',
                 'father_name.required'              =>  'Father Name is required',
