@@ -26,6 +26,9 @@
           @if(isset($draftId))
             <input type="hidden" name="draft_id" value="{{ $draftId }}">
           @endif
+            @php
+                $isDraftMode = request()->has('draft_id');
+            @endphp
 
           <div class="row">
             <!-- Serial NO -->
@@ -40,10 +43,20 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Vehicle No</strong>
-                <input type="text" class="form-control" name="vehicle_no" value="{{ $draftData['vehicle_no'] ?? old('vehicle_no') }}">
-                @if ($errors->has('vehicle_no'))
-                  <label class="text-danger">{{ $errors->first('vehicle_no') }}</label>
-                @endif
+                  <input type="text"
+                         class="form-control
+                {{ $isDraftMode && empty($draftData['vehicle_no'] ?? '') ? 'is-invalid' : '' }}
+                @error('vehicle_no') is-invalid @enderror"
+                         name="vehicle_no"
+                         value="{{ $draftData['vehicle_no'] ?? old('vehicle_no') }}">
+
+                  @if ($isDraftMode && empty($draftData['vehicle_no'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('vehicle_no')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -51,10 +64,20 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Make (Manufacturer)</strong>
-                <input type="text" class="form-control" name="make" value="{{ $draftData['make'] ?? old('make') }}">
-                @if ($errors->has('make'))
-                  <label class="text-danger">{{ $errors->first('make') }}</label>
-                @endif
+                  <input type="text"
+                         class="form-control
+                {{ $isDraftMode && empty($draftData['make'] ?? '') ? 'is-invalid' : '' }}
+                @error('make') is-invalid @enderror"
+                         name="make"
+                         value="{{ $draftData['make'] ?? old('make') }}">
+
+                  @if ($isDraftMode && empty($draftData['make'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('make')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -62,15 +85,30 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Model (Year)</strong>
-                <select class="custom-select" name="model">
-                  <option value="">-- Select Model Year --</option>
-                  @for ($year = date('Y'); $year >= 1980; $year--)
-                    <option value="{{ $year }}" {{ ($draftData['model'] ?? old('model')) == $year ? 'selected' : '' }}>{{ $year }}</option>
-                  @endfor
-                </select>
-                @if ($errors->has('model'))
-                  <label class="text-danger">{{ $errors->first('model') }}</label>
-                @endif
+                  <select name="model"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['model'] ?? '') ? 'is-invalid' : '' }}
+                @error('model') is-invalid @enderror">
+
+                      <option value="">-- Select Model Year --</option>
+
+                      @for ($year = date('Y'); $year >= 1980; $year--)
+                          <option value="{{ $year }}"
+                              {{ ($draftData['model'] ?? old('model')) == $year ? 'selected' : '' }}>
+                              {{ $year }}
+                          </option>
+                      @endfor
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['model'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('model')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
           </div>
@@ -80,10 +118,20 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Chasis No</strong>
-                <input type="text" class="form-control" name="chasis_no" value="{{ $draftData['chasis_no'] ?? old('chasis_no') }}">
-                @if ($errors->has('chasis_no'))
-                  <label class="text-danger">{{ $errors->first('chasis_no') }}</label>
-                @endif
+                  <input type="text"
+                         class="form-control
+                {{ $isDraftMode && empty($draftData['chasis_no'] ?? '') ? 'is-invalid' : '' }}
+                @error('chasis_no') is-invalid @enderror"
+                         name="chasis_no"
+                         value="{{ $draftData['chasis_no'] ?? old('chasis_no') }}">
+
+                  @if ($isDraftMode && empty($draftData['chasis_no'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('chasis_no')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -91,10 +139,20 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Engine No</strong>
-                <input type="text" class="form-control" name="engine_no" value="{{ $draftData['engine_no'] ?? old('engine_no') }}">
-                @if ($errors->has('engine_no'))
-                  <label class="text-danger">{{ $errors->first('engine_no') }}</label>
-                @endif
+                  <input type="text"
+                         class="form-control
+                {{ $isDraftMode && empty($draftData['engine_no'] ?? '') ? 'is-invalid' : '' }}
+                @error('engine_no') is-invalid @enderror"
+                         name="engine_no"
+                         value="{{ $draftData['engine_no'] ?? old('engine_no') }}">
+
+                  @if ($isDraftMode && empty($draftData['engine_no'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('engine_no')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -102,31 +160,65 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Ownership</strong>
-                <input type="text" class="form-control" name="ownership" value="{{ $draftData['ownership'] ?? old('ownership') }}">
-                @if ($errors->has('ownership'))
-                  <label class="text-danger">{{ $errors->first('ownership') }}</label>
-                @endif
+                  <input type="text"
+                         name="ownership"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['ownership'] ?? '') ? 'is-invalid' : '' }}
+               @error('ownership') is-invalid @enderror"
+                         value="{{ $draftData['ownership'] ?? old('ownership') }}">
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['ownership'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('ownership')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
             <!-- Pool Vehicle -->
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Pool Vehicle</strong>
-                <div class="d-flex align-items-center mt-2">
-                  <div class="form-check mr-3">
-                    <input class="form-check-input" type="radio" name="pool_vehicle" id="pool_yes" value="1" {{ (isset($draftData['pool_vehicle']) && $draftData['pool_vehicle'] == 1) || old('pool_vehicle') == '1' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="pool_yes">Yes</label>
+                  @php
+                      $draftMissing = request()->has('draft_id') && !isset($draftData['pool_vehicle']);
+                  @endphp
+
+                  <div class="d-flex align-items-center mt-2">
+
+                      <div class="form-check mr-3">
+                          <input class="form-check-input {{ $draftMissing ? 'border-danger' : '' }}"
+                                 type="radio"
+                                 name="pool_vehicle"
+                                 id="pool_yes"
+                                 value="1"
+                              {{ ($draftData['pool_vehicle'] ?? old('pool_vehicle')) == '1' ? 'checked' : '' }}>
+                          <label class="form-check-label {{ $draftMissing ? 'text-danger' : '' }}" for="pool_yes">Yes</label>
+                      </div>
+
+                      <div class="form-check">
+                          <input class="form-check-input {{ $draftMissing ? 'border-danger' : '' }}"
+                                 type="radio"
+                                 name="pool_vehicle"
+                                 id="pool_no"
+                                 value="0"
+                              {{ ($draftData['pool_vehicle'] ?? old('pool_vehicle')) == '0' ? 'checked' : '' }}>
+                          <label class="form-check-label {{ $draftMissing ? 'text-danger' : '' }}" for="pool_no">No</label>
+                      </div>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="pool_vehicle" id="pool_no" value="0" {{ (isset($draftData['pool_vehicle']) && $draftData['pool_vehicle'] == 0) || old('pool_vehicle') == '0' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="pool_no">No</label>
-                  </div>
-                </div>
-                @if ($errors->has('pool_vehicle'))
+
+                  {{-- Draft Required Message --}}
+                  @if ($draftMissing)
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('pool_vehicle')
                   <div class="mt-1">
-                    <label class="text-danger">{{ $errors->first('pool_vehicle') }}</label>
+                      <label class="text-danger">{{ $message }}</label>
                   </div>
-                @endif
+                  @enderror
               </div>
             </div>
 
@@ -144,24 +236,50 @@
 
           <div class="row">
             <!-- PSO Card Details -->
-            <div class="col-md-3">
-              <div class="form-group">
-                <strong>PSO Card Details</strong>
-                <input type="text" class="form-control" name="pso_card" value="{{ $draftData['pso_card'] ?? old('pso_card') }}">
-                @if ($errors->has('pso_card'))
-                  <label class="text-danger">{{ $errors->first('pso_card') }}</label>
-                @endif
-              </div>
-            </div>
+              @php
+                  $isDraftMode = request()->has('draft_id');
+              @endphp
 
-            <!-- AKPL -->
+              <div class="col-md-3">
+                  <div class="form-group">
+                      <strong>PSO Card Details</strong>
+
+                      <input
+                          type="text"
+                          class="form-control
+            {{ $isDraftMode && empty($draftData['pso_card'] ?? '') ? 'is-invalid' : '' }}"
+                          name="pso_card"
+                          value="{{ $draftData['pso_card'] ?? old('pso_card') }}"
+                      >
+
+                      @if ($errors->has('pso_card'))
+                          <label class="text-danger">{{ $errors->first('pso_card') }}</label>
+                      @endif
+                  </div>
+              </div>
+
+
+
+              <!-- AKPL -->
             <div class="col-md-3">
               <div class="form-group">
                 <strong>AKPL</strong>
-                <input type="text" class="form-control" name="akpl" value="{{ $draftData['akpl'] ?? old('akpl') }}">
-                @if ($errors->has('akpl'))
-                  <label class="text-danger">{{ $errors->first('akpl') }}</label>
-                @endif
+                  <input type="text"
+                         name="akpl"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['akpl'] ?? '') ? 'is-invalid' : '' }}
+               @error('akpl') is-invalid @enderror"
+                         value="{{ $draftData['akpl'] ?? old('akpl') }}">
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['akpl'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('akpl')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -169,15 +287,30 @@
             <div class="col-md-2">
               <div class="form-group">
                 <strong>Shift Hours</strong>
-                <select class="custom-select" name="shift_hour_id">
-                  <option value="">-- Select --</option>
-                  @foreach($shift_hours as $key => $value)
-                    <option value="{{ $key }}" {{ ($draftData['shift_hour_id'] ?? old('shift_hour_id')) == $key ? 'selected' : '' }}>{{ $value }}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('shift_hour_id'))
-                  <label class="text-danger">{{ $errors->first('shift_hour_id') }}</label>
-                @endif
+                  <select name="shift_hour_id"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['shift_hour_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('shift_hour_id') is-invalid @enderror">
+
+                      <option value="">-- Select --</option>
+
+                      @foreach($shift_hours as $key => $value)
+                          <option value="{{ $key }}"
+                              {{ ($draftData['shift_hour_id'] ?? old('shift_hour_id')) == $key ? 'selected' : '' }}>
+                              {{ $value }}
+                          </option>
+                      @endforeach
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['shift_hour_id'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('shift_hour_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -185,15 +318,31 @@
             <div class="col-md-2">
               <div class="form-group">
                 <strong>Vehicle Type</strong>
-                <select class="custom-select" name="vehicle_type_id">
-                  <option value="">-- Select --</option>
-                  @foreach($vehicleTypes as $key => $value)
-                    <option value="{{ $key }}" {{ ($draftData['vehicle_type_id'] ?? old('vehicle_type_id')) == $key ? 'selected' : '' }}>{{ $value }}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('vehicle_type_id'))
-                  <label class="text-danger">{{ $errors->first('vehicle_type_id') }}</label>
-                @endif
+                  <select name="vehicle_type_id"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['vehicle_type_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('vehicle_type_id') is-invalid @enderror">
+
+                      <option value="">-- Select --</option>
+
+                      @foreach($vehicleTypes as $key => $value)
+                          <option value="{{ $key }}"
+                              {{ ($draftData['vehicle_type_id'] ?? old('vehicle_type_id')) == $key ? 'selected' : '' }}>
+                              {{ $value }}
+                          </option>
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['vehicle_type_id'] ?? ''))
+                      <span class="text-danger">Required in draft</span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('vehicle_type_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -201,15 +350,30 @@
             <div class="col-md-2">
               <div class="form-group">
                 <strong>Fabrication Vendor</strong>
-                <select class="custom-select" name="fabrication_vendor_id">
-                  <option value="">-- Select --</option>
-                  @foreach($vendors as $key => $value)
-                    <option value="{{$key}}" {{ ($draftData['fabrication_vendor_id'] ?? old('fabrication_vendor_id')) == $key ? 'selected' : '' }}>{{$value}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('fabrication_vendor_id'))
-                  <label class="text-danger">{{ $errors->first('fabrication_vendor_id') }}</label>
-                @endif
+                  <select name="fabrication_vendor_id"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['fabrication_vendor_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('fabrication_vendor_id') is-invalid @enderror">
+
+                      <option value="">-- Select --</option>
+
+                      @foreach($vendors as $key => $value)
+                          <option value="{{ $key }}"
+                              {{ ($draftData['fabrication_vendor_id'] ?? old('fabrication_vendor_id')) == $key ? 'selected' : '' }}>
+                              {{ $value }}
+                          </option>
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['fabrication_vendor_id'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('fabrication_vendor_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
           </div>
@@ -219,17 +383,31 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong for="station_id">Station</strong>
-                <select name="station_id" id="station_id" class="form-control">
-                  <option value="">-- Select Station --</option>
-                  @foreach($stations as $station)
-                    <option value="{{ $station->id }}" {{ ($draftData['station_id'] ?? old('station_id')) == $station->id ? 'selected' : '' }}>
-                      {{ $station->area }}
-                    </option>
-                  @endforeach
-                </select>
-                @if ($errors->has('station_id'))
-                  <label class="text-danger">{{ $errors->first('station_id') }}</label>
-                @endif
+                  <select name="station_id" id="station_id"
+                          class="form-control
+                {{ request()->has('draft_id') && empty($draftData['station_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('station_id') is-invalid @enderror">
+
+                      <option value="">-- Select Station --</option>
+
+                      @foreach($stations as $station)
+                          <option value="{{ $station->id }}"
+                              {{ ($draftData['station_id'] ?? old('station_id')) == $station->id ? 'selected' : '' }}>
+                              {{ $station->area }}
+                          </option>
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['station_id'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('station_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -237,21 +415,34 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong for="ibc_center_id">IBC Center</strong>
-                <select name="ibc_center_id" id="ibc_center_id" class="form-control">
-                  <option value="">-- Select IBC Center --</option>
-                  @foreach($stations as $station)
-                    @foreach($station->ibcCenter ?? [] as $center)
-                      <option value="{{ $center->id }}"
-                        data-station="{{ $station->id }}"
-                        {{ ($draftData['ibc_center_id'] ?? old('ibc_center_id')) == $center->id ? 'selected' : '' }}>
-                        {{ $center->name }}
-                      </option>
-                    @endforeach
-                  @endforeach
-                </select>
-                @if ($errors->has('ibc_center_id'))
-                  <label class="text-danger">{{ $errors->first('ibc_center_id') }}</label>
-                @endif
+                  <select name="ibc_center_id" id="ibc_center_id"
+                          class="form-control
+                {{ request()->has('draft_id') && empty($draftData['ibc_center_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('ibc_center_id') is-invalid @enderror">
+
+                      <option value="">-- Select IBC Center --</option>
+
+                      @foreach($stations as $station)
+                          @foreach($station->ibcCenter ?? [] as $center)
+                              <option value="{{ $center->id }}"
+                                      data-station="{{ $station->id }}"
+                                  {{ ($draftData['ibc_center_id'] ?? old('ibc_center_id')) == $center->id ? 'selected' : '' }}>
+                                  {{ $center->name }}
+                              </option>
+                          @endforeach
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['ibc_center_id'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('ibc_center_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -275,21 +466,44 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>On Duty Status</strong>
-                <div class="d-flex align-items-center mt-2">
-                  <div class="form-check mr-3">
-                    <input class="form-check-input" type="radio" name="on_duty_status" id="on_duty_status_yes" value="1" {{ (isset($draftData['on_duty_status']) && $draftData['on_duty_status'] == 1) || old('on_duty_status') == '1' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="on_duty_status_yes">Yes</label>
+                  @php
+                      $draftMissing = request()->has('draft_id') && !isset($draftData['on_duty_status']);
+                  @endphp
+
+                  <div class="d-flex align-items-center mt-2">
+
+                      <div class="form-check mr-3">
+                          <input class="form-check-input {{ $draftMissing ? 'border-danger' : '' }}"
+                                 type="radio"
+                                 name="on_duty_status"
+                                 id="on_duty_status_yes"
+                                 value="1"
+                              {{ ($draftData['on_duty_status'] ?? old('on_duty_status')) == '1' ? 'checked' : '' }}>
+                          <label class="form-check-label {{ $draftMissing ? 'text-danger' : '' }}" for="on_duty_status_yes">Yes</label>
+                      </div>
+
+                      <div class="form-check">
+                          <input class="form-check-input {{ $draftMissing ? 'border-danger' : '' }}"
+                                 type="radio"
+                                 name="on_duty_status"
+                                 id="on_duty_status_no"
+                                 value="0"
+                              {{ ($draftData['on_duty_status'] ?? old('on_duty_status')) == '0' ? 'checked' : '' }}>
+                          <label class="form-check-label {{ $draftMissing ? 'text-danger' : '' }}" for="on_duty_status_no">No</label>
+                      </div>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="on_duty_status" id="on_duty_status_no" value="0" {{ (isset($draftData['on_duty_status']) && $draftData['on_duty_status'] == 0) || old('on_duty_status') == '0' ? 'checked' : '' }}>
-                    <label class="form-check-label" for="on_duty_status_no">No</label>
-                  </div>
-                </div>
-                @if ($errors->has('on_duty_status'))
+
+                  {{-- Draft Required Message --}}
+                  @if ($draftMissing)
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('on_duty_status')
                   <div class="mt-1">
-                    <label class="text-danger">{{ $errors->first('on_duty_status') }}</label>
+                      <label class="text-danger">{{ $message }}</label>
                   </div>
-                @endif
+                  @enderror
               </div>
             </div>
 
@@ -297,15 +511,31 @@
             <div class="col-md-2 d-none">
               <div class="form-group">
                 <strong>Seat Cover</strong>
-                <select class="custom-select" name="seat_cover">
-                  <option value="">-- Select --</option>
-                  @foreach($status as $key => $value)
-                    <option value="{{$key}}" {{ ($draftData['seat_cover'] ?? old('seat_cover')) == $key ? 'selected' : '' }}>{{$value}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('seat_cover'))
-                  <label class="text-danger">{{ $errors->first('seat_cover') }}</label>
-                @endif
+                  <select name="seat_cover"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['seat_cover'] ?? '') ? 'is-invalid' : '' }}
+                @error('seat_cover') is-invalid @enderror">
+
+                      <option value="">-- Select --</option>
+
+                      @foreach($status as $key => $value)
+                          <option value="{{ $key }}"
+                              {{ ($draftData['seat_cover'] ?? old('seat_cover')) == $key ? 'selected' : '' }}>
+                              {{ $value }}
+                          </option>
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft mode validation --}}
+                  @if (request()->has('draft_id') && empty($draftData['seat_cover'] ?? ''))
+                      <span class="text-danger">Required in draft</span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('seat_cover')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -313,15 +543,31 @@
             <div class="col-md-2 d-none">
               <div class="form-group">
                 <strong>Fire Extinguisher</strong>
-                <select class="custom-select" name="fire_extenguisher">
-                  <option value="">-- Select --</option>
-                  @foreach($status as $key => $value)
-                    <option value="{{$key}}" {{ ($draftData['fire_extenguisher'] ?? old('fire_extenguisher')) == $key ? 'selected' : '' }}>{{$value}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('fire_extenguisher'))
-                  <label class="text-danger">{{ $errors->first('fire_extenguisher') }}</label>
-                @endif
+                  <select name="fire_extenguisher"
+                          class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['fire_extenguisher'] ?? '') ? 'is-invalid' : '' }}
+                @error('fire_extenguisher') is-invalid @enderror">
+
+                      <option value="">-- Select --</option>
+
+                      @foreach($status as $key => $value)
+                          <option value="{{ $key }}"
+                              {{ ($draftData['fire_extenguisher'] ?? old('fire_extenguisher')) == $key ? 'selected' : '' }}>
+                              {{ $value }}
+                          </option>
+                      @endforeach
+
+                  </select>
+
+                  {{-- Draft required message --}}
+                  @if (request()->has('draft_id') && empty($draftData['fire_extenguisher'] ?? ''))
+                      <span class="text-danger">Required in draft</span>
+                  @endif
+
+                  {{-- Laravel validation --}}
+                  @error('fire_extenguisher')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
           </div>
@@ -331,10 +577,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Tracker Installation Date </strong>
-                <input type="date" class="form-control" name="tracker_installation_date" value="{{ $draftData['tracker_installation_date'] ?? old('tracker_installation_date') }}">
-                @if ($errors->has('tracker_installation_date'))
-                  <label class="text-danger">{{ $errors->first('tracker_installation_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="tracker_installation_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['tracker_installation_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('tracker_installation_date') is-invalid @enderror"
+                         value="{{ $draftData['tracker_installation_date'] ?? old('tracker_installation_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['tracker_installation_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Message --}}
+                  @error('tracker_installation_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -342,10 +601,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Inspection Date</strong>
-                <input type="date" class="form-control" name="inspection_date" value="{{ $draftData['inspection_date'] ?? old('inspection_date') }}">
-                @if ($errors->has('inspection_date'))
-                  <label class="text-danger">{{ $errors->first('inspection_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="inspection_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['inspection_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('inspection_date') is-invalid @enderror"
+                         value="{{ $draftData['inspection_date'] ?? old('inspection_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['inspection_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('inspection_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
 
               </div>
             </div>
@@ -354,10 +626,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Next Inspection Date</strong>
-                <input type="date" class="form-control" name="next_inspection_date" value="{{ $draftData['next_inspection_date'] ?? old('next_inspection_date') }}">
-                @if ($errors->has('next_inspection_date'))
-                  <label class="text-danger">{{ $errors->first('next_inspection_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="next_inspection_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('next_inspection_date') is-invalid @enderror"
+                         value="{{ $draftData['next_inspection_date'] ?? old('next_inspection_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('next_inspection_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -365,10 +650,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Induction Date</strong>
-                <input type="date" class="form-control" name="induction_date" value="{{ $draftData['induction_date'] ?? old('induction_date') }}">
-                @if ($errors->has('induction_date'))
-                  <label class="text-danger">{{ $errors->first('induction_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="induction_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['induction_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('induction_date') is-invalid @enderror"
+                         value="{{ $draftData['induction_date'] ?? old('induction_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['induction_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('induction_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
           </div>
@@ -378,10 +676,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Fitness Date</strong>
-                <input type="date" class="form-control" name="fitness_date" value="{{ $draftData['fitness_date'] ?? old('fitness_date') }}">
-                @if ($errors->has('fitness_date'))
-                  <label class="text-danger">{{ $errors->first('fitness_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="fitness_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['fitness_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('fitness_date') is-invalid @enderror"
+                         value="{{ $draftData['fitness_date'] ?? old('fitness_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['fitness_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('fitness_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -389,10 +700,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Next fitness date</strong>
-                <input type="date" class="form-control" name="next_fitness_date" value="{{ $draftData['next_fitness_date'] ?? old('next_fitness_date') }}">
-                @if ($errors->has('next_fitness_date'))
-                  <label class="text-danger">{{ $errors->first('next_fitness_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="next_fitness_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('next_fitness_date') is-invalid @enderror"
+                         value="{{ $draftData['next_fitness_date'] ?? old('next_fitness_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('next_fitness_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -444,25 +768,53 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Insurance Company</strong>
-                <select class="custom-select" name="insurance_company_id">
-                  <option value="">Select Insurance Company</option>
-                  @foreach($insurance_companies as $key => $value)
-                    <option value="{{$value->id}}" {{ old('insurance_company_id', $vehicle->insurance_company_id ?? '') == $value->id ? 'selected' : '' }}>{{$value->name}}</option>
-                  @endforeach
-                </select>
-                @if ($errors->has('insurance_company_id'))
-                  <label class="text-danger">{{ $errors->first('insurance_company_id') }}</label>
-                @endif
+                  <select class="custom-select
+                {{ request()->has('draft_id') && empty($draftData['insurance_company_id'] ?? '') ? 'is-invalid' : '' }}
+                @error('insurance_company_id') is-invalid @enderror"
+                          name="insurance_company_id">
+
+                      <option value="">Select Insurance Company</option>
+
+                      @foreach($insurance_companies as $key => $value)
+                          <option value="{{ $value->id }}"
+                              {{ ($draftData['insurance_company_id'] ?? old('insurance_company_id', $vehicle->insurance_company_id ?? '')) == $value->id ? 'selected' : '' }}>
+                              {{ $value->name }}
+                          </option>
+                      @endforeach
+                  </select>
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['insurance_company_id'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Error --}}
+                  @error('insurance_company_id')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
             <!-- Insurance Date -->
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Insurance Date</strong>
-                <input type="date" class="form-control" name="insurance_date" value="{{ $draftData['insurance_date'] ?? old('insurance_date') }}">
-                @if ($errors->has('insurance_date'))
-                  <label class="text-danger">{{ $errors->first('insurance_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="insurance_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['insurance_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('insurance_date') is-invalid @enderror"
+                         value="{{ $draftData['insurance_date'] ?? old('insurance_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['insurance_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('insurance_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -470,10 +822,22 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Insurance Expiry Date</strong>
-                <input type="date" class="form-control" name="insurance_expiry_date" value="{{ $draftData['insurance_expiry_date'] ?? old('insurance_expiry_date') }}">
-                @if ($errors->has('insurance_expiry_date'))
-                  <label class="text-danger">{{ $errors->first('insurance_expiry_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="insurance_expiry_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('insurance_expiry_date') is-invalid @enderror"
+                         value="{{ $draftData['insurance_expiry_date'] ?? old('insurance_expiry_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  @error('insurance_expiry_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -504,10 +868,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Route Permit Date</strong>
-                <input type="date" class="form-control" name="route_permit_date" value="{{ $draftData['route_permit_date'] ?? old('route_permit_date') }}">
-                @if ($errors->has('route_permit_date'))
-                  <label class="text-danger">{{ $errors->first('route_permit_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="route_permit_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['route_permit_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('route_permit_date') is-invalid @enderror"
+                         value="{{ $draftData['route_permit_date'] ?? old('route_permit_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['route_permit_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('route_permit_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -515,10 +892,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Route Permit Expiry Date</strong>
-                <input type="date" class="form-control" name="route_permit_expiry_date" value="{{ $draftData['route_permit_expiry_date'] ?? old('route_permit_expiry_date') }}">
-                @if ($errors->has('route_permit_expiry_date'))
-                  <label class="text-danger">{{ $errors->first('route_permit_expiry_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="route_permit_expiry_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('route_permit_expiry_date') is-invalid @enderror"
+                         value="{{ $draftData['route_permit_expiry_date'] ?? old('route_permit_expiry_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? ''))
+                      <span class="text-danger">Required in draft</span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('route_permit_expiry_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -549,10 +939,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Tax Date</strong>
-                <input type="date" class="form-control" name="tax_date" value="{{ $draftData['tax_date'] ?? old('tax_date') }}">
-                @if ($errors->has('tax_date'))
-                  <label class="text-danger">{{ $errors->first('tax_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="tax_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['tax_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('tax_date') is-invalid @enderror"
+                         value="{{ $draftData['tax_date'] ?? old('tax_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['tax_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Validation Error --}}
+                  @error('tax_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
@@ -560,10 +963,23 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Next Tax Date</strong>
-                <input type="date" class="form-control" name="next_tax_date" value="{{ $draftData['next_tax_date'] ?? old('next_tax_date') }}">
-                @if ($errors->has('next_tax_date'))
-                  <label class="text-danger">{{ $errors->first('next_tax_date') }}</label>
-                @endif
+                  <input type="date"
+                         name="next_tax_date"
+                         class="form-control
+               {{ request()->has('draft_id') && empty($draftData['next_tax_date'] ?? '') ? 'is-invalid' : '' }}
+               @error('next_tax_date') is-invalid @enderror"
+                         value="{{ $draftData['next_tax_date'] ?? old('next_tax_date') }}"
+                  >
+
+                  {{-- Draft Required Message --}}
+                  @if (request()->has('draft_id') && empty($draftData['next_tax_date'] ?? ''))
+                      <span class="text-danger"></span>
+                  @endif
+
+                  {{-- Laravel Error --}}
+                  @error('next_tax_date')
+                  <label class="text-danger">{{ $message }}</label>
+                  @enderror
               </div>
             </div>
 
