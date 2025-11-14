@@ -71,19 +71,19 @@
               </div>
 
               <!-- Station Filter -->
-              <div class="col-md-3">
-                  <div class="form-group">
-                      <label><strong>Station</strong></label>
-                      <select name="station_id" class="form-control">
-                          <option value="">-- Select Station --</option>
-                          @foreach($stations as $station)
-                              <option value="{{ $station->id }}" {{ request('station_id') == $station->id ? 'selected' : '' }}>
-                                  {{ $station->area }}
-                              </option>
-                          @endforeach
-                      </select>
-                  </div>
-              </div>
+{{--              <div class="col-md-3">--}}
+{{--                  <div class="form-group">--}}
+{{--                      <label><strong>Station</strong></label>--}}
+{{--                      <select name="station_id" class="form-control">--}}
+{{--                          <option value="">-- Select Station --</option>--}}
+{{--                          @foreach($stations as $station)--}}
+{{--                              <option value="{{ $station->id }}" {{ request('station_id') == $station->id ? 'selected' : '' }}>--}}
+{{--                                  {{ $station->area }}--}}
+{{--                              </option>--}}
+{{--                          @endforeach--}}
+{{--                      </select>--}}
+{{--                  </div>--}}
+{{--              </div>--}}
 
             <div class="col-md-3 mt-4">
               <div class="form-group">
