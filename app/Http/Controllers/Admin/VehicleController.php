@@ -342,7 +342,10 @@ class VehicleController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'vehicle_no'                =>  'required',
+                'vehicle_no' => [
+                    'required',
+                    \Illuminate\Validation\Rule::unique('vehicles', 'vehicle_no')->ignore($vehicle->id),
+                ],
                 'make'                      =>  'required',
                 'model'                     =>  'required',
                 'chasis_no'                 =>  'required',
@@ -380,6 +383,7 @@ class VehicleController extends Controller
             ],
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
+                'vehicle_no.unique'   => 'This vehicle number already exists.',
                 'make.required'                         =>  'Make is required',
                 'model.required'                        =>  'Model is required',
                 'chasis_no.required'                    =>  'Chasis No is required',
