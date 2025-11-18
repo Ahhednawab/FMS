@@ -26,21 +26,41 @@
                 <div class="card-body">
 
                     <!-- ✅ Date Filters above the table -->
+{{--                    <div class="row mb-3">--}}
+{{--                        <div class="col-md-3">--}}
+{{--                            <label class="font-size-sm">From Date:</label>--}}
+{{--                            <input type="date" class="form-control form-control-sm" wire:model.lazy="fromDate" wire:change="filterDrivers">--}}
+{{--                        </div>--}}
+{{--                        <div class="col-md-3">--}}
+{{--                            <label class="font-size-sm">To Date:</label>--}}
+{{--                            <input type="date" class="form-control form-control-sm" wire:model.lazy="toDate" wire:change="filterDrivers">--}}
+{{--                        </div>--}}
+{{--                        <div class="col-md-3 d-flex align-items-end">--}}
+{{--                            <button wire:click="clearFilters" class="btn btn-secondary btn-sm w-100">--}}
+{{--                                Clear Filters--}}
+{{--                            </button>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+
+                    <!-- ✅ Reason Filter above the table -->
                     <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label class="font-size-sm">From Date:</label>
-                            <input type="date" class="form-control form-control-sm" wire:model.lazy="fromDate" wire:change="filterDrivers">
+                        <div class="col-md-4">
+                            <label class="font-size-sm">Filter by Reason:</label>
+                            <select class="form-control form-control-sm" wire:model="filterReason" wire:change="filterDrivers">
+                                <option value="">All Reasons</option>
+                                @foreach($reasonList as $reason)
+                                    <option value="{{ $reason }}">{{ $reason }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="font-size-sm">To Date:</label>
-                            <input type="date" class="form-control form-control-sm" wire:model.lazy="toDate" wire:change="filterDrivers">
-                        </div>
+
                         <div class="col-md-3 d-flex align-items-end">
                             <button wire:click="clearFilters" class="btn btn-secondary btn-sm w-100">
                                 Clear Filters
                             </button>
                         </div>
                     </div>
+
 
                     <table class="table table-striped table-hover table-sm" id="drivers-table">
                         <thead class="thead-light">

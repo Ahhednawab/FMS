@@ -14,15 +14,15 @@ class ExpiredDriversTable extends Component
     protected $paginationTheme = 'bootstrap';
     protected $queryString = [];
 
-    public $fromDate;
-    public $toDate;
+    public $filterReason = '';
+    public $reasonList = [];
 
     /**
-     * Build query for expired drivers
+     * Build query for expired + expiring drivers
      */
     public function loadExpiredDriversQuery()
     {
-        $currentMonthEnd = Carbon::now()->endOfMonth();
+        $today = Carbon::today();
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
 
         $query = Driver::where('is_active', 1)
@@ -35,43 +35,35 @@ class ExpiredDriversTable extends Component
                 $query->where('name', '!=', 'Left');
             });
 
+        /** FILTER REASON */
+        if (!empty($this->filterReason)) {
+            $query->where(function ($q) {
+                if ($this->filterReason === "CNIC Expiry") {
+                    $q->where('cnic_expiry_date', '<=', Carbon::now()->addMonth()->endOfMonth());
+                }
 
-        if (!empty($this->fromDate) && !empty($this->toDate)) {
-            $from = Carbon::parse($this->fromDate)->startOfDay();
-            $to = Carbon::parse($this->toDate)->endOfDay();
-
-            $query->where(function ($q) use ($from, $to) {
-                $q->whereBetween('cnic_expiry_date', [$from, $to])
-                    ->orWhereBetween('license_expiry_date', [$from, $to]);
+                if ($this->filterReason === "License Expiry") {
+                    $q->where('license_expiry_date', '<=', Carbon::now()->addMonth()->endOfMonth());
+                }
             });
         }
 
         return $query;
     }
 
-    /**
-     * Refresh table
-     */
     public function refresh()
     {
         $this->resetPage();
     }
 
-    /**
-     * Apply filters (called on change)
-     */
     public function filterDrivers()
     {
         $this->resetPage();
     }
 
-    /**
-     * Clear all filters
-     */
     public function clearFilters()
     {
-        $this->fromDate = null;
-        $this->toDate = null;
+        $this->filterReason = '';
         $this->resetPage();
     }
 
@@ -80,19 +72,74 @@ class ExpiredDriversTable extends Component
      */
     public function render()
     {
-        $drivers = $this->loadExpiredDriversQuery()->paginate(10);
+        $today = Carbon::today();
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
 
-        $expiredDrivers = $drivers->through(function ($driver) {
-            $reasons = [];
+        /** Load all drivers (for reasonList dropdown) */
+        $allDrivers = $this->loadExpiredDriversQuery()->get();
 
-            if ($driver->cnic_expiry_date && Carbon::parse($driver->cnic_expiry_date)->isPast()) {
-                $formattedDate = Carbon::parse($driver->cnic_expiry_date)->format('d-M-Y');
-                $reasons[] = "CNIC Expiry Date ({$formattedDate})";
+        $dynamicReasons = [];
+
+        foreach ($allDrivers as $driver) {
+
+            // CNIC
+            if ($driver->cnic_expiry_date) {
+                $d = Carbon::parse($driver->cnic_expiry_date);
+
+                if ($d->isPast()) {
+                    $dynamicReasons[] = "CNIC Expiry";
+                } elseif ($d->between($today, $nextMonthEnd)) {
+                    $dynamicReasons[] = "CNIC Expiry";
+                }
             }
 
-            if ($driver->license_expiry_date && Carbon::parse($driver->license_expiry_date)->isPast()) {
-                $formattedDate = Carbon::parse($driver->license_expiry_date)->format('d-M-Y');
-                $reasons[] = "License Expiry Date ({$formattedDate})";
+            // LICENSE
+            if ($driver->license_expiry_date) {
+                $d = Carbon::parse($driver->license_expiry_date);
+
+                if ($d->isPast()) {
+                    $dynamicReasons[] = "License Expiry";
+                } elseif ($d->between($today, $nextMonthEnd)) {
+                    $dynamicReasons[] = "License Expiry";
+                }
+            }
+        }
+
+        $this->reasonList = array_unique($dynamicReasons);
+
+        /** Pagination Result */
+        $drivers = $this->loadExpiredDriversQuery()->paginate(10);
+
+        /** Add reasons to each driver */
+        $expiredDrivers = $drivers->through(function ($driver) {
+
+            $reasons = [];
+
+            $today = Carbon::today();
+            $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+
+            // ----- CNIC -----
+            if ($driver->cnic_expiry_date) {
+                $cnic = Carbon::parse($driver->cnic_expiry_date);
+                $formatted = $cnic->format('d-M-Y');
+
+                if ($cnic->isPast()) {
+                    $reasons[] = "CNIC Expired ({$formatted})";
+                } elseif ($cnic->between($today, $nextMonthEnd)) {
+                    $reasons[] = "CNIC Expiring Soon ({$formatted})";
+                }
+            }
+
+            // ----- LICENSE -----
+            if ($driver->license_expiry_date) {
+                $lic = Carbon::parse($driver->license_expiry_date);
+                $formatted = $lic->format('d-M-Y');
+
+                if ($lic->isPast()) {
+                    $reasons[] = "License Expired ({$formatted})";
+                } elseif ($lic->between($today, $nextMonthEnd)) {
+                    $reasons[] = "License Expiring Soon ({$formatted})";
+                }
             }
 
             return [
@@ -101,13 +148,12 @@ class ExpiredDriversTable extends Component
                 'name' => $driver->full_name,
                 'status' => $driver->driverStatus ? $driver->driverStatus->name : 'N/A',
                 'reason' => implode(', ', $reasons),
-                'cnic_expiry' => $driver->cnic_expiry_date,
-                'license_expiry' => $driver->license_expiry_date,
             ];
         });
 
         return view('livewire.expired-drivers-table', [
             'expiredDrivers' => $expiredDrivers,
+            'reasonList'     => $this->reasonList,
         ]);
     }
 }
