@@ -13,7 +13,7 @@ class ExpiredVehiclesTable extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    // static reasons
+    // Static reasons
     public $reason = '';
     public $reasonList = [
         'next_inspection_date'     => "Next Inspection Expiry",
@@ -26,19 +26,19 @@ class ExpiredVehiclesTable extends Component
     /**
      * Reset pagination when reason changes (safe to call even if main table has no pagination)
      */
-    public function updating($field)
+    public function updatedReason()
     {
-        if ($field === 'reason') {
-            $this->resetPage();
-        }
+        $this->resetPage();
     }
 
-    /**
-     * Clear filters
-     */
+    public function filterVechile()
+    {
+        $this->resetPage();  // Reset pagination on filter change
+    }
+
     public function clearFilters()
     {
-        $this->reset(['reason']);
+        $this->reason = '';
         $this->resetPage();
     }
 
@@ -48,52 +48,51 @@ class ExpiredVehiclesTable extends Component
      */
     protected function expiredBaseQuery()
     {
-        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
-
         return Vehicle::query()
             ->where('is_active', 1)
-            ->where(function ($q) use ($nextMonthEnd) {
+            ->with(['vehicleType', 'station']);
+    }
+
+    public function getFilteredVehicles()
+    {
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+
+        $query = $this->expiredBaseQuery();
+
+        // Apply reason filter for main table (single reason only)
+        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
+            // Apply the selected reason filter on the respective column
+            $query->where($this->reason, '<=', $nextMonthEnd);
+        } else {
+            // If "All Reasons", apply OR conditions for all reasons
+            $query->where(function ($q) use ($nextMonthEnd) {
                 $q->where('next_inspection_date', '<=', $nextMonthEnd)
                     ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
                     ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
                     ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
                     ->orWhere('next_tax_date', '<=', $nextMonthEnd);
-            })
-            ->with(['vehicleType', 'station']);
+            });
+        }
+
+        return $query;
     }
 
     /**
-     * Get collection for main table (NO pagination).
-     * If a reason filter is selected, apply it here for the main table.
+     * Get the main table vehicles with pagination
      */
     public function getMainTableVehicles()
     {
-        $query = $this->expiredBaseQuery();
-
-        // Apply static reason filter only to main table (per your request)
-        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-            $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
-            $query->where($this->reason, '<=', $nextMonthEnd);
-        }
-
-        return $query->get();
+        $query = $this->getFilteredVehicles();
+        return $query->paginate(10);  // Apply pagination directly
     }
 
     /**
-     * Get paginated results for modal (WITH pagination).
-     * Modal shows ALL expired vehicles (ignores the main table's reason filter).
+     * Get the modal vehicles with pagination
      */
     public function getModalVehicles()
     {
-        $query = $this->expiredBaseQuery();
-
-        // If you later want modal to also respect reason, uncomment:
-        // if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-        //     $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
-        //     $query->where($this->reason, '<=', $nextMonthEnd);
-        // }
-
-        return $query->orderBy('id', 'desc')->paginate(10);
+        $query = $this->getFilteredVehicles();
+        return $query->paginate(10);  // Apply pagination directly
     }
 
     /**
@@ -125,7 +124,7 @@ class ExpiredVehiclesTable extends Component
     }
 
     /**
-     * Render
+     * Render the view
      */
     public function render()
     {
