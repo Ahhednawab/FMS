@@ -77,15 +77,16 @@
                   <span class="checkmark"></span>
                 </label>
               </th>
-              <th>Serial No</th>
               <th>Name</th>
+                <th>Cell no</th>
+                <th>Account</th>
+                <th>Vehicle No</th>
               <th class="text-center">Shift</th>
-                <th>Station</th>
-              <th>Vehicle</th>
-              <th>Phone</th>
-              <th>Status</th>
-              <th>Father Name</th>
-              <th>Mother Name</th>
+                <th>CNiC expiry date</th>
+              <th>Eobi #</th>
+              <th>License expiry date</th>
+              <th>Uniform issue date</th>
+              <th>Sandal issue date</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -98,8 +99,11 @@
                     <span class="checkmark"></span>
                   </label>
                 </td>
-                <td>{{$value->serial_no}}</td>
+{{--                <td>{{$value->serial_no}}</td>--}}
                 <td>{{$value->full_name}}</td>
+                  <td>{{$value->phone}}</td>
+                  <td>{{$value->account_no }}</td>
+                  <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>
                 <td class="text-center">
                   @if($value->shiftTiming)
                     {{ $value->shiftTiming->name }}
@@ -112,12 +116,13 @@
                     N/A
                   @endif
                 </td>
-                  <td>{{ $value->vehicle?->station?->area ?? 'N/A' }}</td>
-                <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>
-                <td>{{$value->phone}}</td>
-                <td>{{$value->driverStatus->name}}</td>
-                <td>{{$value->father_name}}</td>
-                <td>{{$value->mother_name}}</td>
+{{--                  <td>{{ $value->vehicle?->station?->area ?? 'N/A' }}</td>--}}
+{{--                <td>@if($value->vehicle) {{$value->vehicle->vehicle_no}} @else N/A @endif</td>--}}
+                <td>{{$value->cnic_expiry_date }}</td>
+                <td>{{$value->eobi_no}}</td>
+                <td>{{$value->license_expiry_date}}</td>
+                <td>{{$value->uniform_issue_date}}</td>
+                  <td>{{$value->sandal_issue_date}}</td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">

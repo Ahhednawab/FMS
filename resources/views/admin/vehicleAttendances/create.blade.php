@@ -36,16 +36,30 @@
                 </select>
               </div>
             </div>
-            
+
+              <div class="col-md-3">
+                  <div class="form-group">
+                      <label class="form-label"><strong>Vechicle no</strong></label>
+                      <select class="custom-select select2" name="vechicle_id" id="vechicle_id">
+                          <option value="">ALL</option>
+                          @foreach($vehicles as $vehicle)
+                              <option value="{{ $vehicle->id }}" {{ old('vechicle_id') == $vehicle->id ? 'selected' : '' }}>
+                                  {{ $vehicle->vehicle_no }}
+                              </option>
+                          @endforeach
+                      </select>
+                  </div>
+              </div>
+
             <div class="col-md-3 mt-4">
               <div class="form-group">
                 <button type="submit" class="btn btn-primary">Filter</button>
                 <a href="{{ route('admin.vehicleAttendances.create') }}" class="btn btn-primary">Reset</a>
               </div>
             </div>
-            
+
           </div>
-        </form>        
+        </form>
       </div>
     </div>
 
@@ -53,7 +67,7 @@
       <div class="card-body">
         <form action="{{ route('admin.vehicleAttendances.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
-          
+
           <div class="row mb-3">
             <!-- Date -->
             <div class="col-md-2">
@@ -65,7 +79,7 @@
                 @enderror
               </div>
             </div>
-            
+
             <!-- Bulk Actions -->
             <div class="col-md-10">
               <div class="form-group">
@@ -109,9 +123,9 @@
                   </div>
                 </div>
                 <input type="hidden" class="form-control" name="vehicle_id[]" value="{{ $value['vehicle_id'] }}">
-                
+
                 <!-- Vehicle No -->
-                <div class="col-md-2 pl-0">
+                <div class="col-md-1 pl-0">
                   <div class="form-group">
                     <strong>Vehicle No</strong>
                     <input type="text" class="form-control" name="vehicle_no" value="{{ $value['vehicle_no'] }}" readonly>
@@ -127,7 +141,7 @@
                 </div>
 
                 <!-- Shift -->
-                <div class="col-md-2">
+                <div class="col-md-1">
                   <div class="form-group">
                     <strong>Shift</strong>
                     <input type="text" class="form-control" name="shift" value="{{ $value['shift'] }}" readonly>
@@ -135,7 +149,7 @@
                 </div>
 
                 <!-- IBC Center -->
-                <div class="col-md-2">
+                <div class="col-md-1">
                   <div class="form-group">
                     <strong>IBC Center</strong>
                     <input type="text" class="form-control" name="ibcCenter" value="{{ $value['ibcCenter'] }}" readonly>
@@ -143,30 +157,49 @@
                 </div>
 
                 <!-- Attendance -->
-                <div class="col-md-2">
-                  <div class="form-group">
-                    <strong>Attendance</strong>
-                    <select class="custom-select @error('status.' . $value['vehicle_id']) is-invalid @enderror" name="status[{{ $value['vehicle_id'] }}]">
-                      <option value="">Select</option>
-                      @foreach($attendanceStatus as $statusKey => $statusLabel)
-                        <option value="{{ $statusKey }}" 
-                          {{ old('status.' . $value['vehicle_id']) == (string) $statusKey ? 'selected' : '' }}>
-                          {{ $statusLabel }}
-                        </option>
-                      @endforeach
-                    </select>
-                    @error('status.' . $value['vehicle_id'])
-                      <label class="text-danger">{{ $message }}</label>
-                    @enderror
-                    
+                  <div class="col-md-2">
+                      <div class="form-group">
+                          <strong>Attendance</strong>
+                          <select class="custom-select @error('status.' . $value['vehicle_id']) is-invalid @enderror" name="status[{{ $value['vehicle_id'] }}]" id="attendanceStatus-{{ $value['vehicle_id'] }}">
+                              <option value="">Select</option>
+                              @foreach($attendanceStatus as $statusKey => $statusLabel)
+                                  <option value="{{ $statusKey }}"
+                                      {{ old('status.' . $value['vehicle_id']) == (string) $statusKey ? 'selected' : '' }}>
+                                      {{ $statusLabel }}
+                                  </option>
+                              @endforeach
+                          </select>
+                          @error('status.' . $value['vehicle_id'])
+                          <label class="text-danger">{{ $message }}</label>
+                          @enderror
+                      </div>
                   </div>
-                </div>
+
+                  <!-- Additional dropdown or section that will be conditionally displayed -->
+                  <div id="additionalOptions-{{ $value['vehicle_id'] }}" class="col-md-2" style="display: none;">
+                      <div class="form-group">
+                          <strong>Pool Vechicle</strong>
+                          <select class="custom-select select2" name="pool_id" id="pool_id">
+                              <option value="" >ALL</option>
+                              @foreach($poolvehicles as $station)
+                                  <option value="{{ $station->id }}" {{ old('pool_id') == $station->id ? 'selected' : '' }}>
+                                      {{ $station->vehicle_no }}
+                                  </option>
+                              @endforeach
+                          </select>
+                      </div>
+                  </div>
+
+
               </div>
+
+
+
               @php $globalIndex++; @endphp
             @endforeach
           @endforeach
 
-          <div class="row">            
+          <div class="row">
             <div class="col-md-12">
               <label for=""></label>
               <div class="text-right">
@@ -175,7 +208,7 @@
               </div>
             </div>
           </div>
-                    
+
         </form>
       </div>
     </div>
@@ -189,10 +222,10 @@ $(document).ready(function() {
     $('.status-btn').on('click', function() {
         const statusId = $(this).data('status-id');
         const statusName = $(this).text().trim();
-        
+
         // Find all checked checkboxes
         const $checkedBoxes = $('.vehicle-checkbox:checked');
-        
+
         if ($checkedBoxes.length === 0) {
             // Show error if no vehicles are selected
             new Noty({
@@ -202,13 +235,13 @@ $(document).ready(function() {
             }).show();
             return;
         }
-        
+
         // Update status for each selected vehicle
         $checkedBoxes.each(function() {
             const vehicleId = $(this).data('vehicle-id');
             $(`select[name='status[${vehicleId}]']`).val(statusId);
         });
-        
+
         // Show success message
         new Noty({
             type: 'success',
@@ -216,12 +249,12 @@ $(document).ready(function() {
             timeout: 3000
         }).show();
     });
-    
+
     // Select All functionality
     $('#selectAll').on('change', function() {
         $('.vehicle-checkbox').prop('checked', $(this).prop('checked'));
     });
-    
+
     // Uncheck "Select All" if any checkbox is unchecked
     $('.vehicle-checkbox').on('change', function() {
         if (!$(this).prop('checked')) {
@@ -234,5 +267,32 @@ $(document).ready(function() {
         }
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Select all attendance dropdowns based on their ID pattern
+    document.querySelectorAll('[id^="attendanceStatus-"]').forEach(function (attendanceStatusSelect) {
+        const vehicleId = attendanceStatusSelect.id.split('-')[1]; // Extract vehicle ID from the dropdown ID
+        const additionalOptionsDiv = document.getElementById('additionalOptions-' + vehicleId);
+
+        // Function to toggle the additional options based on the selected status
+        function toggleAdditionalOptions() {
+            const selectedValue = attendanceStatusSelect.value;  // Get the value of the selected option
+            console.log(selectedValue);
+            if (selectedValue === '5' || selectedValue === '6') {
+                additionalOptionsDiv.style.display = 'block';  // Show the additional options
+            } else {
+                additionalOptionsDiv.style.display = 'none';  // Hide the additional options
+            }
+        }
+
+        // Add event listener for the 'change' event on the attendance status dropdown
+        attendanceStatusSelect.addEventListener('change', toggleAdditionalOptions);
+
+        // Initial check in case a value is already selected when the page loads
+        toggleAdditionalOptions();
+    });
+});
 </script>
+
 @endpush

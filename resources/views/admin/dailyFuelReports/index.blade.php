@@ -239,19 +239,19 @@
                     extend: 'print',
                     text: 'Print',
                     className: 'd-none',
-                    exportOptions: { modifier: { page: 'current' } }
+                    exportOptions: { modifier: { page: 'all' } }
                 },
                 {
                     extend: 'pdfHtml5',
                     text: 'PDF',
                     className: 'd-none',
-                    exportOptions: { modifier: { page: 'current' } }
+                    exportOptions: { modifier: { page: 'all' } }
                 },
                 {
                     extend: 'excelHtml5',   // <<< Excel button added
                     text: 'Excel',
                     className: 'd-none',
-                    exportOptions: { modifier: { page: 'current' } }
+                    exportOptions: { modifier: { page: 'all' } }
                 }
             ]
         });

@@ -237,7 +237,7 @@
                       text: 'Print',
                       className: 'd-none',
                       exportOptions: {
-                          modifier: { page: 'current' }
+                          modifier: { page: 'all' }
                       }
                   },
                   {
@@ -245,7 +245,7 @@
                       text: 'PDF',
                       className: 'd-none',
                       exportOptions: {
-                          modifier: { page: 'current' }
+                          modifier: { page: 'all' }
                       }
                   },
                   {
@@ -253,7 +253,7 @@
                       text: 'Excel',
                       className: 'd-none',
                       exportOptions: {
-                          modifier: { page: 'current' }
+                          modifier: { page: 'all' }
                       }
                   }
               ]

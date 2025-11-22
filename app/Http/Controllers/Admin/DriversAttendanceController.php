@@ -7,6 +7,7 @@ use App\Models\DriversAttendance;
 use App\Models\Driver;
 use App\Models\DriverStatus;
 use App\Models\AttendanceStatus;
+use App\Models\Station;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -15,7 +16,7 @@ class DriversAttendanceController extends Controller
     public function index(Request $request){
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
         $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
-        
+
         $driverAttendances = DriversAttendance::with(['driver.shiftTiming','driver.driverStatus','driver','attendanceStatus'])
             ->where('is_active',1)
             ->whereBetween('date', [
@@ -28,6 +29,9 @@ class DriversAttendanceController extends Controller
     }
 
     public function create(Request $request){
+
+        $stations = Station::where('is_active',1)->get();
+
         $driver_status = DriverStatus::whereIn('id', function ($q) {
                 $q->select('driver_status_id')
                   ->from('drivers')
@@ -37,12 +41,20 @@ class DriversAttendanceController extends Controller
             ->orderBy('name')
             ->pluck('name', 'id');
 
+
+
         $driver_attendance_status = AttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
-        
+
         $drivers = Driver::with(['driverStatus','shiftTiming']);
         $drivers = $drivers->where('is_active', 1);
         if (isset($request->driver_status_id)) {
             $drivers = $drivers->where('driver_status_id', $request->driver_status_id);
+        }
+        if (isset($request->station_id)) {
+            $drivers = $drivers->whereHas('vehicle', function ($query) use ($request) {
+                // Match vehicle's station_id to the requested station_id
+                $query->where('station_id', $request->station_id); // Match vehicle's station_id
+            });
         }
         $drivers = $drivers->orderBy(
                 DriverStatus::select('name')
@@ -54,7 +66,7 @@ class DriversAttendanceController extends Controller
 
         $selected_driver_status_id = $request->driver_status_id ?? '';
 
-        return view('admin.driverAttendances.create',compact('drivers','driver_status','driver_attendance_status','selected_driver_status_id'));
+        return view('admin.driverAttendances.create',compact('drivers','driver_status','driver_attendance_status','selected_driver_status_id','stations'));
     }
 
     public function store(Request $request){
@@ -71,7 +83,7 @@ class DriversAttendanceController extends Controller
 
         foreach ($driverIds as $i => $driverId) {
             $statusId = $statuses[$i] ?? null;
-            
+
             if (empty($statusId)) {
                 continue;
             }
@@ -112,9 +124,9 @@ class DriversAttendanceController extends Controller
         return redirect()->route('admin.driverAttendances.index')->with('success', 'Driver Attendance marked successfully');
     }
 
-    public function edit(DriversAttendance $driverAttendance){ 
+    public function edit(DriversAttendance $driverAttendance){
         $driver_attendance_status = AttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
-        
+
         $driverAttendance->load(['driver.shiftTiming','driver','attendanceStatus']);
 
         return view('admin.driverAttendances.edit',compact('driverAttendance','driver_attendance_status'));

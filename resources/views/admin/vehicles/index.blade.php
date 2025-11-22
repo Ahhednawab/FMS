@@ -14,7 +14,7 @@
     .select-all-checkbox {
         margin-right: 10px;
     }
-    
+
     /* Custom checkbox styling */
     .custom-checkbox {
       position: relative;
@@ -197,13 +197,25 @@
                   <span class="checkmark"></span>
                 </label>
               </th>
-              <th>Serial no</th>
               <th>Vehicle No</th>
+                <th>Make</th>
               <th>Model</th>
+                <th>Ownership </th>
+                <th>AKPL</th>
               <th>Shift</th>
-              <th>Type</th>
+              <th>Vehicle Type</th>
+                <th>Fabricator</th>
               <th>Station</th>
-              <th>IBC Center</th>
+              <th>IBC</th>
+                <th>Inspection Date</th>
+                <th>Next Inspection Date</th>
+                <th>Induction Date </th>
+                <th>Fitness Date</th>
+                <th>Next fitness date</th>
+                <th>Insurance Expiry Date</th>
+                <th>RP date</th>
+                <th>RP expiry date</th>
+                <th>Next tax date</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -216,13 +228,26 @@
                     <span class="checkmark"></span>
                   </label>
                 </td>
-                <td>{{$value->serial_no}}</td>
                 <td>{{$value->vehicle_no}}</td>
+                  <td>{{$value->make}}</td>
                 <td>{{$value->model}}</td>
+                  <td>{{$value->ownership }}</td>
+                  <td>{{$value->akpl}}</td>
                 <td>@if($value->shiftHours) {{$value->shiftHours->name}} @else N/A @endif</td>
                 <td>{{$value->vehicleType->name}}</td>
-                <td>{{$value->station->area}}</td>
-                <td>{{$value->ibcCenter->name}}</td>
+
+                  <td>{{ $value->fabricationVendor?->name ?? 'N/A' }}</td>
+                  <td>{{$value->station->area}}</td>
+                  <td>{{$value->ibcCenter->name}}</td>
+                  <td>{{$value->inspection_date}}</td>
+                  <td>{{$value->next_inspection_date}}</td>
+                  <td>{{$value->induction_date}}</td>
+                  <td>{{$value->fitness_date}}</td>
+                  <td>{{$value->next_fitness_date}}</td>
+                  <td>{{$value->insurance_expiry_date}}</td>
+                <td>{{$value->route_permit_date}}</td>
+                <td>{{$value->route_permit_expiry_date}}</td>
+                  <td>{{$value->next_tax_date}}</td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">
@@ -257,7 +282,7 @@
     <!-- /basic datatable -->
   </div>
   <!-- /content area -->
-  
+
   <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
   <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
@@ -281,16 +306,16 @@
         });
         updateBulkActions();
       });
-      
+
       // Handle individual checkbox changes
       $(document).on('change', '.select-checkbox', function() {
           var isChecked = $(this).prop('checked');
           $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
-          
+
           // Update select all checkbox
           var allChecked = $('.select-checkbox:checked').length === $('.select-checkbox').length;
           $('#selectAll').prop('checked', allChecked);
-          
+
           updateBulkActions();
       });
 
@@ -305,7 +330,7 @@
       $('#deleteSelected').on('click', function(e) {
         e.preventDefault();
         var selectedIds = getSelectedIds();
-        
+
         if (selectedIds.length === 0) {
           alert('Please select at least one vehicle to delete.');
           return;
@@ -315,7 +340,7 @@
           // Add your delete logic here
           // console.log('Deleting vehicles:', selectedIds);
           // Example AJAX call:
-          
+
           $.ajax({
             url: "{{ route('admin.vehicles.destroyMultiple') }}",
             type: 'POST',
@@ -331,7 +356,7 @@
               }
             }
           });
-          
+
         }
       });
 
@@ -339,7 +364,7 @@
       $('#exportSelected').on('click', function(e) {
         e.preventDefault();
         var selectedIds = getSelectedIds();
-        
+
         if (selectedIds.length === 0) {
           alert('Please select at least one vehicle to export.');
           return;
@@ -361,7 +386,7 @@
       function updateBulkActions() {
         var selectedCount = $('.select-checkbox:checked').length;
         $('#selectedCount').text(selectedCount);
-        
+
         if (selectedCount > 0) {
           $('#bulkActions').addClass('show');
         } else {

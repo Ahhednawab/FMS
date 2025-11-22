@@ -36,16 +36,31 @@
                 </select>
               </div>
             </div>
-            
-            <div class="col-md-3 mt-4">
+
+              <div class="col-md-3">
+                  <div class="form-group">
+                      <label class="form-label"><strong>Station</strong></label>
+                      <select class="custom-select select2" name="station_id" id="station_id">
+                          <option value="" {{ empty($selected_driver_status_id) ? 'selected' : '' }}>ALL</option>
+                          @foreach($stations as $station)
+                              <option value="{{ $station->id }}" {{ old('station_id') == $station->id ? 'selected' : '' }}>
+                                  {{ $station->area }}
+                              </option>
+                          @endforeach
+                      </select>
+                  </div>
+              </div>
+
+
+              <div class="col-md-3 mt-4">
               <div class="form-group">
                 <button type="submit" class="btn btn-primary">Filter</button>
                 <a href="{{ route('admin.driverAttendances.create') }}" class="btn btn-primary">Reset</a>
               </div>
             </div>
-            
+
           </div>
-        </form>        
+        </form>
       </div>
     </div>
 
@@ -53,7 +68,7 @@
       <div class="card-body">
         <form action="{{ route('admin.driverAttendances.store') }}" method="POST" enctype="multipart/form-data">
           @csrf
-          
+
 
           <div class="row mb-3">
             <!-- Date -->
@@ -66,7 +81,7 @@
                 @enderror
               </div>
             </div>
-            
+
             <!-- Bulk Actions -->
             <div class="col-md-10">
               <div class="form-group">
@@ -87,7 +102,7 @@
               </div>
             </div>
           </div>
-          
+
           @foreach($drivers as $i => $value)
               <div class="row align-items-center mb-3">
                 <div class="col-auto pr-0 d-flex align-items-center">
@@ -105,8 +120,22 @@
                   </div>
                 </div>
 
+                  <div class="col-md-2">
+                      <div class="form-group">
+                          <strong>Cnic No</strong>
+                          <input type="text" class="form-control" name="cnicno[]" value="{{ $value->cnic_no }}" readonly>
+                      </div>
+                  </div>
+
+                  <div class="col-md-2">
+                      <div class="form-group">
+                          <strong>Account No</strong>
+                          <input type="text" class="form-control" name="accountno[]" value="{{ $value->account_no }}" readonly>
+                      </div>
+                  </div>
+
                 <!-- Shift -->
-                <div class="col-md-4">
+                <div class="col-md-1">
                   <div class="form-group">
                     <strong>Shift</strong>
                     <input type="text" class="form-control" name="shift[]" value="{{ $value->shiftTiming ? $value->shiftTiming->name . ' (' . \Carbon\Carbon::parse($value->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($value->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}" readonly>
@@ -120,9 +149,15 @@
                     <input type="text" class="form-control" name="driverStatus[]" value="{{ $value->driverStatus->name }}" readonly>
                   </div>
                 </div>
+{{--                  <div class="col-md-1">--}}
+{{--                      <div class="form-group">--}}
+{{--                          <strong>Station</strong>--}}
+{{--                          <input type="text" class="form-control" name="driverStatus[]" value="{{ $value->vehicle->station->area ?? '' }}" disabled>--}}
+{{--                      </div>--}}
+{{--                  </div>--}}
 
                 <!-- Attendance -->
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <div class="form-group">
                     <strong>Attendance</strong>
                     <select class="custom-select @error('status.' . $i) is-invalid @enderror" name="status[]" data-driver-idx="{{ $i }}">
@@ -139,7 +174,7 @@
               </div>
           @endforeach
 
-          <div class="row">            
+          <div class="row">
             <div class="col-md-12">
               <label for=""></label>
               <div class="text-right">
@@ -147,7 +182,7 @@
                 <a href="{{ route('admin.driverAttendances.index') }}" class="btn btn-warning">Cancel</a>
               </div>
             </div>
-          </div>                    
+          </div>
         </form>
       </div>
     </div>
@@ -161,10 +196,10 @@ $(document).ready(function() {
     $('.status-btn').on('click', function() {
         const statusId = $(this).data('status-id');
         const statusName = $(this).text().trim();
-        
+
         // Find all checked checkboxes
         const $checkedBoxes = $('.driver-checkbox:checked');
-        
+
         if ($checkedBoxes.length === 0) {
             // Show error if no drivers are selected
             new Noty({
@@ -174,13 +209,13 @@ $(document).ready(function() {
             }).show();
             return;
         }
-        
+
         // Update status for each selected driver
         $checkedBoxes.each(function() {
             const driverIdx = $(this).data('driver-id');
             $(`select[name='status[]'][data-driver-idx='${driverIdx}']`).val(statusId);
         });
-        
+
         // Show success message
         new Noty({
             type: 'success',
@@ -188,12 +223,12 @@ $(document).ready(function() {
             timeout: 3000
         }).show();
     });
-    
+
     // Select All functionality
     $('#selectAll').on('change', function() {
         $('.driver-checkbox').prop('checked', $(this).prop('checked'));
     });
-    
+
     // Uncheck "Select All" if any checkbox is unchecked
     $('.driver-checkbox').on('change', function() {
         if (!$(this).prop('checked')) {
