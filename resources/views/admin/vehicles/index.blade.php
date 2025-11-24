@@ -180,7 +180,10 @@
                         <a class="dropdown-item d-none" href="#" id="exportSelected">Export Selected</a>
                     </div>
                 </div>
+
                 <button type="button" class="btn btn-link text-danger ml-auto" id="clearSelection">Clear Selection</button>
+
+
             </div>
         </div>
     </div>
@@ -188,6 +191,15 @@
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
+          <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+              <i class="icon-file-excel"></i> Excel
+          </button>
+          <button class="btn btn-light" id="printBtn" title="Print">
+              <i class="icon-printer"></i> Print
+          </button>
+          <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
+              <i class="icon-file-pdf"></i> PDF
+          </button>
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
@@ -298,7 +310,50 @@
       // }
     // );
 
-      // Toggle all checkboxes
+        new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'print',
+                    text: 'Print',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: { page: 'all' }
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: 'PDF',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: { page: 'all' }
+                    }
+                },
+                {
+                    extend: 'excelHtml5',   // <<< Excel button added
+                    text: 'Excel',
+                    className: 'd-none',
+                    exportOptions: {
+                        modifier: { page: 'all' }
+                    }
+                }
+            ]
+        });
+
+        // Button triggers
+        $('#printBtn').on('click', function() {
+            table.button('.buttons-print').trigger();
+        });
+
+        $('#pdfBtn').on('click', function() {
+            table.button('.buttons-pdf').trigger();
+        });
+
+        $('#excelBtn').on('click', function() {   // <<< Excel button trigger
+            table.button('.buttons-excel').trigger();
+        });
+
+
+        // Toggle all checkboxes
       $('#selectAll').on('change', function() {
         var isChecked = $(this).prop('checked');
         $('.select-checkbox').prop('checked', isChecked).each(function() {

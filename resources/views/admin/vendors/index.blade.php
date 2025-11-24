@@ -47,6 +47,15 @@
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
+          <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+              <i class="icon-file-excel"></i> Excel
+          </button>
+          <button class="btn btn-light" id="printBtn" title="Print">
+              <i class="icon-printer"></i> Print
+          </button>
+          <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
+              <i class="icon-file-pdf"></i> PDF
+          </button>
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
@@ -82,7 +91,7 @@
                   </div>
                 </td>
               </tr>
-            @endforeach           
+            @endforeach
           </tbody>
         </table>
       </div>
@@ -90,23 +99,67 @@
     <!-- /basic datatable -->
   </div>
   <!-- /content area -->
-  
+
   <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
   <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
 
   <script>
-    $(document).ready(function () {
-      $('.datatable-colvis-basic').DataTable();
-    });
+      $(document).ready(function () {
+          // Initialize DataTable
+          var table = $('.datatable-colvis-basic').DataTable();
 
-    setTimeout(function () {
-      let alertBox = document.getElementById('alert-message');
-      if (alertBox) {
-        alertBox.style.transition = 'opacity 0.5s ease';
-        alertBox.style.opacity = '0';
-        setTimeout(() => alertBox.remove(), 500);
-      }
-    }, 3000);
+          new $.fn.dataTable.Buttons(table, {
+              buttons: [
+                  {
+                      extend: 'print',
+                      text: 'Print',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  },
+                  {
+                      extend: 'pdfHtml5',
+                      text: 'PDF',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  },
+                  {
+                      extend: 'excelHtml5',   // Excel button added
+                      text: 'Excel',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  }
+              ]
+          });
+
+          // Button triggers
+          $('#printBtn').on('click', function() {
+              table.button('.buttons-print').trigger();
+          });
+
+          $('#pdfBtn').on('click', function() {
+              table.button('.buttons-pdf').trigger();
+          });
+
+          $('#excelBtn').on('click', function() {   // Excel button trigger
+              table.button('.buttons-excel').trigger();
+          });
+
+          setTimeout(function () {
+              let alertBox = document.getElementById('alert-message');
+              if (alertBox) {
+                  alertBox.style.transition = 'opacity 0.5s ease';
+                  alertBox.style.opacity = '0';
+                  setTimeout(() => alertBox.remove(), 500);
+              }
+          }, 3000);
+      });
+
   </script>
 @endsection

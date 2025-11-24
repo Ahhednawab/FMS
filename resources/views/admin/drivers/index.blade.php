@@ -68,6 +68,15 @@
     <!-- Basic datatable -->
     <div class="card">
       <div class="card-body">
+          <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+              <i class="icon-file-excel"></i> Excel
+          </button>
+          <button class="btn btn-light" id="printBtn" title="Print">
+              <i class="icon-printer"></i> Print
+          </button>
+          <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
+              <i class="icon-file-pdf"></i> PDF
+          </button>
         <table class="table datatable-colvis-basic dataTable">
           <thead>
             <tr>
@@ -153,113 +162,152 @@
   <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script>
 
   <script>
-    $(document).ready(function () {
-      $('.datatable-colvis-basic').DataTable();
-    });
+      $(document).ready(function () {
+          // Initialize DataTable
+          var table = $('.datatable-colvis-basic').DataTable();
 
-    // Toggle all checkboxes
-    $('#selectAll').on('change', function() {
-      var isChecked = $(this).prop('checked');
-      $('.select-checkbox').prop('checked', isChecked).each(function() {
-          $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
-      });
-      updateBulkActions();
-    });
+          new $.fn.dataTable.Buttons(table, {
+              buttons: [
+                  {
+                      extend: 'print',
+                      text: 'Print',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  },
+                  {
+                      extend: 'pdfHtml5',
+                      text: 'PDF',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  },
+                  {
+                      extend: 'excelHtml5',   // Excel button added
+                      text: 'Excel',
+                      className: 'd-none',
+                      exportOptions: {
+                          modifier: { page: 'all' }
+                      }
+                  }
+              ]
+          });
 
-    // Handle individual checkbox changes
-    $(document).on('change', '.select-checkbox', function() {
-        var isChecked = $(this).prop('checked');
-        $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
+          // Button triggers
+          $('#printBtn').on('click', function() {
+              table.button('.buttons-print').trigger();
+          });
 
-        // Update select all checkbox
-        var allChecked = $('.select-checkbox:checked').length === $('.select-checkbox').length;
-        $('#selectAll').prop('checked', allChecked);
+          $('#pdfBtn').on('click', function() {
+              table.button('.buttons-pdf').trigger();
+          });
 
-        updateBulkActions();
-    });
+          $('#excelBtn').on('click', function() {   // Excel button trigger
+              table.button('.buttons-excel').trigger();
+          });
 
-    // Clear selection
-    $('#clearSelection').on('click', function() {
-      $('.select-checkbox, #selectAll').prop('checked', false);
-      $('.checkmark').text('');
-      updateBulkActions();
-    });
+          // Toggle all checkboxes
+          $('#selectAll').on('change', function() {
+              var isChecked = $(this).prop('checked');
+              $('.select-checkbox').prop('checked', isChecked).each(function() {
+                  $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
+              });
+              updateBulkActions();
+          });
 
-    // Delete selected items
-    $('#deleteSelected').on('click', function(e) {
-      e.preventDefault();
-      var selectedIds = getSelectedIds();
+          // Handle individual checkbox changes
+          $(document).on('change', '.select-checkbox', function() {
+              var isChecked = $(this).prop('checked');
+              $(this).siblings('.checkmark').text(isChecked ? '✓' : '');
 
-      if (selectedIds.length === 0) {
-        alert('Please select at least one driver to delete.');
-        return;
-      }
+              // Update select all checkbox
+              var allChecked = $('.select-checkbox:checked').length === $('.select-checkbox').length;
+              $('#selectAll').prop('checked', allChecked);
 
-      if (confirm('Are you sure you want to delete the selected drivers?')) {
-        // Add your delete logic here
-        // console.log('Deleting drivers:', selectedIds);
-        // Example AJAX call:
+              updateBulkActions();
+          });
 
-        $.ajax({
-          url: "{{ route('admin.drivers.destroyMultiple') }}",
-          type: 'POST',
-          data: {
-            _token: '{{ csrf_token() }}',
-            ids: selectedIds
-          },
-          success: function(response) {
-            if (response.success) {
-              location.reload();
-            } else {
-              alert('Error deleting drivers');
-            }
+          // Clear selection
+          $('#clearSelection').on('click', function() {
+              $('.select-checkbox, #selectAll').prop('checked', false);
+              $('.checkmark').text('');
+              updateBulkActions();
+          });
+
+          // Delete selected items
+          $('#deleteSelected').on('click', function(e) {
+              e.preventDefault();
+              var selectedIds = getSelectedIds();
+
+              if (selectedIds.length === 0) {
+                  alert('Please select at least one driver to delete.');
+                  return;
+              }
+
+              if (confirm('Are you sure you want to delete the selected drivers?')) {
+                  // Add your delete logic here
+                  $.ajax({
+                      url: "{{ route('admin.drivers.destroyMultiple') }}",
+                      type: 'POST',
+                      data: {
+                          _token: '{{ csrf_token() }}',
+                          ids: selectedIds
+                      },
+                      success: function(response) {
+                          if (response.success) {
+                              location.reload();
+                          } else {
+                              alert('Error deleting drivers');
+                          }
+                      }
+                  });
+              }
+          });
+
+          // Export selected items
+          $('#exportSelected').on('click', function(e) {
+              e.preventDefault();
+              var selectedIds = getSelectedIds();
+
+              if (selectedIds.length === 0) {
+                  alert('Please select at least one driver to export.');
+                  return;
+              }
+
+              // Add your export logic here
+              console.log('Exporting drivers:', selectedIds);
+          });
+
+          // Get selected vehicle IDs
+          function getSelectedIds() {
+              return $('.select-checkbox:checked').map(function() {
+                  return $(this).val();
+              }).get();
           }
-        });
 
-      }
-    });
+          // Update bulk actions visibility and selected count
+          function updateBulkActions() {
+              var selectedCount = $('.select-checkbox:checked').length;
+              $('#selectedCount').text(selectedCount);
 
-    // Export selected items
-    $('#exportSelected').on('click', function(e) {
-      e.preventDefault();
-      var selectedIds = getSelectedIds();
+              if (selectedCount > 0) {
+                  $('#bulkActions').addClass('show');
+              } else {
+                  $('#bulkActions').removeClass('show');
+              }
+          }
 
-      if (selectedIds.length === 0) {
-        alert('Please select at least one driver to export.');
-        return;
-      }
+          setTimeout(function () {
+              let alertBox = document.getElementById('alert-message');
+              if (alertBox) {
+                  alertBox.style.transition = 'opacity 0.5s ease';
+                  alertBox.style.opacity = '0';
+                  setTimeout(() => alertBox.remove(), 500);
+              }
+          }, 3000);
+      });
 
-      // Add your export logic here
-      console.log('Exporting drivers:', selectedIds);
-      // Example: window.location.href = '/admin/vehicles/export?ids=' + selectedIds.join(',');
-    });
-
-    // Get selected vehicle IDs
-    function getSelectedIds() {
-      return $('.select-checkbox:checked').map(function() {
-        return $(this).val();
-      }).get();
-    }
-
-    // Update bulk actions visibility and selected count
-    function updateBulkActions() {
-      var selectedCount = $('.select-checkbox:checked').length;
-      $('#selectedCount').text(selectedCount);
-
-      if (selectedCount > 0) {
-        $('#bulkActions').addClass('show');
-      } else {
-        $('#bulkActions').removeClass('show');
-      }
-    }
-
-    setTimeout(function () {
-      let alertBox = document.getElementById('alert-message');
-      if (alertBox) {
-        alertBox.style.transition = 'opacity 0.5s ease';
-        alertBox.style.opacity = '0';
-        setTimeout(() => alertBox.remove(), 500);
-      }
-    }, 3000);
   </script>
 @endsection
