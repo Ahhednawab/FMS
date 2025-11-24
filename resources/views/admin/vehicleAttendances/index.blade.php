@@ -109,6 +109,7 @@
               <th class="text-center">Shift</th>
               <th class="text-center">Date</th>
               <th class="text-center">Attendance Status</th>
+                <th class="text-center">Replace By</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -126,6 +127,12 @@
                 </td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
                 <td class="text-center">{{$value->attendanceStatus->name}}</td>
+                  <td class="text-center"
+                      @if($value->pool)
+                          style="background-color: #FFEB3B; color: #000; padding: 0px 14px; border-radius: 100px; font-weight: bold; text-align: center; max-width: 120px; width: auto; vertical-align: middle;"
+                      @endif>
+                      {{ $value->pool->vehicle_no ?? '' }}
+                  </td>
                 <td class="text-center">
                   <div class="list-icons">
                     <div class="dropdown">

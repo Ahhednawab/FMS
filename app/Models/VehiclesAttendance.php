@@ -10,6 +10,7 @@ class VehiclesAttendance extends Model
         'vehicle_id',
         'date',
         'status',
+        'pool_id',
     ];
 
     public function vehicle()
@@ -20,5 +21,9 @@ class VehiclesAttendance extends Model
     public function attendanceStatus()
     {
         return $this->belongsTo(AttendanceStatus::class, 'status');
+    }
+    public function pool()
+    {
+        return $this->belongsTo(Vehicle::class, 'pool_id');
     }
 }

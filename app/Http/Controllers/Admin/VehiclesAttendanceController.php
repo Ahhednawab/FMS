@@ -102,6 +102,7 @@ class VehiclesAttendanceController extends Controller
         $date = $request->input('date');
         $vehicleIds = $request->input('vehicle_id', []);
         $statuses = $request->input('status', []);
+        $poolIds = $request->input('pool_id', []);
 
         $allowedStatusIds = AttendanceStatus::where('is_active', 1)
             ->where('id', '!=', 3)
@@ -123,6 +124,7 @@ class VehiclesAttendanceController extends Controller
             }
 
             $statusId = $statuses[(string) $vehicleId] ?? null;
+            $poolId = $poolIds[(string) $vehicleId] ?? null;
 
             if (empty($statusId)) {
                 continue;
@@ -154,11 +156,18 @@ class VehiclesAttendanceController extends Controller
                 continue;
             }
 
-            $toInsert[] = [
+            $attendanceData = [
                 'vehicle_id' => $vehicleId,
                 'date'       => $date,
                 'status'     => (int) $statusId,
             ];
+
+            if ($poolId) { // If pool_id is provided, include it in the data
+                $attendanceData['pool_id'] = $poolId;
+            }
+
+            $toInsert[] = $attendanceData;
+
         }
 
         if ($selectedCount === 0) {

@@ -63,7 +63,6 @@ class VehicleController extends Controller
             return redirect()->back()->with('success', 'Draft saved successfully!');
         }
 
-        // If coming from a draft, relax file requirements when already attached in draft
         $draftAttached = [
             'registration_file' => false,
             'fitness_file' => false,

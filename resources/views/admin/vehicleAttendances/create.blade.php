@@ -179,7 +179,7 @@
                   <div id="additionalOptions-{{ $value['vehicle_id'] }}" class="col-md-2" style="display: none;">
                       <div class="form-group">
                           <strong>Pool Vechicle</strong>
-                          <select class="custom-select select2" name="pool_id" id="pool_id">
+                          <select class="custom-select select2" name="pool_id[{{ $value['vehicle_id'] }}]" id="pool_id">
                               <option value="" >ALL</option>
                               @foreach($poolvehicles as $station)
                                   <option value="{{ $station->id }}" {{ old('pool_id') == $station->id ? 'selected' : '' }}>

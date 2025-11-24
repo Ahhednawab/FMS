@@ -47,8 +47,8 @@
                     <div class="mt-1">
                       @foreach($draft->file_info as $fieldName => $fileInfo)
                         <small class="text-muted d-block">
-                          <i class="icon-file"></i> 
-                          <a href="{{ route('admin.drafts.view', base64_encode($fileInfo['path'])) }}" 
+                          <i class="icon-file"></i>
+                          <a href="{{ route('admin.drafts.view', base64_encode($fileInfo['path'])) }}"
                              target="_blank" class="text-primary">
                             {{ $fileInfo['original_name'] }}
                           </a>
