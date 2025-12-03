@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\WarehousesController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -87,7 +90,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('stations', StationController::class);
     Route::resource('ibcCenters', IbcController::class);
     Route::resource('warehouses', WarehouseController::class);
-    
+
     // Master Data
     Route::resource('vehicles', VehicleController::class);
     Route::post('vehicles/destroyMultiple', [VehicleController::class, 'destroyMultiple'])->name('vehicles.destroyMultiple');
@@ -117,7 +120,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
     Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
 
-    
+
 
     // Inventory
     Route::resource('products', ProductController::class);
@@ -128,7 +131,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 
     Route::resource('inventoryWarehouses', InventoryWarehouseController::class);
 
-    
+
 
     // Inventory Issuance
     Route::resource('inventoryDemands', InventoryDemandController::class);
@@ -168,6 +171,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/drafts/download/{path}', [App\Http\Controllers\Admin\DraftController::class, 'downloadFile'])->name('drafts.download');
     Route::get('/drafts/view/{path}', [App\Http\Controllers\Admin\DraftController::class, 'viewFile'])->name('drafts.view');
     Route::post('/drafts/{draft}/remove-file', [App\Http\Controllers\Admin\DraftController::class, 'removeFile'])->name('drafts.removeFile');
+
+    Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
+    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
+    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+
+    Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
+    Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
+    Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
+
 });
 
 
