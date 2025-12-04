@@ -14,7 +14,6 @@ class ExpiredVehiclesTable extends Component
     protected $paginationTheme = 'bootstrap';
 
     // Static reasons
-    public $search = '';
     public $reason = '';
     public $reasonList = [
         'next_inspection_date'     => "Next Inspection Expiry",
@@ -27,11 +26,7 @@ class ExpiredVehiclesTable extends Component
     /**
      * Reset pagination when reason changes (safe to call even if main table has no pagination)
      */
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-    public function updatingdReason()
+    public function updatedReason()
     {
         $this->resetPage();
     }
@@ -43,7 +38,6 @@ class ExpiredVehiclesTable extends Component
 
     public function clearFilters()
     {
-        $this->search = '';
         $this->reason = '';
         $this->resetPage();
     }
@@ -58,37 +52,30 @@ class ExpiredVehiclesTable extends Component
             ->where('is_active', 1)
             ->with(['vehicleType', 'station']);
     }
+
     public function getFilteredVehicles()
-{
-    $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+    {
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
 
-    $query = $this->expiredBaseQuery();
+        $query = $this->expiredBaseQuery();
 
-    // Apply reason filter
-    if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-        $query->where($this->reason, '<=', $nextMonthEnd);
-    } else {
-        $query->where(function ($q) use ($nextMonthEnd) {
-            $q->where('next_inspection_date', '<=', $nextMonthEnd)
-              ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
-              ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
-              ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
-              ->orWhere('next_tax_date', '<=', $nextMonthEnd);
-        });
+        // Apply reason filter for main table (single reason only)
+        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
+            // Apply the selected reason filter on the respective column
+            $query->where($this->reason, '<=', $nextMonthEnd);
+        } else {
+            // If "All Reasons", apply OR conditions for all reasons
+            $query->where(function ($q) use ($nextMonthEnd) {
+                $q->where('next_inspection_date', '<=', $nextMonthEnd)
+                    ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
+                    ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
+                    ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
+                    ->orWhere('next_tax_date', '<=', $nextMonthEnd);
+            });
+        }
+
+        return $query;
     }
-
-    // Apply search filter
-    if (!empty($this->search)) {
-        $query->where(function ($q) {
-            $q->where('vehicle_no', 'like', '%' . $this->search . '%')
-            ->orWhere('model', 'like', '%' . $this->search . '%')   ;
-             
-        });
-    }
-
-    return $query;
-}
-
 
     /**
      * Get the main table vehicles with pagination
@@ -117,39 +104,24 @@ class ExpiredVehiclesTable extends Component
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
         $labels = [];
 
-        // If a specific reason filter is active → return ONLY that reason
-        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-
-            $field = $this->reason;
-            $date  = $v->$field;
-
-            if (!empty($date) && Carbon::parse($date)->lte($nextMonthEnd)) {
-                return $this->reasonList[$field] . " (" . Carbon::parse($date)->format('d-M-Y') . ")";
-            }
-
-            return "-";  // if for some reason doesn't match
-        }
-
-        // Otherwise → return ALL expired reasons
         if (!empty($v->next_inspection_date) && Carbon::parse($v->next_inspection_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Inspection (" . Carbon::parse($v->next_inspection_date)->format('d-M-Y') . ")";
+            $labels[] = "Next Inspection Date (" . Carbon::parse($v->next_inspection_date)->format('d-M-Y') . ")";
         }
         if (!empty($v->next_fitness_date) && Carbon::parse($v->next_fitness_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Fitness (" . Carbon::parse($v->next_fitness_date)->format('d-M-Y') . ")";
+            $labels[] = "Next Fitness Date (" . Carbon::parse($v->next_fitness_date)->format('d-M-Y') . ")";
         }
         if (!empty($v->insurance_expiry_date) && Carbon::parse($v->insurance_expiry_date)->lte($nextMonthEnd)) {
-            $labels[] = "Insurance (" . Carbon::parse($v->insurance_expiry_date)->format('d-M-Y') . ")";
+            $labels[] = "Insurance Expiry Date (" . Carbon::parse($v->insurance_expiry_date)->format('d-M-Y') . ")";
         }
         if (!empty($v->route_permit_expiry_date) && Carbon::parse($v->route_permit_expiry_date)->lte($nextMonthEnd)) {
-            $labels[] = "Route Permit (" . Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y') . ")";
+            $labels[] = "Route Permit Expiry Date (" . Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y') . ")";
         }
         if (!empty($v->next_tax_date) && Carbon::parse($v->next_tax_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Tax (" . Carbon::parse($v->next_tax_date)->format('d-M-Y') . ")";
+            $labels[] = "Next Tax Date (" . Carbon::parse($v->next_tax_date)->format('d-M-Y') . ")";
         }
 
         return count($labels) ? implode(', ', $labels) : '-';
     }
-
 
     /**
      * Render the view

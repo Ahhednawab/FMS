@@ -21,7 +21,7 @@
 
     <!-- /page header -->
     <div>
-        @if($expiredDrivers->total() > 0 || true)
+        @if($expiredDrivers->total() > 0)
             <div class="card">
                 <div class="card-body">
 
@@ -59,10 +59,6 @@
                                 Clear Filters
                             </button>
                         </div>
-                        <div class="col-md-4 col-12">
-                            <label class="font-size-sm">Search:</label>
-                            <input type="text" id="de_search"  class="form-control" placeholder="Search drivers..." wire:model.debounce.500ms="search">
-                        </div>
                     </div>
 
 
@@ -77,7 +73,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @if($expiredDrivers->total() > 0)
                         @foreach($expiredDrivers as $driver)
                             <tr>
                                 <td class="font-size-sm">{{ $driver['serial_no'] }}</td>
@@ -98,27 +93,12 @@
                                 </td>
                             </tr>
                         @endforeach
-                        @else
-                            <div class="card">
-                                <div class="card-body text-center py-5">
-                                    <i class="icon-checkmark-circle text-success" style="font-size: 4rem;"></i>
-                                    <h4 class="text-muted mt-3">All drivers have valid documents!</h4>
-                                    <p class="text-muted">No expired documents found.</p>
-                                </div>
-                            </div>
-                        @endif
                         </tbody>
                     </table>
- 
-                   
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="text-muted small">
-                                Showing {{ $expiredDrivers->firstItem() }} to {{ $expiredDrivers->lastItem() }}
-                                of {{ $expiredDrivers->total() }} results
-                            </div>
-                        </div>
-                        {{ $expiredDrivers->links('vendor.pagination.custom-short') }}
+
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $expiredDrivers->links() }}
+                    </div>
                 </div>
             </div>
         @else
@@ -167,7 +147,6 @@
                     <div class="d-flex justify-content-center mt-3">
                         {{ $expiredDrivers->links() }}
                     </div>
-                    
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -186,17 +165,5 @@
                 window.location.reload();
             }, 100);
         });
-    });
-    function debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-    const input = document.getElementById('de_search');
-
-    input.addEventListener('keyup', function() {
-        @this.set('search', input.value); // Livewire will re-render automatically
     });
 </script>
