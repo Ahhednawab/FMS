@@ -54,7 +54,7 @@ class User extends Authenticatable
     /**
      * Relationships to country and city (optional)
      */
-    
+
     public function designation()
     {
         return $this->belongsTo(Designation::class);
@@ -67,5 +67,25 @@ class User extends Authenticatable
         $serial_no = $serial_no->first()->id;
 
         return $serial_no;
+    }
+
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+
+    public function isAdmin(): bool
+    {
+        return $this->role && $this->role->slug === 'admin';
+    }
+
+    public function hasRole($roles): bool
+    {
+        if (is_array($roles)) {
+            return in_array($this->role->slug, $roles);
+        }
+        return $this->role->slug === $roles;
     }
 }

@@ -13,7 +13,7 @@
           <div class="media-body">
             <div class="font-weight-semibold">{{Auth::user()->name}}</div>
             <div class="font-size-sm line-height-sm opacity-50">
-              {{ ucfirst(Auth::user()->role) }}
+              {{ ucfirst(Auth::user()->role->name) }}
             </div>
           </div>
 

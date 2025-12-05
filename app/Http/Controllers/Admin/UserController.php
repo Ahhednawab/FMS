@@ -19,18 +19,18 @@ class UserController extends Controller
     public function index()
     {
         // $users = User::with(['designation'])->where('role','!=','admin')->where('is_active',1)->get();
-        $users = User::with(['designation'])->where('designation_id','!=',0)->where('id','!=',Auth::user()->id)->where('is_active',1)->get();
+        $users = User::with(['designation'])->where('designation_id', '!=', 0)->where('id', '!=', Auth::user()->id)->where('is_active', 1)->get();
         return view('admin.users.index', compact('users'));
     }
 
     public function create(Request $request)
     {
         $serial_no = User::GetSerialNumber();
-        $designation = Designation::where('is_active',1)->orderBy('designation','ASC')->get();
-        
+        $designation = Designation::where('is_active', 1)->orderBy('designation', 'ASC')->get();
+
         $draftInfo = $this->getDraftDataForView($request, 'users');
-        
-        return view('admin.users.create', compact('serial_no','designation') + $draftInfo);
+
+        return view('admin.users.create', compact('serial_no', 'designation') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -77,8 +77,8 @@ class UserController extends Controller
         $user->phone            =   $request->phone;
         $user->password         =   Hash::make($request->password);
         // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
-        $user->role = 'admin';
-        $user->address          =   $request->address;        
+        $user->role_id = 1;
+        $user->address          =   $request->address;
         $user->save();
 
         // Delete draft if it exists
@@ -89,8 +89,8 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $designation = Designation::where('is_active',1)->orderBy('designation','ASC')->get();
-        return view('admin.users.edit', compact('user','designation'));
+        $designation = Designation::where('is_active', 1)->orderBy('designation', 'ASC')->get();
+        return view('admin.users.edit', compact('user', 'designation'));
     }
 
     public function update(Request $request, User $user)
@@ -100,7 +100,7 @@ class UserController extends Controller
             [
                 'full_name'     => 'required|string|max:255',
                 'email'         => 'required|email|unique:users,email,' . $user->id,
-                'designation_id'=> 'required',
+                'designation_id' => 'required',
                 'phone'         => 'required|string|max:12|unique:users,phone,' . $user->id,
                 'password'      => 'nullable|string|min:6|confirmed',
                 'address'       => 'required',
@@ -127,8 +127,8 @@ class UserController extends Controller
         $user->country_id       =   $request->country_id;
         $user->city_id          =   $request->city_id;
         // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
-        $user->role = 'admin';
-        $user->address          =   $request->address;       
+        $user->role_id = 1;
+        $user->address          =   $request->address;
         $user->save();
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');

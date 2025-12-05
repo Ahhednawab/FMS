@@ -46,6 +46,7 @@ use App\Http\Controllers\Admin\DailyFuelReportController;
 use App\Http\Controllers\Admin\InsuranceCompanyController;
 
 Route::get('/', function () {
+
     if (Auth::check()) {
         return redirect()->route('admin.index');
     }
@@ -79,7 +80,7 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::get('/admin/dashboard', [AdminController::class, 'index'])
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', 'can:access-admin-dashboard'])
     ->name('admin.index');
 
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
@@ -183,7 +184,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
     Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
     Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
-
 });
 
 

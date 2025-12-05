@@ -18,15 +18,13 @@ class RouteServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot()
-{
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
+    {
+        Route::get('/dashboard', function () {
+            $user = auth()->user();
 
-        return redirect()->intended(
-            $user->role === 'admin' ? '/admin-dashboard' :
-            ($user->role === 'manager' ? '/manager-dashboard' : '/user-dashboard')
-        );
-    })->middleware(['auth'])->name('dashboard');
-}
-
+            return redirect()->intended(
+                $user->role === 'admin' ? '/admin-dashboard' : ($user->role === 'manager' ? '/manager-dashboard' : '/user-dashboard')
+            );
+        })->middleware(['auth'])->name('dashboard');
+    }
 }

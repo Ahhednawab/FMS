@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Models\Role;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CustomLoginController extends Controller
@@ -20,7 +21,7 @@ class CustomLoginController extends Controller
             'password' => 'required',
         ]);
 
- 
+
         if (Auth::attempt([
             'email' => $request->email,
             'password' => $request->password,
@@ -28,7 +29,8 @@ class CustomLoginController extends Controller
         ], $request->filled('remember'))) {
 
             $user = Auth::user();
-            if ($user->role === 'admin') {
+
+            if ($user->role_id === 1) {
                 return redirect('/admin/dashboard');
             } elseif ($user->role === 'manager') {
                 return redirect('/manager/dashboard');
@@ -38,7 +40,7 @@ class CustomLoginController extends Controller
         }
 
         return back()->withErrors([
-             'email' => 'Invalid login credentials or account is inactive.',
+            'email' => 'Invalid login credentials or account is inactive.',
         ])->withInput($request->only('email', 'remember'));
     }
 }
