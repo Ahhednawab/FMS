@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class ProductList extends Model
 {
-	protected $table = 'products_list';
+    protected $table = 'products_list';
     protected $fillable = [
-    	'name',
+        'name',
+        'vendor_id',
         'product_category_id',
         'brand_id',
         'unit_id',
@@ -30,7 +31,7 @@ class ProductList extends Model
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    
+
 
     public static function GetSerialNumber()
     {

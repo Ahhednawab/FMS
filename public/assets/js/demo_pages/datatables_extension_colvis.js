@@ -44,6 +44,7 @@ var DatatableColumnVisibility = function() {
         
         // Basic example
         $('.datatable-colvis-basic').DataTable({
+            order: [],
             buttons: [
                 {
                     extend: 'colvis',

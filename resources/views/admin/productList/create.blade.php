@@ -44,6 +44,21 @@
               </div>
             </div>
 
+            <div class="col-md-3">
+              <div class="form-group">
+                <strong>Vendor</strong>
+                <select class="custom-select" name="vendor_id">
+                  <option value="">-- Select --</option>
+                  @foreach($vendors as $key => $value)
+                    <option value="{{$value->id}}" {{ old('vendor_id') == $key ? 'selected' : '' }}>{{$value->name}}</option>
+                  @endforeach
+                </select>
+                @if ($errors->has('vendor_id'))
+                  <label class="text-danger">{{ $errors->first('vendor_id') }}</label>
+                @endif
+              </div>
+            </div>
+
             <!-- Category -->
             <div class="col-md-3">
               <div class="form-group">

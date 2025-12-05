@@ -2,28 +2,33 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\ProductList;
-use App\Models\ProductCategory;
-use App\Models\Brand;
 use App\Models\Unit;
+use App\Models\Brand;
+use App\Models\Vendor;
+use App\Models\ProductList;
+use Illuminate\Http\Request;
+use App\Models\ProductCategory;
+use App\Http\Controllers\Controller;
 
 
 class ProductListController extends Controller
 {
-    public function index(){
-    	$productList = ProductList::with(['productCategory','brand','unit'])->where('is_active',1)->orderby('id','DESC')->get();
-    	return view('admin.productList.index', compact('productList'));
+    public function index()
+    {
+        $productList = ProductList::with(['productCategory', 'brand', 'unit'])->where('is_active', 1)->orderby('id', 'DESC')->get();
+        return view('admin.productList.index', compact('productList'));
     }
 
-    public function create(){
+    public function create()
+    {
         $serial_no = ProductList::GetSerialNumber();
         $productCategory = ProductCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $brands = Brand::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $units = Unit::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.productList.create',compact('serial_no','productCategory','brands','units'));
+        $vendors = Vendor::where('is_active', 1)->get();
+
+        return view('admin.productList.create', compact('serial_no', 'productCategory', 'brands', 'units', 'vendors'));
     }
 
     public function store(Request $request)
@@ -31,13 +36,15 @@ class ProductListController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'name'	                =>   'required',
+                'name'                    =>   'required',
+                'vendor_id'   =>   'required',
                 'product_category_id'   =>   'required',
-                'brand_id'	            =>	 'required',
-                'unit_id'	            =>    'required',
+                'brand_id'                =>     'required',
+                'unit_id'                =>    'required',
             ],
             [
                 'name.required'           =>  'Product Name is required',
+                'vendor_id.required'           =>  'Vendor is required',
                 'product_category_id.required'           =>  'Category  is required',
                 'brand_id.required'           =>  'Brand is required',
                 'unit_id.required'           =>  'Unit is required',
@@ -49,13 +56,14 @@ class ProductListController extends Controller
         }
 
         $product = new ProductList();
-        $product->serial_no	=	$request->serial_no;
-        $product->name	=	$request->name;
-        $product->product_category_id	=	$request->product_category_id;
-        $product->brand_id	=	$request->brand_id;
-        $product->unit_id	=	$request->unit_id;
+        $product->serial_no    =    $request->serial_no;
+        $product->name    =    $request->name;
+        $product->vendor_id    =    $request->vendor_id;
+        $product->product_category_id    =    $request->product_category_id;
+        $product->brand_id    =    $request->brand_id;
+        $product->unit_id    =    $request->unit_id;
         $product->save();
-        
+
         return redirect()->route('admin.productList.index')->with('success', 'Product created successfully.');
     }
 
@@ -65,7 +73,7 @@ class ProductListController extends Controller
         $brands = Brand::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $units = Unit::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.productList.edit',compact('productList','productCategory','brands','units'));
+        return view('admin.productList.edit', compact('productList', 'productCategory', 'brands', 'units'));
     }
 
     public function update(Request $request, $id)
@@ -96,7 +104,7 @@ class ProductListController extends Controller
         $product->brand_id              =   $request->brand_id;
         $product->unit_id               =   $request->unit_id;
         $product->save();
-        
+
         return redirect()->route('admin.productList.index')->with('success', 'Product Updated successfully.');
     }
 
