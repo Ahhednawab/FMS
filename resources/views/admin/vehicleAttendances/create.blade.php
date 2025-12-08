@@ -160,7 +160,7 @@
                   <div class="col-md-2">
                       <div class="form-group">
                           <strong>Attendance</strong>
-                          <select class="custom-select @error('status.' . $value['vehicle_id']) is-invalid @enderror" name="status[{{ $value['vehicle_id'] }}]" id="attendanceStatus-{{ $value['vehicle_id'] }}">
+                          <select class="custom-select attendanceStatus @error('status.' . $value['vehicle_id']) is-invalid @enderror" name="status[{{ $value['vehicle_id'] }}]" id="attendanceStatus-{{ $value['vehicle_id'] }}">
                               <option value="">Select</option>
                               @foreach($attendanceStatus as $statusKey => $statusLabel)
                                   <option value="{{ $statusKey }}"
@@ -176,10 +176,10 @@
                   </div>
 
                   <!-- Additional dropdown or section that will be conditionally displayed -->
-                  <div id="additionalOptions-{{ $value['vehicle_id'] }}" class="col-md-2" style="display: none;">
+                  <div id="additionalOptions-{{ $value['vehicle_id'] }}" class="col-md-2 additionalOptions" style="display: none;">
                       <div class="form-group">
                           <strong>Pool Vechicle</strong>
-                          <select class="custom-select select2" name="pool_id[{{ $value['vehicle_id'] }}]" id="pool_id">
+                          <select class="custom-select select2 pool_id" name="pool_id[{{ $value['vehicle_id'] }}]" id="pool_id">
                               <option value="" >ALL</option>
                               @foreach($poolvehicles as $station)
                                   <option value="{{ $station->id }}" {{ old('pool_id') == $station->id ? 'selected' : '' }}>
@@ -218,6 +218,14 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+
+    function removeElementOnce(arr, value) {
+      const index = arr.indexOf(value);
+      if (index > -1) { // Only splice if the value is found
+        arr.splice(index, 1); // Remove 1 element at the found index
+      }
+      return arr;
+    }
     // Handle status button clicks
     $('.status-btn').on('click', function() {
         const statusId = $(this).data('status-id');
@@ -266,7 +274,144 @@ $(document).ready(function() {
             }
         }
     });
+
+
+
+  
 });
+$(document).ready(function() {
+    // Your existing code for status buttons, select all, etc. remains unchanged...
+
+    // === NEW: Track selected pool vehicles globally ===
+    let selectedPoolVehicles = []; // Array to store currently selected pool vehicle IDs
+
+    // Function to refresh ALL pool dropdowns based on what's already selected
+    function refreshAllPoolDropdowns() {
+        $('.pool_id').each(function() {
+            const $select = $(this);
+            const currentValue = $select.val();
+            const vehicleId = $select.closest('[id^="additionalOptions-"]').attr('id').split('-')[1];
+
+            // Get all options
+            const $options = $select.find('option:not(:first-child)'); // exclude "ALL"
+
+            $options.each(function() {
+                const $option = $(this);
+                const poolVehicleId = $option.val();
+
+                if (poolVehicleId === '') return;
+
+                // Disable option if it's selected in another row (and not this one)
+                if (selectedPoolVehicles.includes(poolVehicleId) && poolVehicleId !== currentValue) {
+                    $option.prop('disabled', true);
+                    $option.text($option.data('original-text') + ' (Already Assigned)');
+                } else {
+                    $option.prop('disabled', false);
+                    $option.text($option.data('original-text')); // restore original text
+                }
+            });
+
+            // Reinitialize Select2 to reflect disabled state
+            $select.trigger('change.select2');
+        });
+    }
+
+    // On page load: store original text and initialize
+    $('.pool_id').each(function() {
+        $(this).find('option:not(:first-child)').each(function() {
+            const text = $(this).text();
+            $(this).data('original-text', text);
+        });
+    });
+
+    // Listen for changes on any pool vehicle dropdown
+    $(document).on('change', '.pool_id', function() {
+        const selectedValue = $(this).val();
+        const previousValue = $(this).data('previous-value') || '';
+
+        // Remove previously selected value (if any and if it was valid)
+        if (previousValue && previousValue !== '') {
+            selectedPoolVehicles = selectedPoolVehicles.filter(id => id !== previousValue);
+        }
+
+        // Add newly selected value (if not empty)
+        if (selectedValue && selectedValue !== '') {
+            // Prevent duplicate selection
+            if (selectedPoolVehicles.includes(selectedValue)) {
+                // Revert selection
+                $(this).val('');
+                new Noty({
+                    type: 'error',
+                    text: 'This pool vehicle is already assigned to another vehicle!',
+                    timeout: 4000
+                }).show();
+            } else {
+                selectedPoolVehicles.push(selectedValue);
+            }
+        }
+
+        // Store current value for next change
+        $(this).data('previous-value', $(this).val());
+
+        // Refresh all dropdowns
+        refreshAllPoolDropdowns();
+    });
+
+
+    $('body').on('change','.attendanceStatus',function(){
+      let attendance = $(this).val();
+      $(this).parent().parent().closest('.additionalOptions select').val("");
+
+      if(attendance==5 || attendance==6)
+      {
+        $(this).parent().parent().closest('.additionalOptions').show();
+      }else
+      {
+        $(this).parent().parent().closest('.additionalOptions').hide();
+
+      }
+    });
+    // Existing attendance status change handler (updated to trigger pool refresh)
+//     document.querySelectorAll('[id^="attendanceStatus-"]').forEach(function (attendanceStatusSelect) {
+//         const vehicleId = attendanceStatusSelect.id.split('-')[1];
+//         const additionalOptionsDiv = document.getElementById('additionalOptions-' + vehicleId);
+//         const poolSelect = document.getElementById('pool_id'); // Note: all have same ID — fix this!
+
+//         // WARNING: You have duplicate IDs! All pool dropdowns use id="pool_id"
+//         // This is invalid HTML and breaks JS targeting.
+//         // Fix: Give each a unique ID like: pool_id-{{ $value['vehicle_id'] }}
+
+//         function toggleAdditionalOptions() {
+//             const selectedValue = attendanceStatusSelect.value;
+//             if (selectedValue === '5' || selectedValue === '6') {
+//                 additionalOptionsDiv.style.display = 'block';
+
+//                 // Trigger change to sync disabled state when shown
+//                 setTimeout(() => {
+//                     $('.pool_id:visible').trigger('change');
+//                 }, 100);
+//             } else {
+//                 additionalOptionsDiv.style.display = 'none';
+
+//                 // Clear selection and free up the pool vehicle when hidden
+//                 const $poolSelect = $(additionalOptionsDiv).find('.pool_id');
+//                 const wasSelected = $poolSelect.val();
+//                 if (wasSelected && wasSelected !== '') {
+//                     selectedPoolVehicles = selectedPoolVehicles.filter(id => id !== wasSelected);
+//                 }
+//                 $poolSelect.val('').trigger('change');
+//                 refreshAllPoolDropdowns();
+//             }
+//         }
+
+//         attendanceStatusSelect.addEventListener('change', toggleAdditionalOptions);
+//         toggleAdditionalOptions(); // initial check
+//     });
+
+//     // Initial refresh in case some are pre-selected
+//     refreshAllPoolDropdowns();
+});
+
 
 
 document.addEventListener('DOMContentLoaded', function () {

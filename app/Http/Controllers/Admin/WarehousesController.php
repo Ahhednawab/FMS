@@ -19,7 +19,7 @@ class WarehousesController extends Controller
 
         Warehouses::create($validated);
 
-        return redirect()->route('warehouses.index');
+        return redirect()->route('admin.warehouses.index');
     }
 
     public function requestInventory(Request $request)
@@ -32,7 +32,7 @@ class WarehousesController extends Controller
 
         InventoryRequest::create($validated);
 
-        return redirect()->route('warehouses.index');
+        return redirect()->route('admin.warehouses.index');
     }
 
     public function issueInventory(Request $request)
@@ -46,6 +46,6 @@ class WarehousesController extends Controller
 
         InventoryIssue::create($validated);
 
-        return redirect()->route('warehouses.index');
+        return redirect()->route('admin.warehouses.index');
     }
 }

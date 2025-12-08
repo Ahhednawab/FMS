@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
     <div class="container">
@@ -10,7 +10,7 @@
             </div>
         @endif
 
-        <a href="{{ route('purchases.create') }}" class="btn btn-primary mb-3">Add New Purchase</a>
+        <a href="{{ route('admin.purchases.create') }}" class="btn btn-primary mb-3">Add New Purchase</a>
 
         <table class="table">
             <thead>

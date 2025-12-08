@@ -1,10 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
     <div class="container">
         <h2>Add New Inventory Item</h2>
 
-        <form action="{{ route('master_warehouse_inventory.store') }}" method="POST">
+        <form action="{{ route('admin.master_warehouse_inventory.store') }}" method="POST">
             @csrf
             <div class="form-group">
                 <label for="name">Item Name</label>

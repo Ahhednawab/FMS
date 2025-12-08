@@ -11,12 +11,12 @@ class MasterWarehouseInventoryController extends Controller
     public function index()
     {
         $inventory = MasterWarehouseInventory::all();  // Get all inventory items
-        return view('master_warehouse_inventory.index', compact('inventory'));
+        return view('admin.master_warehouse_inventory.index', compact('inventory'));
     }
 
     public function create()
     {
-        return view('master_warehouse_inventory.create');
+        return view('admin.master_warehouse_inventory.create');
     }
 
     public function store(Request $request)

@@ -1,10 +1,21 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+
 
 @section('content')
-    <div class="container">
+    {{-- <div class="container mt-2">
+        @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif --}}
         <h2>Add New Purchase</h2>
 
-        <form action="{{ route('purchases.store') }}" method="POST">
+        <form action="{{ route('admin.purchases.store') }}" method="POST">
             @csrf
 
             <div class="form-group">
@@ -29,7 +40,15 @@
 
             <div class="form-group">
                 <label for="price">Price</label>
-                <input type="text" name="price" id="price" class="form-control" required>
+                <input 
+                    type="number" 
+                    name="price" 
+                    id="price" 
+                    class="form-control" 
+                    step="0.01" 
+                    min="0" 
+                    required
+                >
             </div>
 
             <div class="form-group">

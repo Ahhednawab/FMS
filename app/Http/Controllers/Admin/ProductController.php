@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Warehouse;
@@ -13,20 +15,21 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index(){
-        $products = Product::with(['supplier','productCategory','product','warehouse'])->where('is_active',1)->orderby('id','DESC')->get();
-
+    public function index()
+    {
+        $products = Product::with(['supplier', 'productCategory', 'product', 'warehouse'])->where('is_active', 1)->orderby('id', 'DESC')->get();
         return view('admin.products.index', compact('products'));
     }
 
-    public function create(){
+    public function create()
+    {
         $serial_no = Product::GetSerialNumber();
         $warehouse = Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $productList = ProductList::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $productCategory = ProductCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $suppliers = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
-        return view('admin.products.create',compact('serial_no','warehouse','productList','productCategory','suppliers'));
+
+        return view('admin.products.create', compact('serial_no', 'warehouse', 'productList', 'productCategory', 'suppliers'));
     }
 
     public function store(Request $request)
@@ -59,6 +62,7 @@ class ProductController extends Controller
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
+            dd($messages);
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
@@ -88,7 +92,7 @@ class ProductController extends Controller
         $productCategory = ProductCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $suppliers = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.products.edit', compact('product','warehouse','productList','productCategory','suppliers'));
+        return view('admin.products.edit', compact('product', 'warehouse', 'productList', 'productCategory', 'suppliers'));
     }
 
     public function update(Request $request, Product $product)
@@ -155,18 +159,47 @@ class ProductController extends Controller
 
     public function getProductDetails(Request $request)
     {
-        $product = DB::table('products_list as p')
-            ->join('product_category as pc', 'pc.id', '=', 'p.product_category_id')
-            ->join('brands as b', 'b.id', '=', 'p.brand_id')
-            ->join('units as u', 'u.id', '=', 'p.unit_id')
-            ->where('p.id', $request->product_id)
-            ->select('p.id as product_id', 'pc.name as category', 'b.name as brand', 'u.name as unit')
-            ->first();
+        try {
+            $productId = (int) $request->product_id;
 
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            if ($productId <= 0) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Invalid product ID',
+                    'data'    => []
+                ]);
+            }
+
+            $product = ProductList::with([
+                'productCategory:id,name',
+                'brand:id,name',
+                'unit:id,name'
+            ])->find($productId);
+
+
+            if (!$product) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Product not found',
+                    'data'    => []
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Product details fetched successfully',
+                'data'    => $product
+            ]);
+        } catch (\Throwable $e) {
+
+            // Log the real error (recommended)
+            // \Log::error($e);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Something went wrong',
+                'data'    => []
+            ]);
         }
-
-        return response()->json($product);
     }
 }

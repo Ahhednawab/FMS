@@ -11,7 +11,7 @@
       <div class="header-elements d-none">
         <div class="d-flex justify-content-center">
           <a href="{{ route('admin.products.index') }}" class="btn btn-primary">
-            <span>View Products <i class="icon-list ml-2"></i></span>
+            <span>View Products<i class="icon-list ml-2"></i></span>
           </a>
         </div>
       </div>
@@ -49,30 +49,35 @@
               </div>
             </div>
 
-            <!-- Category -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Category</strong>
-                <input type="text" class="form-control" disabled name="category" id="category">
+              <!-- Category -->
+              <div class="col-md-2">
+                  <div class="form-group">
+                      <strong>Category</strong>
+                      <input type="text" class="form-control" id="product_category_name" disabled>
+                      <input type="hidden" name="product_category_id" id="product_category_id">
+                  </div>
               </div>
+
+              <!-- Brand -->
+              <div class="col-md-2">
+                  <div class="form-group">
+                      <strong>Brand</strong>
+                      <input type="text" class="form-control" id="brand_name" disabled>
+                      <input type="hidden" name="brands" id="brands">
+                  </div>
+              </div>
+
+              <!-- Unit -->
+              <div class="col-md-2">
+                  <div class="form-group">
+                      <strong>Unit</strong>
+                      <input type="text" class="form-control" id="unit_name" disabled>
+                      <input type="hidden" name="unit_id" id="unit_id">
+                  </div>
+              </div>
+
             </div>
 
-            <!-- Brands -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Brands</strong>
-                <input type="text" class="form-control" disabled name="brand" id="brand">
-              </div>
-            </div>
-
-            <!-- Unit -->
-            <div class="col-md-2">
-              <div class="form-group">
-                <strong>Unit</strong>
-                <input type="text" class="form-control" disabled name="unit" id="unit">
-              </div>
-            </div>
-          </div>
 
           <div class="row">
             <!-- Quantity -->
@@ -90,9 +95,9 @@
             <div class="col-md-3">
               <div class="form-group">
                 <strong>Unit Price</strong>
-                <input type="number" step="1" min="0" class="form-control" name="unit_price" id="unit_price" value="{{ old('unit_price') }}">
-                @if ($errors->has('unit_price'))
-                  <label class="text-danger">{{ $errors->first('unit_price') }}</label>
+                <input type="number" step="1" min="0" class="form-control" name="price" id="price" value="{{ old('price') }}">
+                @if ($errors->has('price'))
+                  <label class="text-danger">{{ $errors->first('price') }}</label>
                 @endif
               </div>
             </div>
@@ -203,37 +208,57 @@
   </div>
 
   <script>
-    $('#product_id').on('change', function () {
-      var productId = $(this).val();
+   $('body').on('change', '#product_id', function () {
+    var productId = $(this).val();
 
-      if (productId) {
+    if (productId) {
         $.ajax({
-          url: '{{ route("admin.get-product-details") }}',
-          method: 'GET',
-          data: { product_id: productId },
-          success: function (response) {
-            $('#category').val(response.category);
-            $('#brand').val(response.brand);
-            $('#unit').val(response.unit);
-          },
-          error: function () {
-            alert('Something went wrong.');
-          }
+            url: '{{ route("admin.get-product-details") }}',
+            method: 'GET',
+            data: { product_id: productId },
+            success: function (res) {
+
+                if (res && res.status === "success") {
+
+                    // CATEGORY
+                    $('#product_category_name').val(res.data.product_category.name);
+                    $('#product_category_id').val(res.data.product_category.id);
+
+                    // BRAND
+                    $('#brand_name').val(res.data.brand.name);
+                    $('#brand_id').val(res.data.brand.id);
+
+                    // UNIT
+                    $('#unit_name').val(res.data.unit.name);
+                    $('#unit_id').val(res.data.unit.id);
+                }
+            },
+            error: function () {
+                alert('Something went wrong.');
+            }
         });
-      } else {
-        $('#product-details').html('');
-      }
-    });
+    } else {
+        $('#product_category_name').val('');
+        $('#brand_name').val('');
+        $('#unit_name').val('');
+
+        $('#product_category_id').val('');
+        $('#brand_id').val('');
+        $('#unit_id').val('');
+    }
+});
+
+
 
     function calculateTotalAmount() {
       let quantity = parseFloat($('#quantity').val()) || 0;
-      let unitPrice = parseFloat($('#unit_price').val()) || 0;
+      let unitPrice = parseFloat($('#price').val()) || 0;
       let total = quantity * unitPrice;
 
       $('input[name="total_amount"]').val(total.toFixed(0)); 
     }
 
-    $('#quantity, #unit_price').on('input', function () {
+    $('#quantity, #price').on('input', function () {
       calculateTotalAmount();
     });
   </script>

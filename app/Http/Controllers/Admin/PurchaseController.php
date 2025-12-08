@@ -12,27 +12,32 @@ class PurchaseController extends Controller
     public function index()
     {
         $purchases = Purchase::with('supplier')->get();
-        return view('purchases.index', compact('purchases'));
+        return view('admin.purchases.index', compact('purchases'));
     }
 
     public function create()
     {
-        $suppliers = Supplier::all();  // Get all suppliers (static for now)
-        return view('purchases.create', compact('suppliers'));
+        $suppliers = Supplier::all();
+        return view('admin.purchases.create', compact('suppliers'));
     }
 
     public function store(Request $request)
     {
+
+        // try {
         $validated = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'item_name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'price' => 'required|decimal',
+            'price' => 'required|decimal:0,2',
             'purchase_date' => 'required|date',
         ]);
 
         Purchase::create($validated);  // Store the new purchase
 
-        return redirect()->route('purchases.index')->with('success', 'Purchase added successfully!');
+        return redirect()->route('admin.purchases.index')->with('success', 'Purchase added successfully!');
+        // } catch (\Throwable $th) {
+        //     return redirect()->route('admin.purchases.create')->with('error', 'Something went wrong!');
+        // }
     }
 }
