@@ -7,13 +7,22 @@ use Illuminate\Support\Facades\DB;
 
 class Warehouse extends Model
 {
+    protected $table = 'warehouses';
+
     protected $fillable = [
+        'serial_no',
         'name',
-        'country_id',
-        'city_id',
-        'location',
+        'type',
+        'manager_id',
+        'station_id',
+        'is_active',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    // Relationships
     public function manager()
     {
         return $this->belongsTo(User::class, 'manager_id');
@@ -24,13 +33,13 @@ class Warehouse extends Model
         return $this->belongsTo(Station::class, 'station_id');
     }
 
-    public static function GetSerialNumber()
+    // Auto-generate serial_no like WH-000000001, WH-000000002, etc.
+    public static function generateSerialNo(): string
     {
-        $serial_no = DB::table('warehouses');
-        $serial_no = $serial_no->select(DB::RAW("LPAD(IFNULL( MAX( id ) +1, 1 ),9,'0') AS id"));
-        $serial_no = $serial_no->first()->id;
+        $prefix = 'WH-';
+        $nextId = DB::table('warehouses')->max('id') + 1;
 
-        return $serial_no;
+        return $prefix . str_pad($nextId, 9, '0', STR_PAD_LEFT);
+        // → WH-000000001, WH-000000002, ...
     }
 }
-

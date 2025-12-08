@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Models\ProductList;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\MasterWarehouseInventory;
 
 class PurchaseController extends Controller
 {
@@ -18,7 +20,8 @@ class PurchaseController extends Controller
     public function create()
     {
         $suppliers = Supplier::all();
-        return view('admin.purchases.create', compact('suppliers'));
+        $products = ProductList::all();
+        return view('admin.purchases.create', compact('suppliers', 'products'));
     }
 
     public function store(Request $request)
@@ -26,14 +29,18 @@ class PurchaseController extends Controller
 
         // try {
         $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'item_name' => 'required|string|max:255',
+            'product_id' => 'required|exists:products_list,id',
+            'supplier_id' => 'required|exists:suppliers,id',    
             'quantity' => 'required|integer|min:1',
             'price' => 'required|decimal:0,2',
+            'expiry_date' => 'nullable|date',
             'purchase_date' => 'required|date',
         ]);
 
+
         Purchase::create($validated);  // Store the new purchase
+
+        MasterWarehouseInventory::create($validated);
 
         return redirect()->route('admin.purchases.index')->with('success', 'Purchase added successfully!');
         // } catch (\Throwable $th) {

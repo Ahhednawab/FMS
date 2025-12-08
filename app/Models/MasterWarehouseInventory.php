@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\ProductList;
+
+
 use Illuminate\Database\Eloquent\Model;
 
 class MasterWarehouseInventory extends Model
 {
     protected $table = "master_warehouse_inventory";
-    protected $fillable = ['name', 'batch_number', 'expiry_date', 'quantity', 'price', 'category'];
+    protected $fillable = ['product_id', 'batch_number', 'expiry_date', 'quantity', 'price'];
+
+    public function product()
+    {
+        return $this->belongsTo(ProductList::class, 'product_id');
+    }
 }

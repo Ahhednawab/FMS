@@ -37,14 +37,14 @@ class ProductListController extends Controller
             $request->all(),
             [
                 'name'                    =>   'required',
-                'vendor_id'   =>   'required',
+
                 'product_category_id'   =>   'required',
                 'brand_id'                =>     'required',
                 'unit_id'                =>    'required',
             ],
             [
                 'name.required'           =>  'Product Name is required',
-                'vendor_id.required'           =>  'Vendor is required',
+
                 'product_category_id.required'           =>  'Category  is required',
                 'brand_id.required'           =>  'Brand is required',
                 'unit_id.required'           =>  'Unit is required',
@@ -58,7 +58,7 @@ class ProductListController extends Controller
         $product = new ProductList();
         $product->serial_no    =    $request->serial_no;
         $product->name    =    $request->name;
-        $product->vendor_id    =    $request->vendor_id;
+
         $product->product_category_id    =    $request->product_category_id;
         $product->brand_id    =    $request->brand_id;
         $product->unit_id    =    $request->unit_id;

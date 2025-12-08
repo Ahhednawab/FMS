@@ -52,7 +52,22 @@
                     @endif
 									</div>
 								</div>
-
+ <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Type</strong>
+                    <select name="type" id="type" class="form-control">
+                      <option value="">--Select--</option>
+                      @foreach($types as $value)
+                        <option value="{{ $value }}" {{ ($value ?? old('type')) == $value ? 'selected' : '' }}>
+                          {{ $value }}
+                        </option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('type'))
+                      <label class="text-danger">{{ $errors->first('type') }}</label>
+                    @endif
+                  </div>
+                </div>
                 <!-- Stations -->
                 <div class="col-md-3">
                   <div class="form-group">

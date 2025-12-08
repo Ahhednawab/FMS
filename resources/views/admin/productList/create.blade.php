@@ -44,7 +44,7 @@
               </div>
             </div>
 
-            <div class="col-md-3">
+            {{-- <div class="col-md-3">
               <div class="form-group">
                 <strong>Vendor</strong>
                 <select class="custom-select" name="vendor_id">
@@ -57,7 +57,7 @@
                   <label class="text-danger">{{ $errors->first('vendor_id') }}</label>
                 @endif
               </div>
-            </div>
+            </div> --}}
 
             <!-- Category -->
             <div class="col-md-3">

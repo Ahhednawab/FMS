@@ -176,6 +176,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
     Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
     Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
+        ->name('master_warehouse_inventory.assign');
+
+    // Add this line with your other admin routes
+    Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
+        ->name('assigned_inventory.index');
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');

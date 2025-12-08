@@ -65,7 +65,7 @@
             || request()->routeIs('admin.cities.*') 
             || request()->routeIs('admin.stations.*') 
             || request()->routeIs('admin.ibcCenters.*') 
-            || request()->routeIs('admin.warehouses.*') 
+          
               ? 'display:block;' : '' }}">
               
             <li class="nav-item">
@@ -80,9 +80,9 @@
             <li class="nav-item">
               <a href="{{ route('admin.ibcCenters.index')}}" class="nav-link {{ request()->routeIs('admin.ibcCenters.*') ? 'active' : '' }}">IBC Center Management</a>
             </li>
-            <li class="nav-item">
+            {{-- <li class="nav-item">
               <a href="{{ route('admin.warehouses.index')}}" class="nav-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">Warehouse Management</a>
-            </li>
+            </li> --}}
           </ul>
         </li>
 
@@ -132,7 +132,7 @@
 
             <li class="nav-item"><a href="{{ route('admin.brands.index')}}" class="nav-link {{ request()->routeIs('admin.brands.*') ? 'active' : '' }}">Brand Management</a></li>
             <li class="nav-item"><a href="{{ route('admin.categories.index')}}" class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">Category Management</a></li>
-            <li class="nav-item"><a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">Product Management</a></li>
+            {{-- <li class="nav-item"><a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">Product Management</a></li> --}}
           </ul>
         </li>
 
@@ -166,6 +166,7 @@
         || request()->routeIs('admin.master_warehouse_inventory.*')
         || request()->routeIs('admin.purchases.*')
         || request()->routeIs('admin.warehouses.*')
+        
         ? 'nav-item-open' : '' }}">
 
     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
@@ -174,9 +175,26 @@
         style="{{  request()->routeIs('admin.master_warehouse_inventory.*')
             || request()->routeIs('admin.purchases.*')
             || request()->routeIs('admin.warehouses.*')
+            || request()->routeIs('admin.assigned_inventory.*')
+            || request()->routeIs('admin.productList.*') 
+        
             ? 'display:block;' : '' }}">
 
+      <li class="nav-item">
+            <a href="{{ route('admin.warehouses.index')}}" class="nav-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">Warehouse Management</a>
+        </li>
+   <li class="nav-item">
+          <a href="{{ route('admin.assigned_inventory.index') }}"
+            class="nav-link {{ request()->routeIs('admin.assigned_inventory.*') ? 'active' : '' }}">
+             
+              Assigned Inventory
+          </a>
+      </li>
+         <li class="nav-item">
+              <a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">Products List</a>
+          </li>
       
+   
         <li class="nav-item">
             <a href="{{ route('admin.master_warehouse_inventory.index') }}" 
                class="nav-link {{ request()->routeIs('admin.master_warehouse_inventory.*') ? 'active' : '' }}">
@@ -190,13 +208,10 @@
                Purchases
             </a>
         </li>
+       
+       
 
-        <li class="nav-item">
-            <a href="{{ route('admin.warehouses.create') }}" 
-               class="nav-link {{ request()->routeIs('admin.warehouses.create') ? 'active' : '' }}">
-               Create Warehouse
-            </a>
-        </li>
+         
 
 
     </ul>

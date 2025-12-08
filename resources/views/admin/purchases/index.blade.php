@@ -16,7 +16,6 @@
             <thead>
             <tr>
                 <th>Supplier</th>
-                <th>Item Name</th>
                 <th>Quantity</th>
                 <th>Price</th>
                 <th>Purchase Date</th>
@@ -26,7 +25,6 @@
             @foreach($purchases as $purchase)
                 <tr>
                     <td>{{ $purchase->supplier->name }}</td>
-                    <td>{{ $purchase->item_name }}</td>
                     <td>{{ $purchase->quantity }}</td>
                     <td>{{ $purchase->price }}</td>
                     <td>{{ $purchase->purchase_date }}</td>

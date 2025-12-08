@@ -27,12 +27,25 @@
                     @endforeach
                 </select>
             </div>
+            <div class="form-group">
+                <label for="product_id">Product</label>
+                <select name="product_id" id="product_id" class="form-control" required>
+                    <option value="" disabled selected>Select Product</option>
+                    @foreach($products as $product)
+                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+{{--   
 
             <div class="form-group">
                 <label for="item_name">Item Name</label>
                 <input type="text" name="item_name" id="item_name" class="form-control" required>
+            </div> --}}
+            <div class="form-group">
+                <label for="expiry_date">Expiry Date</label>
+                <input type="date" name="expiry_date" class="form-control" id="expiry_date">
             </div>
-
             <div class="form-group">
                 <label for="quantity">Quantity</label>
                 <input type="number" name="quantity" id="quantity" class="form-control" required>
