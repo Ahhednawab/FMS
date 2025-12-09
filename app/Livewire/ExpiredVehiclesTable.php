@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ExpiredVehiclesExport;
 
 class ExpiredVehiclesTable extends Component
 {
@@ -23,6 +25,18 @@ class ExpiredVehiclesTable extends Component
         'route_permit_expiry_date' => "Route Permit Expiry",
         'next_tax_date'            => "Next Tax Expiry",
     ];
+
+
+    public function export()
+    {
+        // This re-uses EXACTLY the same query as your main table
+        $vehicles = $this->getFilteredVehicles()->get(); // ->get() instead of paginate()
+
+        return Excel::download(
+            new ExpiredVehiclesExport($vehicles),
+            'expired-vehicles-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
 
     /**
      * Reset pagination when reason changes (safe to call even if main table has no pagination)
@@ -59,35 +73,34 @@ class ExpiredVehiclesTable extends Component
             ->with(['vehicleType', 'station']);
     }
     public function getFilteredVehicles()
-{
-    $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+    {
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
 
-    $query = $this->expiredBaseQuery();
+        $query = $this->expiredBaseQuery();
 
-    // Apply reason filter
-    if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-        $query->where($this->reason, '<=', $nextMonthEnd);
-    } else {
-        $query->where(function ($q) use ($nextMonthEnd) {
-            $q->where('next_inspection_date', '<=', $nextMonthEnd)
-              ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
-              ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
-              ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
-              ->orWhere('next_tax_date', '<=', $nextMonthEnd);
-        });
+        // Apply reason filter
+        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
+            $query->where($this->reason, '<=', $nextMonthEnd);
+        } else {
+            $query->where(function ($q) use ($nextMonthEnd) {
+                $q->where('next_inspection_date', '<=', $nextMonthEnd)
+                    ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
+                    ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
+                    ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
+                    ->orWhere('next_tax_date', '<=', $nextMonthEnd);
+            });
+        }
+
+        // Apply search filter
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('vehicle_no', 'like', '%' . $this->search . '%')
+                    ->orWhere('model', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        return $query;
     }
-
-    // Apply search filter
-    if (!empty($this->search)) {
-        $query->where(function ($q) {
-            $q->where('vehicle_no', 'like', '%' . $this->search . '%')
-            ->orWhere('model', 'like', '%' . $this->search . '%')   ;
-             
-        });
-    }
-
-    return $query;
-}
 
 
     /**
