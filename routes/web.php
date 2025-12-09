@@ -44,6 +44,7 @@ use App\Http\Controllers\Admin\DailyMileageReportController;
 use App\Http\Controllers\Admin\DailyFuelController;
 use App\Http\Controllers\Admin\DailyFuelReportController;
 use App\Http\Controllers\Admin\InsuranceCompanyController;
+use App\Http\Controllers\Admin\SupplierController;
 
 Route::get('/', function () {
 
@@ -91,6 +92,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('stations', StationController::class);
     Route::resource('ibcCenters', IbcController::class);
     Route::resource('warehouses', WarehouseController::class);
+    Route::resource('suppliers', SupplierController::class);
+
 
     // Master Data
     Route::resource('vehicles', VehicleController::class);

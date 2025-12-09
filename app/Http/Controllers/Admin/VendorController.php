@@ -9,7 +9,7 @@ use App\Models\VendorType;
 use App\Models\City;
 use App\Traits\DraftTrait;
 
-class VendorController extends Controller
+class    extends Controller
 {
     use DraftTrait;
     public function index(){

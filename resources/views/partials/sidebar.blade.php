@@ -160,41 +160,45 @@
         </li>
 
 
-     <li class="nav-item nav-item-submenu 
+   <li class="nav-item nav-item-submenu 
     {{ request()->routeIs('admin.products.*') 
         || request()->routeIs('admin.inventoryWarehouses.*')
         || request()->routeIs('admin.master_warehouse_inventory.*')
         || request()->routeIs('admin.purchases.*')
         || request()->routeIs('admin.warehouses.*')
-        
+        || request()->routeIs('admin.suppliers.*') 
         ? 'nav-item-open' : '' }}">
 
     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
 
     <ul class="nav nav-group-sub" data-submenu-title="Inventory" 
-        style="{{  request()->routeIs('admin.master_warehouse_inventory.*')
+        style="{{ request()->routeIs('admin.master_warehouse_inventory.*')
             || request()->routeIs('admin.purchases.*')
             || request()->routeIs('admin.warehouses.*')
             || request()->routeIs('admin.assigned_inventory.*')
-            || request()->routeIs('admin.productList.*') 
-        
+            || request()->routeIs('admin.productList.*')
+            || request()->routeIs('admin.suppliers.*')
             ? 'display:block;' : '' }}">
 
-      <li class="nav-item">
-            <a href="{{ route('admin.warehouses.index')}}" class="nav-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">Warehouse Management</a>
+        <li class="nav-item">
+            <a href="{{ route('admin.warehouses.index')}}" class="nav-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">
+                Warehouse Management
+            </a>
         </li>
-   <li class="nav-item">
-          <a href="{{ route('admin.assigned_inventory.index') }}"
-            class="nav-link {{ request()->routeIs('admin.assigned_inventory.*') ? 'active' : '' }}">
-             
-              Assigned Inventory
-          </a>
-      </li>
-         <li class="nav-item">
-              <a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">Products List</a>
-          </li>
-      
-   
+
+        <li class="nav-item">
+            <a href="{{ route('admin.assigned_inventory.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.assigned_inventory.*') ? 'active' : '' }}">
+               Assigned Inventory
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('admin.productList.index')}}" class="nav-link {{ request()->routeIs('admin.productList.*') ? 'active' : '' }}">
+                Products List
+            </a>
+        </li>
+
         <li class="nav-item">
             <a href="{{ route('admin.master_warehouse_inventory.index') }}" 
                class="nav-link {{ request()->routeIs('admin.master_warehouse_inventory.*') ? 'active' : '' }}">
@@ -208,14 +212,18 @@
                Purchases
             </a>
         </li>
-       
-       
 
-         
-
+        {{-- ⭐ NEW: Supplier Management --}}
+        <li class="nav-item">
+            <a href="{{ route('admin.suppliers.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}">
+               Suppliers
+            </a>
+        </li>
 
     </ul>
 </li>
+
 
 
         {{-- <li class="nav-item nav-item-submenu 
