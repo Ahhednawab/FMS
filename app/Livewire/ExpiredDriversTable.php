@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Driver;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ExpiredDriversExport;
 
 class ExpiredDriversTable extends Component
 {
@@ -18,6 +20,49 @@ class ExpiredDriversTable extends Component
     public $reasonList = [];
     public $search = ''; // 🔍 added search
 
+    public function export()
+    {
+        $drivers = $this->loadExpiredDriversQuery()->get();
+
+        $formattedDrivers = $drivers->map(function ($driver) {
+            $reasons = [];
+            $today = Carbon::today();
+            $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+
+            if ($driver->cnic_expiry_date) {
+                $cnic = Carbon::parse($driver->cnic_expiry_date);
+                $f = $cnic->format('d-M-Y');
+                if ($cnic->isPast()) {
+                    $reasons[] = "CNIC Expired ($f)";
+                } elseif ($cnic->between($today, $nextMonthEnd)) {
+                    $reasons[] = "CNIC Expiring Soon ($f)";
+                }
+            }
+
+            if ($driver->license_expiry_date) {
+                $lic = Carbon::parse($driver->license_expiry_date);
+                $f = $lic->format('d-M-Y');
+                if ($lic->isPast()) {
+                    $reasons[] = "License Expired ($f)";
+                } elseif ($lic->between($today, $nextMonthEnd)) {
+                    $reasons[] = "License Expiring Soon ($f)";
+                }
+            }
+
+            return [
+                'serial_no' => $driver->serial_no,
+                'name'      => $driver->full_name,
+                'cnic_no'   => $driver->cnic_no,
+                'status'    => $driver->driverStatus?->name ?? 'N/A',
+                'reason'    => $reasons ? implode(', ', $reasons) : '—',
+            ];
+        })->toArray(); // ← THIS IS THE FIX: ->toArray() instead of ->values()
+
+        return Excel::download(
+            new ExpiredDriversExport($formattedDrivers),
+            'expired-drivers-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
     /**
      * Build the base query
      */
@@ -29,7 +74,7 @@ class ExpiredDriversTable extends Component
         $query = Driver::where('is_active', 1)
             ->where(function ($query) use ($nextMonthEnd) {
                 $query->where('cnic_expiry_date', '<=', $nextMonthEnd)
-                      ->orWhere('license_expiry_date', '<=', $nextMonthEnd);
+                    ->orWhere('license_expiry_date', '<=', $nextMonthEnd);
             })
             ->with(['driverStatus', 'vehicle'])
             ->whereHas('driverStatus', function ($query) {
@@ -53,8 +98,8 @@ class ExpiredDriversTable extends Component
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('full_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('serial_no', 'like', '%' . $this->search . '%')
-                  ->orWhere('cnic_no', 'like', '%' . $this->search . '%');
+                    ->orWhere('serial_no', 'like', '%' . $this->search . '%')
+                    ->orWhere('cnic_no', 'like', '%' . $this->search . '%');
             });
         }
     }
@@ -158,8 +203,14 @@ class ExpiredDriversTable extends Component
     }
 
     /** Pagination resets */
-    public function updatingSearch() { $this->resetPage(); }
-    public function filterDrivers() { $this->resetPage(); }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function filterDrivers()
+    {
+        $this->resetPage();
+    }
     public function clearFilters()
     {
         $this->filterReason = '';

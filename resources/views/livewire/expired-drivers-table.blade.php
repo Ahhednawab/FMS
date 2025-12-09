@@ -11,6 +11,18 @@
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center align-items-center">
                     <span class="badge badge-danger mr-2">{{ $expiredDrivers->total() }} Expired</span>
+
+                    <button 
+                        wire:click="export" 
+                        wire:loading.attr="disabled"
+                        class="btn btn-success btn-sm mr-2">
+                        <span wire:loading.remove wire:target="export">
+                            <i class="icon-file-excel mr-1"></i> Export Report
+                        </span>
+                        <span wire:loading wire:target="export">
+                            <i class="icon-spinner2 spinner mr-1"></i> Exporting...
+                        </span>
+                    </button>
                     <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#allDriversModal">
                         View All
                     </button>
