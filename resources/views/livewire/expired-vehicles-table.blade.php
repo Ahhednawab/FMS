@@ -37,7 +37,7 @@
 
     <div>
         @if($mainVehicles->count() > 0 || true)
-            <div class="card">
+            <div class="card" style="min-height: 660px;">
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-4 col-12">
@@ -64,7 +64,7 @@
                     </div>
                     <!-- MAIN TABLE (WITH PAGINATION) -->
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover table-sm" id="vehicles-table">
+                        <table class="table table-striped table-hover table-sm" id="vehicles-table" >
                             <thead class="thead-light">
                             <tr>
                                 <th class="font-size-sm">Serial No</th>
