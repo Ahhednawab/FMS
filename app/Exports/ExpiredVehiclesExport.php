@@ -2,14 +2,11 @@
 
 namespace App\Exports;
 
-use App\Models\Vehicle;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;  // Fixed: No extra \Excel\
-use Maatwebsite\Excel\Concerns\WithMapping;   // Fixed: No extra \Excel\
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ExpiredVehiclesExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class ExpiredVehiclesExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $vehicles;
 
@@ -31,18 +28,21 @@ class ExpiredVehiclesExport implements FromCollection, WithHeadings, WithMapping
             'Model',
             'Type',
             'Station',
-            'Reason',
+            'Reason',      // Separate column for reason
+            'Expiry Date', // Separate column for date
         ];
     }
 
     public function map($vehicle): array
     {
         return [
+            str_pad($vehicle->id, 9, '0', STR_PAD_LEFT),
             $vehicle->vehicle_no,
             $vehicle->model,
-            $vehicle->station ? $vehicle->station->name : 'N/A',
             $vehicle->vehicleType ? $vehicle->vehicleType->name : 'N/A',
-            $vehicle->formatted_expiry_reason ?? '-', // Use the pre-formatted reason
+            $vehicle->station ? $vehicle->station->area : 'N/A',
+            $vehicle->formatted_reason ?? '-',  // Reason column
+            $vehicle->formatted_date ?? '-',    // Date column
         ];
     }
 }

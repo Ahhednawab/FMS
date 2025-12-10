@@ -75,7 +75,8 @@
                                     <th class="font-size-sm">Name</th>
                                     <th class="font-size-sm">CNIC</th>
                                     <th class="font-size-sm">Status</th>
-                                    <th class="font-size-sm">Reason</th>
+                                    <th>Reason</th>
+                                    <th>Expiry Date</th>
                                     <th class="text-center font-size-sm">Actions</th>
                                 </tr>
                             </thead>
@@ -89,9 +90,8 @@
                                             <td class="font-size-sm">
                                                 <span class="badge badge-warning badge-sm">{{ $driver['status'] }}</span>
                                             </td>
-                                            <td class="font-size-sm" data-label="Reason">
-                                                <span class="text-danger">{{ $driver['reason'] }}</span>
-                                            </td>
+                                            <td class="text-danger">{{ $driver['reason'] }}</td>
+                                            <td class="text-danger">{{ $driver['date'] }}</td>
                                             <td class="text-center" data-label="Actions">
                                                 <div class="list-icons">
                                                     <div class="dropdown">
@@ -166,6 +166,7 @@
                                     <th>CNIC</th>
                                     <th>Status</th>
                                     <th>Reason</th>
+                                    <th>Expiry Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -175,7 +176,8 @@
                                         <td>{{ $driver['name'] }}</td>
                                         <td>{{ $driver['cnic_no'] }}</td>
                                         <td><span class="badge badge-warning">{{ $driver['status'] }}</span></td>
-                                        <td class="text-danger">{{ $driver['reason'] }}</td>
+                                         <td class="text-danger">{{ $driver['reason'] }}</td>
+                                            <td class="text-danger">{{ $driver['date'] }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
