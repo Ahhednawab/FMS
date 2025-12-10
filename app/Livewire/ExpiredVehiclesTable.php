@@ -32,8 +32,14 @@ class ExpiredVehiclesTable extends Component
         // This re-uses EXACTLY the same query as your main table
         $vehicles = $this->getFilteredVehicles()->get(); // ->get() instead of paginate()
 
+        // Create a custom collection with formatted expiry reason
+        $formattedVehicles = $vehicles->map(function ($vehicle) {
+            $vehicle->formatted_expiry_reason = $this->getVehicleReasonLabel($vehicle);
+            return $vehicle;
+        });
+
         return Excel::download(
-            new ExpiredVehiclesExport($vehicles),
+            new ExpiredVehiclesExport($formattedVehicles),
             'expired-vehicles-' . now()->format('Y-m-d') . '.xlsx'
         );
     }

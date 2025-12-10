@@ -17,10 +17,10 @@
                     <!-- Export Button – exact same as Vehicles -->
                     <button wire:click="export" wire:loading.attr="disabled" class="btn btn-success btn-sm mx-1">
                         <span wire:loading.remove wire:target="export">
-                            Export Report
+                            <i class="icon-file-excel mr-1"></i> Export Report
                         </span>
                         <span wire:loading wire:target="export">
-                            Exporting...
+                             <i class="icon-spinner2 spinner mr-1"></i> Exporting...
                         </span>
                     </button>
 
