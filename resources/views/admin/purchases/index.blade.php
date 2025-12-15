@@ -33,7 +33,7 @@
                     </tr>
                 @endforeach
                 <tr>
-                    <td colspan="4">
+                    <td colspan="5">
                         <div class="float-right">
                             {{ $purchases->links() }}
                         </div>
