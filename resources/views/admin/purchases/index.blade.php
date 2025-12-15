@@ -17,7 +17,8 @@
                 <tr>
                     <th>Supplier</th>
                     <th>Quantity</th>
-                    <th>Price</th>
+                    <th>Unit Price</th>
+                    <th>Total Price</th>
                     <th>Purchase Date</th>
                 </tr>
             </thead>
@@ -26,7 +27,8 @@
                     <tr>
                         <td>{{ $purchase->supplier->name }}</td>
                         <td>{{ $purchase->quantity }}</td>
-                        <td>{{ $purchase->price }}</td>
+                        <td>{{ number_format($purchase->price, 2) }}</td>
+                        <td>{{ number_format($purchase->price * $purchase->quantity, 2) }}</td>
                         <td>{{ $purchase->purchase_date }}</td>
                     </tr>
                 @endforeach
