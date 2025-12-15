@@ -13,7 +13,7 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with('supplier')->get();
+        $purchases = Purchase::with('supplier')->paginate(10);
         return view('admin.purchases.index', compact('purchases'));
     }
 
@@ -30,7 +30,7 @@ class PurchaseController extends Controller
         // try {
         $validated = $request->validate([
             'product_id' => 'required|exists:products_list,id',
-            'supplier_id' => 'required|exists:suppliers,id',    
+            'supplier_id' => 'required|exists:suppliers,id',
             'quantity' => 'required|integer|min:1',
             'price' => 'required|decimal:0,2',
             'expiry_date' => 'nullable|date',

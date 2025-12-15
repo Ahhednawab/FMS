@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrap();
 
         $this->registerPolicies(); // ✅ now works
 
