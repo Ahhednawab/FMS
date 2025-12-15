@@ -8,19 +8,25 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $suppliers = Supplier::latest()->paginate(10);
-        return view('admin.suppliers.index', compact('suppliers'));
+        return view('admin.suppliers.index', compact('suppliers', 'role_slug'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.suppliers.create');
+        $role_slug = $request->get('roleSlug');
+
+        return view('admin.suppliers.create', compact('role_slug'));
     }
 
     public function store(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $request->validate([
             'name' => 'required',
             'contact' => 'required',
@@ -29,22 +35,28 @@ class SupplierController extends Controller
 
         Supplier::create($request->all());
 
-        return redirect()->route('admin.suppliers.index')
+        return redirect()->route($role_slug . '.suppliers.index')
             ->with('success', 'Supplier created successfully.');
     }
 
-    public function show(Supplier $supplier)
+    public function show(Request $request, Supplier $supplier)
     {
-        return view('admin.suppliers.show', compact('supplier'));
+        $role_slug = $request->get('roleSlug');
+
+        return view('admin.suppliers.show', compact('supplier', 'role_slug'));
     }
 
-    public function edit(Supplier $supplier)
+    public function edit(Request $request, Supplier $supplier)
     {
-        return view('admin.suppliers.edit', compact('supplier'));
+        $role_slug = $request->get('roleSlug');
+
+        return view('admin.suppliers.edit', compact('supplier', 'role_slug'));
     }
 
     public function update(Request $request, Supplier $supplier)
     {
+        $role_slug = $request->get('roleSlug');
+
         $request->validate([
             'name' => 'required',
             'contact' => 'required',
@@ -53,15 +65,17 @@ class SupplierController extends Controller
 
         $supplier->update($request->all());
 
-        return redirect()->route('admin.suppliers.index')
+        return redirect()->route($role_slug . '.suppliers.index')
             ->with('success', 'Supplier updated successfully.');
     }
 
-    public function destroy(Supplier $supplier)
+    public function destroy(Request $request, Supplier $supplier)
     {
+        $role_slug = $request->get('roleSlug');
+
         $supplier->delete();
 
-        return redirect()->route('admin.suppliers.index')
+        return redirect()->route($role_slug . '.suppliers.index')
             ->with('success', 'Supplier deleted successfully.');
     }
 }

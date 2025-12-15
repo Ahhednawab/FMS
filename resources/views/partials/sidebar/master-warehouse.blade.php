@@ -49,11 +49,9 @@
 
                 <li
                     class="nav-item nav-item-submenu 
-                    {{ request()->routeIs('master-warehouse.products.*') ||
-                    request()->routeIs('master-warehouse.inventoryWarehouses.*') ||
+                    {{ request()->routeIs('master-warehouse.inventoryWarehouses.*') ||
                     request()->routeIs('master-warehouse.master_warehouse_inventory.*') ||
                     request()->routeIs('master-warehouse.purchases.*') ||
-                    request()->routeIs('master-warehouse.warehouses.*') ||
                     request()->routeIs('master-warehouse.suppliers.*')
                         ? 'nav-item-open'
                         : '' }}">
@@ -61,28 +59,14 @@
                     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
 
                     <ul class="nav nav-group-sub" data-submenu-title="Inventory"
-                        style="{{ request()->routeIs('master-warehouse.master_warehouse_inventory.*') ||
-                        request()->routeIs('master-warehouse.purchases.*') ||
-                        request()->routeIs('master-warehouse.warehouses.*') ||
+                        style="{{ request()->routeIs('master-warehouse.purchases.*') ||
                         request()->routeIs('master-warehouse.assigned_inventory.*') ||
-                        request()->routeIs('master-warehouse.productList.*') ||
                         request()->routeIs('master-warehouse.suppliers.*')
                             ? 'display:block;'
                             : '' }}">
 
-                        <li class="nav-item">
-                            <a href="{{ route('master-warehouse.warehouses.index') }}"
-                                class="nav-link {{ request()->routeIs('master-warehouse.warehouses.*') ? 'active' : '' }}">
-                                Warehouse Management
-                            </a>
-                        </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('master-warehouse.master_warehouse_inventory.index') }}"
-                                class="nav-link {{ request()->routeIs('master-warehouse.master_warehouse_inventory.*') ? 'active' : '' }}">
-                                Master Warehouse Inventory
-                            </a>
-                        </li>
+
 
                         <li class="nav-item">
                             <a href="{{ route('master-warehouse.assigned_inventory.index') }}"
@@ -91,12 +75,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('master-warehouse.productList.index') }}"
-                                class="nav-link {{ request()->routeIs('master-warehouse.productList.*') ? 'active' : '' }}">
-                                Products List
-                            </a>
-                        </li>
+
 
                         <li class="nav-item">
                             <a href="{{ route('master-warehouse.purchases.index') }}"
@@ -114,12 +93,51 @@
 
                     </ul>
                 </li>
-                <li class="nav-item ">
+                <li
+                    class="nav-item nav-item-submenu 
+                    {{ request()->routeIs('master-warehouse.productList.*') ? 'nav-item-open' : '' }}">
 
                     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Product Management</span></a>
 
+                    <ul class="nav nav-group-sub" data-submenu-title="Inventory"
+                        style="{{ request()->routeIs('master-warehouse.productList.*') ? 'display:block;' : '' }}">
 
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('master-warehouse.productList.index') }}"
+                                class="nav-link {{ request()->routeIs('master-warehouse.productList.*') ? 'active' : '' }}">
+                                Products List
+                            </a>
+                        </li>
+
+
+
+                    </ul>
                 </li>
+
+                <li
+                    class="nav-item nav-item-submenu 
+                    {{ request()->routeIs('master-warehouse.warehouses.index') ? 'nav-item-open' : '' }}">
+
+                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Warehouse Management</span></a>
+
+                    <ul class="nav nav-group-sub" data-submenu-title="Inventory"
+                        style="{{ request()->routeIs('master-warehouse.warehouses.index') ? 'display:block;' : '' }}">
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('master-warehouse.warehouses.index') }}"
+                                class="nav-link {{ request()->routeIs('master-warehouse.warehouses.index') ? 'active' : '' }}">
+                                Warehouse Management
+                            </a>
+                        </li>
+
+
+                    </ul>
+                </li>
+
             </ul>
         </div>
         <!-- /main navigation -->
