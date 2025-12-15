@@ -70,6 +70,21 @@
                   </div>
                 </div>
 
+                <!-- Rolea -->
+                <div class="col-md-3">
+                  <div class="form-group">
+                    <strong>Role</strong>
+                    <select class="custom-select" name="role_id">
+                      <option value="">Select Role</option>
+                      @foreach($roles as $value)
+                        <option value="{{$value->id}}" {{ old('role_id', $user->role_id ?? '') == $value->id ? 'selected' : '' }}>{{$value->name}}</option>
+                      @endforeach
+                    </select>
+                    @if ($errors->has('role_id'))
+                      <label class="text-danger">{{ $errors->first('role_id') }}</label>
+                    @endif
+                  </div>
+                </div>
                 <!-- Designation -->
                 <div class="col-md-3">
                   <div class="form-group">

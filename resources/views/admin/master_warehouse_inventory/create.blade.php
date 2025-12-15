@@ -4,13 +4,13 @@
     <div class="container">
         <h2>Add New Inventory Item</h2>
 
-        <form action="{{ route('admin.master_warehouse_inventory.store') }}" method="POST">
+        <form action="{{ route($role_slug . '.master_warehouse_inventory.store') }}" method="POST">
             @csrf
             <div class="form-group">
                 <label for="product_id">Product</label>
                 <select name="product_id" id="product_id" class="form-control" required>
                     <option value="" disabled selected>Select Product</option>
-                    @foreach($products as $product)
+                    @foreach ($products as $product)
                         <option value="{{ $product->id }}">{{ $product->name }}</option>
                     @endforeach
                 </select>
@@ -19,7 +19,7 @@
                 <label for="batch_number">Batch Number</label>
                 <input type="text" name="batch_number" class="form-control" id="batch_number">
             </div>
-                {{-- <div class="form-group">
+            {{-- <div class="form-group">
                     <label for="Category">Category</label>
                     <input type="text" name="Category" class="form-control" id="Category">
                 </div> --}}

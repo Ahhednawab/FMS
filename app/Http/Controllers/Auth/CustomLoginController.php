@@ -30,13 +30,15 @@ class CustomLoginController extends Controller
 
             $user = Auth::user();
 
-            if ($user->role_id === 1) {
-                return redirect('/admin/dashboard');
-            } elseif ($user->role === 'manager') {
-                return redirect('/manager/dashboard');
-            } else {
-                return redirect('/user/dashboard');
-            }
+
+            return redirect("/{$user->role->slug}/dashboard");
+            // if ($user->role_id === 1) {
+            //     return redirect('/admin/dashboard');
+            // } elseif ($user->role === 'manager') {
+            //     return redirect('/manager/dashboard');
+            // } else {
+            //     return redirect('/user/dashboard');
+            // }
         }
 
         return back()->withErrors([

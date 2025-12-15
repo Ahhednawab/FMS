@@ -1,50 +1,51 @@
 <?php
 
-use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
-use App\Http\Controllers\Admin\PurchaseController;
-use App\Http\Controllers\Admin\WarehousesController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\Auth\CustomLoginController;
+use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\CountriesController;
+use App\Http\Controllers\Admin\IbcController;
 use App\Http\Controllers\Admin\CityController;
-use App\Http\Controllers\Admin\WarehouseController;
-use App\Http\Controllers\Admin\LocationController;
-use App\Http\Controllers\Admin\LedderMakerController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\InventoryWarehouseController;
-use App\Http\Controllers\Admin\TrackerMileageController;
+use App\Http\Controllers\Admin\StationController;
+use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\LocationController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\CountriesController;
+use App\Http\Controllers\Admin\DailyFuelController;
+use App\Http\Controllers\Admin\WarehouseController;
+use App\Http\Controllers\MasterwarehouseController;
+use App\Http\Controllers\Admin\WarehousesController;
+use App\Http\Controllers\Auth\CustomLoginController;
+use App\Http\Controllers\Admin\BankPaymentController;
+use App\Http\Controllers\Admin\CashPaymentController;
+use App\Http\Controllers\Admin\LedderMakerController;
+use App\Http\Controllers\Admin\ProductListController;
 use App\Http\Controllers\Admin\DailyMileageController;
-use App\Http\Controllers\Admin\DailyFuelMileageController;
-use App\Http\Controllers\Admin\InventoryDemandController;
-use App\Http\Controllers\Admin\InventoryDispatchController;
-use App\Http\Controllers\Admin\InventoryLargerReportController;
+use App\Http\Controllers\Admin\ClientInvoiceController;
 use App\Http\Controllers\Admin\AccidentDetailController;
 use App\Http\Controllers\Admin\AccidentReportController;
-use App\Http\Controllers\Admin\ClientInvoiceController;
-use App\Http\Controllers\Admin\CashPaymentController;
-use App\Http\Controllers\Admin\BankPaymentController;
-use App\Http\Controllers\Admin\VehicleMaintenanceController;
-use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
-use App\Http\Controllers\Admin\DriversAttendanceController;
-use App\Http\Controllers\Admin\VehiclesAttendanceController;
-use App\Http\Controllers\Admin\DriverController;
-use App\Http\Controllers\Admin\VehicleController;
-use App\Http\Controllers\Admin\StationController;
-use App\Http\Controllers\Admin\VendorController;
-use App\Http\Controllers\Admin\IbcController;
-use App\Http\Controllers\Admin\ProductListController;
-use App\Http\Controllers\Admin\BrandController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\DailyMileageReportController;
-use App\Http\Controllers\Admin\DailyFuelController;
+use App\Http\Controllers\Admin\TrackerMileageController;
 use App\Http\Controllers\Admin\DailyFuelReportController;
+use App\Http\Controllers\Admin\InventoryDemandController;
+use App\Http\Controllers\Admin\DailyFuelMileageController;
 use App\Http\Controllers\Admin\InsuranceCompanyController;
-use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\DriversAttendanceController;
+use App\Http\Controllers\Admin\InventoryDispatchController;
+use App\Http\Controllers\Admin\DailyMileageReportController;
+use App\Http\Controllers\Admin\InventoryWarehouseController;
+use App\Http\Controllers\Admin\VehicleMaintenanceController;
+use App\Http\Controllers\Admin\VehiclesAttendanceController;
+use App\Http\Controllers\Admin\InventoryLargerReportController;
+use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
+use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
 
 Route::get('/', function () {
 
@@ -84,7 +85,7 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
     ->middleware(['auth', 'can:access-admin-dashboard'])
     ->name('admin.index');
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {
 
     //General
     Route::resource('users', UserController::class);
@@ -193,6 +194,29 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
     Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
     Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
+});
+
+Route::prefix('master-warehouse')->name('master-warehouse.')->middleware('auth', 'role:master-warehouse')->group(function () {
+    Route::get('dashboard', [MasterwarehouseController::class, 'index'])->name('index');
+
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('productList', ProductListController::class);
+    Route::resource('suppliers', SupplierController::class);
+
+    Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
+        ->name('assigned_inventory.index');
+
+    //masterwarehouse route
+    Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
+    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
+    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
+        ->name('master_warehouse_inventory.assign');
+
+    //purchase routes
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 });
 
 

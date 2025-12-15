@@ -59,6 +59,14 @@
           </div>
             
           <div class="row mt-2">
+            <!-- Role -->
+            <div class="col-md-3 text-center">
+              <div class="card p-2">
+                <h5 class="m-0">Role</h5>
+                <p>{{ $user->role->name }}</p>
+              </div>
+            </div>
+            
             <!-- Designation -->
             <div class="col-md-3 text-center">
               <div class="card p-2">

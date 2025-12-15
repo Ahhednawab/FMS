@@ -15,14 +15,18 @@ use App\Http\Controllers\Controller;
 class WarehouseController extends Controller
 {
     use DraftTrait;
-    public function index()
+    public function index(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
         $warehouses = Warehouse::with(['manager', 'station'])->where('is_active', 1)->latest()->get();
-        return view('admin.warehouses.index', compact('warehouses'));
+        return view('admin.warehouses.index', compact('warehouses', 'role_slug'));
     }
 
     public function create(Request $request)
     {
+
+        $role_slug = $request->get('roleSlug');
+
         $serial_no = Warehouse::generateSerialNo();
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
@@ -31,16 +35,17 @@ class WarehouseController extends Controller
 
         $draftInfo = $this->getDraftDataForView($request, 'warehouses');
 
-        return view('admin.warehouses.create', compact('serial_no', 'managers', 'stations', 'types') + $draftInfo);
+        return view('admin.warehouses.create', compact('serial_no', 'managers', 'stations', 'types', 'role_slug') + $draftInfo);
     }
 
     public function store(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         // Handle draft saving (your existing logic)
         if ($this->handleDraftSave($request, 'warehouses')) {
             return back()->with('success', 'Draft saved successfully!');
         }
-        // dd("hwre");
 
         $valid = $request->validate([
             'name'        => 'required|string|max:255',
@@ -71,25 +76,31 @@ class WarehouseController extends Controller
         $this->deleteDraftAfterSuccess($request, 'warehouses');
 
         return redirect()
-            ->route('admin.warehouses.index')
+            ->route($role_slug . '.warehouses.index')
             ->with('success', 'Warehouse created successfully!');
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $role_slug = $request->get('roleSlug');
+
         $warehouse = Warehouse::with('country', 'city')->findOrFail($id);
-        return view('admin.warehouses.show', compact('warehouse'));
+        return view('admin.warehouses.show', compact('warehouse', 'role_slug'));
     }
 
-    public function edit(Warehouse $warehouse)
+    public function edit(Request $request, Warehouse $warehouse)
     {
+        $role_slug = $request->get('roleSlug');
+
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
-        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers'));
+        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers', 'role_slug'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
     {
+        $role_slug = $request->get('roleSlug');
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -113,14 +124,16 @@ class WarehouseController extends Controller
         $warehouse->station_id  =   $request->station_id;
         $warehouse->save();
 
-        return redirect()->route('admin.warehouses.index')->with('success', 'Warehouse updated successfully.');
+        return redirect()->route($role_slug . '.warehouses.index')->with('success', 'Warehouse updated successfully.');
     }
 
-    public function destroy(Warehouse $warehouse)
+    public function destroy(Request $request, Warehouse $warehouse)
     {
+        $role_slug = $request->get('roleSlug');
+
         $warehouse->is_active = 0;
         $warehouse->save();
 
-        return redirect()->route('admin.warehouses.index')->with('delete_msg', 'Warehouse deleted successfully.');
+        return redirect()->route($role_slug . '.warehouses.index')->with('delete_msg', 'Warehouse deleted successfully.');
     }
 }

@@ -597,6 +597,15 @@ pre code {
     overflow-y: scroll
 }
 
+.qty-badge{
+    /* font-size: 22px !important; */
+    max-width: 150px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+}
+
+
 .container,
 .container-fluid,
 .container-lg,

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use App\Models\City;
-use App\Models\Designation;
+use App\Models\Role;
+use App\Models\User;
 use App\Models\Draft;
 use App\Traits\DraftTrait;
+use App\Models\Designation;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 
 class UserController extends Controller
@@ -19,18 +20,20 @@ class UserController extends Controller
     public function index()
     {
         // $users = User::with(['designation'])->where('role','!=','admin')->where('is_active',1)->get();
-        $users = User::with(['designation'])->where('designation_id', '!=', 0)->where('id', '!=', Auth::user()->id)->where('is_active', 1)->get();
+        $users = User::with(['designation', 'role'])->where('designation_id', '!=', 0)->where('id', '!=', Auth::user()->id)->where('is_active', 1)->get();
         return view('admin.users.index', compact('users'));
     }
 
     public function create(Request $request)
     {
         $serial_no = User::GetSerialNumber();
+
+        $roles = Role::all();
         $designation = Designation::where('is_active', 1)->orderBy('designation', 'ASC')->get();
 
         $draftInfo = $this->getDraftDataForView($request, 'users');
 
-        return view('admin.users.create', compact('serial_no', 'designation') + $draftInfo);
+        return view('admin.users.create', compact('serial_no', 'designation', 'roles') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -45,6 +48,7 @@ class UserController extends Controller
             [
                 'full_name'         => 'required',
                 'email'             => 'required|email|unique:users,email',
+                'role_id'           => 'required',
                 'designation_id'    => 'required',
                 'phone'             => 'required|string|max:12|unique:users,phone',
                 'password'          => 'required|string|min:6|confirmed',
@@ -55,6 +59,7 @@ class UserController extends Controller
             [
                 'full_name.required'        => 'Full Name is required',
                 'email.required'            => 'Email is required',
+                'role_id.required'          => 'Role is required',
                 'designation_id.required'   => 'Designation is required',
                 'phone.required'            => 'Phone is required',
                 'password.required'         => 'Password is required',
@@ -64,20 +69,23 @@ class UserController extends Controller
                 'address.required'          => 'Address is required.',
             ]
         );
+
+
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+
         $user = new User();
         $user->serial_no        =   $request->serial_no;
         $user->name             =   $request->full_name;
         $user->email            =   $request->email;
+        $user->role_id          =   $request->role_id;
         $user->designation_id   =   $request->designation_id;
         $user->phone            =   $request->phone;
         $user->password         =   Hash::make($request->password);
         // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
-        $user->role_id = 1;
         $user->address          =   $request->address;
         $user->save();
 
@@ -89,8 +97,9 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $roles = Role::all();
         $designation = Designation::where('is_active', 1)->orderBy('designation', 'ASC')->get();
-        return view('admin.users.edit', compact('user', 'designation'));
+        return view('admin.users.edit', compact('user', 'designation', 'roles'));
     }
 
     public function update(Request $request, User $user)
@@ -100,6 +109,7 @@ class UserController extends Controller
             [
                 'full_name'     => 'required|string|max:255',
                 'email'         => 'required|email|unique:users,email,' . $user->id,
+                'role_id'           => 'required',
                 'designation_id' => 'required',
                 'phone'         => 'required|string|max:12|unique:users,phone,' . $user->id,
                 'password'      => 'nullable|string|min:6|confirmed',
@@ -108,6 +118,7 @@ class UserController extends Controller
             [
                 'full_name.required'        => 'Full Name is required',
                 'email.required'            => 'Email is required',
+                'role_id.required'          => 'Role is required',
                 'designation_id.required'   => 'Designation is required',
                 'phone.required'            => 'Phone is required',
                 'password.confirmed'        => 'Password confirmation does not match',
@@ -127,7 +138,7 @@ class UserController extends Controller
         $user->country_id       =   $request->country_id;
         $user->city_id          =   $request->city_id;
         // $user->role             =   ($request->designation_id == 3) ? 'manager' : 'user';
-        $user->role_id = 1;
+        $user->role_id = $request->role_id;;
         $user->address          =   $request->address;
         $user->save();
 

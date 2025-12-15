@@ -33,6 +33,11 @@ class Warehouse extends Model
         return $this->belongsTo(Station::class, 'station_id');
     }
 
+    public function country()
+    {
+        
+    }
+
     // Auto-generate serial_no like WH-000000001, WH-000000002, etc.
     public static function generateSerialNo(): string
     {

@@ -12,8 +12,10 @@ use App\Models\MasterWarehouseInventory;
 class MasterWarehouseInventoryController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $inventory = MasterWarehouseInventory::with('product')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -22,18 +24,22 @@ class MasterWarehouseInventoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses'));
+        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses', 'role_slug'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $products = ProductList::all();
 
-        return view('admin.master_warehouse_inventory.create', compact('products'));
+        return view('admin.master_warehouse_inventory.create', compact('products', 'role_slug'));
     }
 
     public function store(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products_list,id',
             'batch_number' => 'nullable|string|max:255',
@@ -46,7 +52,7 @@ class MasterWarehouseInventoryController extends Controller
 
         MasterWarehouseInventory::create($validated);  // Save new inventory item
 
-        return redirect()->route('admin.master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
+        return redirect()->route($role_slug . '.master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
     }
 
     public function assignStock(Request $request)
@@ -84,7 +90,7 @@ class MasterWarehouseInventoryController extends Controller
             'new_quantity' => $master->quantity
         ]);
     }
-    public function assigned()
+    public function assigned(Request $request)
     {
         $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
             ->orderBy('assigned_at', 'desc')

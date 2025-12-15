@@ -13,14 +13,18 @@ use App\Http\Controllers\Controller;
 
 class ProductListController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $productList = ProductList::with(['productCategory', 'brand', 'unit'])->where('is_active', 1)->orderby('id', 'DESC')->get();
-        return view('admin.productList.index', compact('productList'));
+        return view('admin.productList.index', compact('productList', 'role_slug'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $serial_no = ProductList::GetSerialNumber();
         $productCategory = ProductCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $brands = Brand::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -28,11 +32,13 @@ class ProductListController extends Controller
 
         $vendors = Vendor::where('is_active', 1)->get();
 
-        return view('admin.productList.create', compact('serial_no', 'productCategory', 'brands', 'units', 'vendors'));
+        return view('admin.productList.create', compact('serial_no', 'productCategory', 'brands', 'units', 'vendors', 'role_slug'));
     }
 
     public function store(Request $request)
     {
+        $role_slug = $request->get('roleSlug');
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -64,20 +70,24 @@ class ProductListController extends Controller
         $product->unit_id    =    $request->unit_id;
         $product->save();
 
-        return redirect()->route('admin.productList.index')->with('success', 'Product created successfully.');
+        return redirect()->route($role_slug . '.productList.index')->with('success', 'Product created successfully.');
     }
 
-    public function edit(ProductList $productList)
+    public function edit(Request $request, ProductList $productList)
     {
+        $role_slug = $request->get('roleSlug');
+
         $productCategory = ProductCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $brands = Brand::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $units = Unit::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.productList.edit', compact('productList', 'productCategory', 'brands', 'units'));
+        return view('admin.productList.edit', compact('productList', 'productCategory', 'brands', 'units', 'role_slug'));
     }
 
     public function update(Request $request, $id)
     {
+        $role_slug = $request->get('roleSlug');
+
         $validator = \Validator::make(
             $request->all(),
             [
@@ -105,19 +115,23 @@ class ProductListController extends Controller
         $product->unit_id               =   $request->unit_id;
         $product->save();
 
-        return redirect()->route('admin.productList.index')->with('success', 'Product Updated successfully.');
+        return redirect()->route($role_slug . '.productList.index')->with('success', 'Product Updated successfully.');
     }
 
-    public function show(ProductList $productList)
+    public function show(Request $request, ProductList $productList)
     {
-        return view('admin.productList.show', compact('productList'));
+        $role_slug = $request->get('roleSlug');
+
+        return view('admin.productList.show', compact('productList', 'role_slug'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        $role_slug = $request->get('roleSlug');
+
         $product = ProductList::find($id);
         $product->is_active = 0;
         $product->save();
-        return redirect()->route('admin.productList.index')->with('delete_msg', 'Product deleted successfully.');
+        return redirect()->route($role_slug . '.productList.index')->with('delete_msg', 'Product deleted successfully.');
     }
 }

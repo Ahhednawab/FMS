@@ -9,8 +9,16 @@ class RoleMiddleware
 {
     public function handle($request, Closure $next, $role)
     {
-        dd(Auth::user()->role_id);
-        if (Auth::check() && Auth::user()->role_id === $role) {
+        if (Auth::check() && Auth::user()->role->slug === $role) {
+
+            // Example: assuming user has role relation with slug
+            $roleSlug = Auth::user()->role->slug;
+
+            // Share role slug with all views
+            view()->share('roleSlug', $roleSlug);
+
+            // Or attach to request
+            $request->attributes->set('roleSlug', $roleSlug);
             return $next($request);
         }
 
