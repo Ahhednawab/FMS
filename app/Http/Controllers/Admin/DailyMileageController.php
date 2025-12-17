@@ -14,7 +14,8 @@ use Carbon\Carbon;
 
 class DailyMileageController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
 
         $query = DailyMileageReport::query();
 
@@ -32,16 +33,16 @@ class DailyMileageController extends Controller
             $toDate->toDateString(),
         ]);
 
-        $dailyMileages = $query->where('is_active',1)
+        $dailyMileages = $query->where('is_active', 1)
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
-            ->with(['vehicle.station'])->orderby('id','DESC')
+            ->with(['vehicle.station'])->orderby('id', 'DESC')
             ->get();
 
-        $vehicles = Vehicle::where('is_active',1)->get();
+        $vehicles = Vehicle::where('is_active', 1)->get();
 
-        return view('admin.dailyMileages.index', compact('dailyMileages','vehicles'));
+        return view('admin.dailyMileages.index', compact('dailyMileages', 'vehicles'));
     }
 
     public function create(Request $request)
@@ -102,83 +103,83 @@ class DailyMileageController extends Controller
     }
 
 
-//    public function store(Request $request)
-//    {
-//        $validator = \Validator::make(
-//            $request->all(),
-//            [
-//                'current_km'    => 'array',
-//                'current_km.*'  => 'nullable|numeric|min:0',
-//                'report_date' => 'required|date|before_or_equal:today',
-//            ],
-//            [
-//                'report_date.required'        =>  'Date is required',
-//                'report_date.date'            =>  'Date must be a valid date',
-//                'report_date.before_or_equal' =>  'Date cannot be greater than today',
-//            ]
-//        );
-//
-//
-//        $validator->after(function ($validator) use ($request) {
-//            $previous_kms = $request->previous_km;
-//            $current_kms = $request->current_km;
-//            $vehicle_ids = $request->vehicle_id;
-//            $report_date = $request->report_date;
-//
-//            foreach ($current_kms as $index => $current_km){
-//                $previous_km = $previous_kms[$index] ?? 0;
-//
-//                if($current_km < $previous_km && isset($current_km)){
-//                    $validator->errors()->add("current_km.$index", "Current KM must be greater than Previous KM.");
-//                }
-//
-//                $vehicle_id = $vehicle_ids[$index] ?? null;
-//                if ($vehicle_id && isset($current_km)) {
-//                    $last = DailyMileageReport::where('vehicle_id', $vehicle_id)
-//                        ->where('is_active', 1)
-//                        ->orderBy('report_date', 'desc')
-//                        ->orderBy('id', 'desc')
-//                        ->first();
-//
-//                    if ($last) {
-//                        if ($report_date && Carbon::parse($report_date)->lt(Carbon::parse($last->report_date))) {
-//                            $lastDateFormatted = Carbon::parse($last->report_date)->format('d-M-Y');
-//                            $validator->errors()->add("current_km.$index", "Report date cannot be earlier than last date ($lastDateFormatted) for this vehicle.");
-//                        }
-//
-//                        if ($current_km < $last->current_km) {
-//                            $validator->errors()->add("current_km.$index", "Current KM for this vehicle cannot be less than last recorded KM ({$last->current_km}).");
-//                        }
-//                    }
-//                }
-//            }
-//        });
-//
-//        if ($validator->fails()) {
-//            $messages = $validator->getMessageBag();
-//            return redirect()->back()->withErrors($validator)->withInput();
-//        }
-//
-//        $vehicle_ids    = $request->vehicle_id;
-//        $report_date    = $request->report_date;
-//        $mileages       = $request->mileage;
-//        $previous_kms   = $request->previous_km;
-//        $current_kms    = $request->current_km;
-//
-//        foreach ($vehicle_ids as $index => $vehicle_id) {
-//            if (isset($current_kms[$index])) {
-//                DailyMileageReport::Create([
-//                    'vehicle_id'    =>  $vehicle_id,
-//                    'report_date'   =>  $report_date,
-//                    'mileage'       =>  ($current_kms[$index] - $previous_kms[$index]),
-//                    'previous_km'   =>  $previous_kms[$index],
-//                    'current_km'    =>  $current_kms[$index],
-//                ]);
-//            }
-//        }
-//
-//        return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage created successfully.');
-//    }
+    //    public function store(Request $request)
+    //    {
+    //        $validator = \Validator::make(
+    //            $request->all(),
+    //            [
+    //                'current_km'    => 'array',
+    //                'current_km.*'  => 'nullable|numeric|min:0',
+    //                'report_date' => 'required|date|before_or_equal:today',
+    //            ],
+    //            [
+    //                'report_date.required'        =>  'Date is required',
+    //                'report_date.date'            =>  'Date must be a valid date',
+    //                'report_date.before_or_equal' =>  'Date cannot be greater than today',
+    //            ]
+    //        );
+    //
+    //
+    //        $validator->after(function ($validator) use ($request) {
+    //            $previous_kms = $request->previous_km;
+    //            $current_kms = $request->current_km;
+    //            $vehicle_ids = $request->vehicle_id;
+    //            $report_date = $request->report_date;
+    //
+    //            foreach ($current_kms as $index => $current_km){
+    //                $previous_km = $previous_kms[$index] ?? 0;
+    //
+    //                if($current_km < $previous_km && isset($current_km)){
+    //                    $validator->errors()->add("current_km.$index", "Current KM must be greater than Previous KM.");
+    //                }
+    //
+    //                $vehicle_id = $vehicle_ids[$index] ?? null;
+    //                if ($vehicle_id && isset($current_km)) {
+    //                    $last = DailyMileageReport::where('vehicle_id', $vehicle_id)
+    //                        ->where('is_active', 1)
+    //                        ->orderBy('report_date', 'desc')
+    //                        ->orderBy('id', 'desc')
+    //                        ->first();
+    //
+    //                    if ($last) {
+    //                        if ($report_date && Carbon::parse($report_date)->lt(Carbon::parse($last->report_date))) {
+    //                            $lastDateFormatted = Carbon::parse($last->report_date)->format('d-M-Y');
+    //                            $validator->errors()->add("current_km.$index", "Report date cannot be earlier than last date ($lastDateFormatted) for this vehicle.");
+    //                        }
+    //
+    //                        if ($current_km < $last->current_km) {
+    //                            $validator->errors()->add("current_km.$index", "Current KM for this vehicle cannot be less than last recorded KM ({$last->current_km}).");
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        });
+    //
+    //        if ($validator->fails()) {
+    //            $messages = $validator->getMessageBag();
+    //            return redirect()->back()->withErrors($validator)->withInput();
+    //        }
+    //
+    //        $vehicle_ids    = $request->vehicle_id;
+    //        $report_date    = $request->report_date;
+    //        $mileages       = $request->mileage;
+    //        $previous_kms   = $request->previous_km;
+    //        $current_kms    = $request->current_km;
+    //
+    //        foreach ($vehicle_ids as $index => $vehicle_id) {
+    //            if (isset($current_kms[$index])) {
+    //                DailyMileageReport::Create([
+    //                    'vehicle_id'    =>  $vehicle_id,
+    //                    'report_date'   =>  $report_date,
+    //                    'mileage'       =>  ($current_kms[$index] - $previous_kms[$index]),
+    //                    'previous_km'   =>  $previous_kms[$index],
+    //                    'current_km'    =>  $current_kms[$index],
+    //                ]);
+    //            }
+    //        }
+    //
+    //        return redirect()->route('admin.dailyMileages.index')->with('success', 'Daily Mileage created successfully.');
+    //    }
 
     public function store(Request $request)
     {
@@ -247,7 +248,7 @@ class DailyMileageController extends Controller
 
         // Check if any field is empty, if so, mark as draft
         foreach ($vehicle_ids as $index => $vehicle_id) {
-            if (empty($current_kms[$index]) || empty($previous_kms[$index]) || empty($report_date)) {
+            if (empty($current_kms[$index]) || empty($report_date)) {
                 $isDraft = true;
                 break;
             }
@@ -256,7 +257,7 @@ class DailyMileageController extends Controller
         if ($isDraft) {
             // Save as a draft if any field is empty
             $draftData = [
-                'report_date '   => $report_date ,
+                'report_date '   => $report_date,
                 'selectedstations' => $selectedstations,
                 'station'     => $stations,
                 'vehicle_ids'    => $vehicle_ids,
@@ -282,7 +283,7 @@ class DailyMileageController extends Controller
                     DailyMileageReport::Create([
                         'vehicle_id'    =>  $vehicle_id,
                         'report_date'   =>  $report_date,
-                        'mileage'       =>  ($current_kms[$index] - $previous_kms[$index]),
+                        'mileage'       => ($current_kms[$index] - $previous_kms[$index]),
                         'previous_km'   =>  $previous_kms[$index],
                         'current_km'    =>  $current_kms[$index],
                     ]);
@@ -300,11 +301,11 @@ class DailyMileageController extends Controller
 
         $months = [];
 
-            for ($i = 0; $i <= 3; $i++) {
+        for ($i = 0; $i <= 3; $i++) {
             $months[] = date("F", strtotime("-$i months"));
         }
 
-        return view('admin.dailyMileages.edit',compact('dailyMileage','months','vehicles'));
+        return view('admin.dailyMileages.edit', compact('dailyMileage', 'months', 'vehicles'));
     }
 
     public function update(Request $request, DailyMileageReport $dailyMileage)
@@ -325,7 +326,7 @@ class DailyMileageController extends Controller
             $previous_km = $request->previous_km;
             $current_km = $request->current_km;
 
-            if($current_km < $previous_km){
+            if ($current_km < $previous_km) {
                 $validator->errors()->add("current_km", "Current KM must be greater than Previous KM.");
             }
 
@@ -351,7 +352,7 @@ class DailyMileageController extends Controller
         $dailyMileage->current_km   = $request->current_km;
         $dailyMileage->save();
 
-        $succeded_record = DailyMileageReport::where('vehicle_id',$dailyMileage->vehicle_id)->where('id','>',$dailyMileage->id)->first();
+        $succeded_record = DailyMileageReport::where('vehicle_id', $dailyMileage->vehicle_id)->where('id', '>', $dailyMileage->id)->first();
 
         if (isset($succeded_record)) {
             $succeded_record->previous_km   =  $request->current_km;
