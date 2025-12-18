@@ -1,27 +1,30 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\DailyFuelReport;
+use Carbon\Carbon;
+use App\Models\Station;
 use App\Models\Vehicle;
 use App\Models\Destination;
 use App\Models\FuelStation;
-use App\Models\Station;
-use Carbon\Carbon;
-
 use Illuminate\Http\Request;
+use App\Models\DailyFuelReport;
+
+use App\Models\DailyMileageReport;
+use App\Http\Controllers\Controller;
 
 class DailyFuelController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
         $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
-        
+
         $dailyFuels = DailyFuelReport::where('is_active', 1)
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
-            ->with(['vehicle.station'])->orderby('id','DESC')
+            ->with(['vehicle.station'])->orderby('id', 'DESC')
             ->with('vehicle');
 
         if ($request->filled('vehicle_id')) {
@@ -29,22 +32,39 @@ class DailyFuelController extends Controller
                 $q->where('vehicle_id', $request->vehicle_id);
             });
         }
-        
+
 
         $dailyFuels = $dailyFuels->whereBetween('report_date', [
             $fromDate->toDateString(),
             $toDate->toDateString(),
         ]);
-        $dailyFuels = $dailyFuels->orderBy('id','DESC');
+        $dailyFuels = $dailyFuels->orderBy('id', 'DESC');
         $dailyFuels = $dailyFuels->get();
 
-        $vehicles = Vehicle::where('is_active',1)->get();
+        $vehicles = Vehicle::where('is_active', 1)->get();
 
-        return view('admin.dailyFuels.index', compact('dailyFuels','vehicles'));
+        $vehicleData = [];
+        foreach ($vehicles as $vehicle) {
+            $previousRecord = DailyMileageReport::where('vehicle_id', $vehicle->id)
+                ->where('is_active', 1)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            $previous_km = ($previousRecord) ? $previousRecord->current_km : $vehicle->kilometer;
+
+            $vehicleData[] = [
+                'vehicle_id' => $vehicle->id,
+                'station' => $vehicle->station->area,
+                'vehicle_no' => $vehicle->vehicle_no,
+                'previous_km' => $previous_km
+            ];
+        }
+        return view('admin.dailyFuels.index', compact('dailyFuels', 'vehicles', 'vehicleData'));
     }
 
-    public function create(Request $request){
-        
+    public function create(Request $request)
+    {
+
         $vehicles = Vehicle::with('station');
         $vehicles = $vehicles->where('is_active', 1);
         if (isset($request->station_id)) {
@@ -56,10 +76,10 @@ class DailyFuelController extends Controller
 
         $vehicleData = array();
 
-        foreach($vehicles as $vehicle){
-            $previousRecord = DailyFuelReport::where('vehicle_id',$vehicle->id)
-                ->where('is_active',1)
-                ->orderBy('id','DESC')
+        foreach ($vehicles as $vehicle) {
+            $previousRecord = DailyFuelReport::where('vehicle_id', $vehicle->id)
+                ->where('is_active', 1)
+                ->orderBy('id', 'DESC')
                 ->select('*')
                 ->first();
 
@@ -82,8 +102,8 @@ class DailyFuelController extends Controller
         $stations = $stations->toArray();
 
         $selectedStation = $request->station_id ?? '';
-        
-        return view('admin.dailyFuels.create',compact('vehicles','vehicleData','stations','selectedStation'));
+
+        return view('admin.dailyFuels.create', compact('vehicles', 'vehicleData', 'stations', 'selectedStation'));
     }
 
     public function store(Request $request)
@@ -107,7 +127,7 @@ class DailyFuelController extends Controller
             ]
         );
 
-        $validator->after(function($validator) use ($request) {
+        $validator->after(function ($validator) use ($request) {
             $prevs = $request->input('previous_km', []);
             $currs = $request->input('current_km', []);
             $fuels = $request->input('fuel_taken', []);
@@ -122,7 +142,7 @@ class DailyFuelController extends Controller
                 $hasFuel = !(is_null($fuel) || $fuel === '');
 
                 // current_km must not exceed previous_km
-                if ($hasCurr && $prev !== null && $prev !== '' ) {
+                if ($hasCurr && $prev !== null && $prev !== '') {
                     if (is_numeric($curr) && is_numeric($prev)) {
                         if ((float)$curr < (float)$prev) {
                             $validator->errors()->add("current_km.$i", 'Current KMs cannot be greater than Previous KMs.');
@@ -184,7 +204,7 @@ class DailyFuelController extends Controller
 
     public function edit(DailyFuelReport $dailyFuel)
     {
-        return view('admin.dailyFuels.edit',compact('dailyFuel'));
+        return view('admin.dailyFuels.edit', compact('dailyFuel'));
     }
 
     public function update(Request $request, DailyFuelReport $dailyFuel)
@@ -206,7 +226,7 @@ class DailyFuelController extends Controller
             ]
         );
 
-        $validator->after(function($validator) use ($request) {
+        $validator->after(function ($validator) use ($request) {
             $prev = $request->previous_km;
             $curr = $request->current_km;
             if ($curr !== null && $curr !== '' && $prev !== null && $prev !== '') {
@@ -222,7 +242,7 @@ class DailyFuelController extends Controller
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        
+
         $dailyFuel->report_date     =   $request->report_date;
         $dailyFuel->current_km      =   $request->current_km;
         $dailyFuel->mileage         =   $request->mileage;
@@ -242,7 +262,7 @@ class DailyFuelController extends Controller
     {
         $dailyFuel->is_active = 0;
         $dailyFuel->save();
-        
+
         return redirect()->route('admin.dailyFuels.index')->with('delete_msg', 'Daily Fuel deleted successfully.');
     }
 }
