@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Draft;
+use App\Models\Warehouse;
 use App\Traits\DraftTrait;
 use App\Models\Designation;
 use Illuminate\Http\Request;
@@ -42,6 +43,7 @@ class UserController extends Controller
         if ($this->handleDraftSave($request, 'users')) {
             return redirect()->back()->with('success', 'Draft saved successfully!');
         }
+
 
         $validator = \Validator::make(
             $request->all(),
@@ -156,5 +158,58 @@ class UserController extends Controller
     public function show(User $user)
     {
         return view('admin.users.show', compact('user'));
+    }
+
+    public function getManagers(Request $request)
+    {
+        try {
+            $type = $request->type;
+
+            if (!$type) {
+                return response()->json([
+                    'success' => false,
+                    'data'    => [],
+                    'message' => 'Warehouse type is required'
+                ]);
+            }
+
+            // Already assigned managers
+            $assignedManagerIds = Warehouse::where('type', $type)
+                ->whereNotNull('manager_id')
+                ->pluck('manager_id');
+
+            // Role mapping
+            $roleMap = [
+                'master' => 'master-warehouse',
+                'sub'    => 'sub-warehouse',
+            ];
+
+            if (!isset($roleMap[$type])) {
+                return response()->json([
+                    'success' => false,
+                    'data'    => [],
+                    'message' => 'Invalid warehouse type'
+                ]);
+            }
+
+            $managers = User::whereHas('role', function ($q) use ($roleMap, $type) {
+                $q->where('slug', $roleMap[$type]);
+            })
+                ->whereNotIn('id', $assignedManagerIds)
+                ->where('is_active', 1)
+                ->pluck('name', 'id');
+
+            return response()->json([
+                'success' => true,
+                'data'    => $managers,
+                'message' => 'Managers fetched successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data'    => [],
+                'message' => 'Something went wrong'
+            ], 500);
+        }
     }
 }

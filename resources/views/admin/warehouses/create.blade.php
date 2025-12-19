@@ -57,7 +57,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Type</strong>
-                                        <select name="type" id="type" class="form-control">
+                                        <select name="type" id="type" class="form-control warehouse-type">
                                             <option value="">--Select--</option>
                                             @foreach ($types as $value)
                                                 <option value="{{ $value }}"
@@ -96,12 +96,7 @@
                                         <strong>Warehouse Manager</strong>
                                         <select name="manager_id" id="manager_id" class="form-control">
                                             <option value="">--Select--</option>
-                                            @foreach ($managers as $key => $value)
-                                                <option value="{{ $key }}"
-                                                    {{ ($draftData['manager_id'] ?? old('manager_id')) == $key ? 'selected' : '' }}>
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
+
                                         </select>
                                         @if ($errors->has('manager_id'))
                                             <label class="text-danger">{{ $errors->first('manager_id') }}</label>
@@ -154,3 +149,55 @@
         });
     </script>
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.warehouse-type').on('change', function() {
+                let type = $(this).val();
+                let managerSelect = $('#manager_id');
+
+                managerSelect.html('<option value="">Loading...</option>');
+
+                if (!type) {
+                    managerSelect.html('<option value="">--Select--</option>');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('admin.users.getmanagers') }}",
+                    type: "GET",
+                    data: {
+                        type: type
+                    },
+                    success: function(response) {
+
+                        managerSelect.empty();
+                        managerSelect.append('<option value="">--Select--</option>');
+
+                        if (!response.success) {
+                            alert(response.message);
+                            return;
+                        }
+
+                        if ($.isEmptyObject(response.data)) {
+                            managerSelect.append(
+                                '<option value="">No managers available</option>');
+                            return;
+                        }
+
+                        $.each(response.data, function(id, name) {
+                            managerSelect.append(
+                                `<option value="${id}">${name}</option>`
+                            );
+                        });
+                    },
+                    error: function() {
+                        managerSelect.html('<option value="">Server error</option>');
+                    }
+                });
+            });
+
+        });
+    </script>
+@endpush

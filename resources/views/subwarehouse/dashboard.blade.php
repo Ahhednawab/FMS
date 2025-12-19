@@ -85,7 +85,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Product</th>
-                                        <th>Batch No.</th>
+                                        <th>Serial No.</th>
                                         <th>Quantity</th>
                                         <th>Expiry Date</th>
                                         <th>Expiry</th>
@@ -95,8 +95,8 @@
                                     @foreach ($lowStockInventory as $index => $item)
                                         <tr class="{{ $item->quantity <= 5 ? 'table-danger' : 'table-warning' }}">
                                             <td>{{ $lowStockInventory->firstItem() + $index }}</td>
-                                            <td>{{ $item->product->name ?? 'N/A' }}</td>
-                                            <td>{{ $item->product->batch_number ?? '-' }}</td>
+                                            <td>{{ $item->name ?? 'N/A' }}</td>
+                                            <td>{{ $item->serial_no ?? '-' }}</td>
                                             <td>
                                                 <span class="badge badge-danger">
                                                     {{ $item->quantity }}

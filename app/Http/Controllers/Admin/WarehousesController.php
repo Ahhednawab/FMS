@@ -48,4 +48,8 @@ class WarehousesController extends Controller
 
         return redirect()->route('admin.warehouses.index');
     }
+
+    public function assignWarehouse() {
+        
+    }
 }

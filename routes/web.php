@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\MasterwarehouseController;
 use App\Http\Controllers\Admin\WarehousesController;
 use App\Http\Controllers\Auth\CustomLoginController;
+use App\Http\Controllers\InventoryRequestController;
 use App\Http\Controllers\Admin\BankPaymentController;
 use App\Http\Controllers\Admin\CashPaymentController;
 use App\Http\Controllers\Admin\LedderMakerController;
@@ -87,7 +88,10 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {
 
-    //General
+    //General  
+    Route::get('users/getmanagers', [UserController::class, 'getManagers'])
+        ->name('users.getmanagers');
+
     Route::resource('users', UserController::class);
     Route::resource('cities', CityController::class);
     Route::resource('stations', StationController::class);
@@ -191,6 +195,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 
+    Route::get('/warehouses/assign', [WarehousesController::class, 'assignWarehouse'])->name('warehouses.assign');
     Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
     Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
     Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
@@ -208,6 +213,53 @@ Route::prefix('master-warehouse')->name('master-warehouse.')->middleware('auth',
 
     //masterwarehouse route
     Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
+    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
+    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
+        ->name('master_warehouse_inventory.assign');
+
+    //purchase routes
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+
+    Route::get(
+        'inventory-requests',
+        [InventoryRequestController::class, 'index']
+    )->name('inventory-requests.index');
+
+
+    Route::post('inventory-requests/{inventoryRequest}/approve', [InventoryRequestController::class, 'approve'])
+        ->name('inventory-requests.approve');
+
+    Route::post('inventory-requests/{inventoryRequest}/reject', [InventoryRequestController::class, 'reject'])
+        ->name('inventory-requests.reject');
+});
+
+Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role:sub-warehouse')->group(function () {
+    Route::get('dashboard', [MasterwarehouseController::class, 'index'])->name('index');
+    Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
+        ->name('assigned_inventory.index');
+    Route::get('/master_warehouse_inventory/request_inventory', [MasterWarehouseInventoryController::class, 'requestInventory'])->name('master_warehouse_inventory.request_inventory');
+
+    // Route::post(
+    //     '/subwarehouse/inventory/request',
+    //     [MasterWarehouseInventoryController::class, 'request']
+    // )->name('inventory.request');
+
+
+    Route::resource(
+        'inventory-requests',
+        InventoryRequestController::class
+    )->only(['index', 'store']); // ✅ FIX HERE
+
+
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('productList', ProductListController::class);
+    Route::resource('suppliers', SupplierController::class);
+
+
+    //masterwarehouse route
     Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
     Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
     Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])

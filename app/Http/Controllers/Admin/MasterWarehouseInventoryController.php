@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Warehouse;
 use App\Models\Warehouses;
 use App\Models\ProductList;
 use Illuminate\Http\Request;
+use App\Models\InventoryRequest;
 use App\Models\WarehouseAssignment;
 use App\Http\Controllers\Controller;
 use App\Models\MasterWarehouseInventory;
@@ -58,10 +60,11 @@ class MasterWarehouseInventoryController extends Controller
     public function assignStock(Request $request)
     {
         $valid = $request->validate([
-            'master_inventory_id' => 'required|exists:master_warehouse_inventory,id',
             'warehouse_id'         => 'required|exists:warehouses,id',
             'quantity'            => 'required|integer|min:1'
         ]);
+
+        $masterwarehouse = Warehouse::where('type', 'master')->get();
 
         $master = MasterWarehouseInventory::with('product')->findOrFail($request->master_inventory_id);
         if ((int)$request->quantity > $master->quantity) {
@@ -92,10 +95,62 @@ class MasterWarehouseInventoryController extends Controller
     }
     public function assigned(Request $request)
     {
-        $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
-            ->orderBy('assigned_at', 'desc')
-            ->paginate(25);
+        if (auth()->user()->role->slug == "master-warehouse" || auth()->user()->role->slug == "admin") {
+            $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
+                ->orderBy('assigned_at', 'desc')
+                ->paginate(25);
+            return view('admin.master_warehouse_inventory.assigned', compact('assignments'));
+        } else {
+
+            $subwarehouse = Warehouse::where('manager_id', auth()->user()->id)->get();
+
+            if (!empty($subwarehouse) && count($subwarehouse) > 0) {
+                $assignments = WarehouseAssignment::from('warehouse_assignments as wa')
+                    ->join('master_warehouse_inventory as mwi', 'wa.master_inventory_id', '=', 'mwi.id')
+                    ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
+                    ->where('wa.warehouse_id', $subwarehouse[0]->id)
+                    ->select([
+                        'pl.name',
+                        'pl.serial_no',
+                        'wa.quantity',
+                        'mwi.batch_number',
+                        'mwi.expiry_date',
+                        'wa.price',
+                        'wa.created_at',
+                    ])
+                    ->orderBy('quantity', 'asc')
+                    ->paginate(10);
+            }
+            return view('subwarehouse.master_warehouse_inventory.assigned', compact('assignments'));
+        }
 
         return view('admin.master_warehouse_inventory.assigned', compact('assignments'));
+    }
+
+    public function requestInventory()
+    {
+        // Get all inventory requested by current user
+        $requestedInventoryIds = InventoryRequest::where('requested_by', auth()->id())
+            ->pluck('master_inventory_id')
+            ->toArray();
+
+
+        $requestedInventoryMap = InventoryRequest::where('requested_by', auth()->id())
+            ->where('status', 'pending')
+            ->pluck('quantity', 'master_inventory_id')
+            ->toArray();
+
+
+        // Get available inventory with quantity > 0
+        $availableInventory = MasterWarehouseInventory::with('product')
+            ->where('quantity', '>', 0)
+            ->paginate(10);
+
+        return view('subwarehouse.master_warehouse_inventory.request', compact('availableInventory', 'requestedInventoryIds', 'requestedInventoryMap'));
+    }
+
+    public function request()
+    {
+        dd("here");
     }
 }

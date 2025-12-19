@@ -23,8 +23,6 @@
                                                 <th>Batch / Expiry</th>
                                                 <th>Quantity Assigned</th>
                                                 <th>Price</th>
-                                                <th>Warehouse</th>
-                                                <th>Assigned By</th>
                                                 <th>Date & Time</th>
                                             </tr>
                                         </thead>
@@ -34,10 +32,9 @@
                                                 <td>{{ $loop->iteration + ($assignments->currentPage() - 1) * $assignments->perPage() }}
                                                 </td>
                                                 <td>
-                                                    <strong>{{ $assign->masterInventory?->product?->name ?? 'Product Deleted' }}</strong>
+                                                    <strong>{{ $assign->name ?? 'Product Deleted' }}</strong>
                                                     <br>
-                                                    <small
-                                                        class="text-muted">{{ $assign->masterInventory?->product?->serial_no ?? '' }}</small>
+                                                    <small class="text-muted">{{ $assign->serial_no ?? '' }}</small>
                                                 </td>
                                                 <td>
                                                     <small>
@@ -56,14 +53,6 @@
                                                     <span class="badge bg-success fs-6">{{ $assign->quantity }}</span>
                                                 </td>
                                                 <td>Rs. {{ number_format($assign->price, 2) }}</td>
-                                                <td>
-                                                    <span class="badge bg-info">
-                                                        {{ $assign->warehouse?->name ?? 'Unknown' }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {{ $assign->assignedBy?->name ?? 'System' }}
-                                                </td>
                                                 <td>
                                                     <small>
                                                         {{ \Carbon\Carbon::parse($assign->assigned_at)->format('d M Y') }}<br>

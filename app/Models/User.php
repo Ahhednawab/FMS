@@ -89,4 +89,10 @@ class User extends Authenticatable
         }
         return $this->role->slug === $roles;
     }
+
+    public function warehouse()
+    {
+        // Assumes each user has ONE warehouse assigned, foreign key in warehouses table: user_id
+        return $this->hasOne(\App\Models\Warehouse::class, 'manager_id', 'id');
+    }
 }

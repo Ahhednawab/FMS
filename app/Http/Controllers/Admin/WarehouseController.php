@@ -31,7 +31,13 @@ class WarehouseController extends Controller
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
 
-        $types = ["master", "sub"];
+        $warehouse = Warehouse::where('type', 'master')->get();
+
+        if (count($warehouse) > 0) {
+            $types = ["sub"];
+        } else {
+            $types = ["master", "sub"];
+        };
 
         $draftInfo = $this->getDraftDataForView($request, 'warehouses');
 

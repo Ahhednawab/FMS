@@ -46,13 +46,21 @@
                         <span>Dashboard</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('master-warehouse.inventory-requests.index') }}"
+                        class="nav-link {{ request()->routeIs('master-warehouse.inventory-requests.*') ? 'active' : '' }}">
+                        <i class="icon-copy"></i>
+                        Requested Inventory
+                    </a>
+                </li>
 
                 <li
                     class="nav-item nav-item-submenu 
                     {{ request()->routeIs('master-warehouse.inventoryWarehouses.*') ||
                     request()->routeIs('master-warehouse.master_warehouse_inventory.*') ||
                     request()->routeIs('master-warehouse.purchases.*') ||
-                    request()->routeIs('master-warehouse.suppliers.*')
+                    request()->routeIs('master-warehouse.suppliers.*') ||
+                    request()->routeIs('master-warehouse.master_warehouse_inventory.index')
                         ? 'nav-item-open'
                         : '' }}">
 
@@ -61,7 +69,8 @@
                     <ul class="nav nav-group-sub" data-submenu-title="Inventory"
                         style="{{ request()->routeIs('master-warehouse.purchases.*') ||
                         request()->routeIs('master-warehouse.assigned_inventory.*') ||
-                        request()->routeIs('master-warehouse.suppliers.*')
+                        request()->routeIs('master-warehouse.suppliers.*') ||
+                        request()->routeIs('master-warehouse.master_warehouse_inventory.index')
                             ? 'display:block;'
                             : '' }}">
 
@@ -75,6 +84,12 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a href="{{ route('master-warehouse.master_warehouse_inventory.index') }}"
+                                class="nav-link {{ request()->routeIs('master-warehouse.master_warehouse_inventory.*') ? 'active' : '' }}">
+                                Master Warehouse Inventory
+                            </a>
+                        </li>
 
 
                         <li class="nav-item">

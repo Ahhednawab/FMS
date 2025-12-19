@@ -2,21 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InventoryRequest extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'master_inventory_id',
+        'requested_by',
+        'quantity',
+        'price',
+        'status'
+    ];
 
-    protected $fillable = ['sub_warehouse_id', 'inventory_item_id', 'quantity'];
-
-    public function subWarehouse()
+    public function inventory()
     {
-        return $this->belongsTo(Warehouses::class, 'sub_warehouse_id');
+        return $this->belongsTo(
+            MasterWarehouseInventory::class,
+            'master_inventory_id'
+        );
     }
-    public function inventoryItem()
+
+    public function requester()
     {
-        return $this->belongsTo(InventoryItem::class);
+        return $this->belongsTo(User::class, 'requested_by');
     }
 }

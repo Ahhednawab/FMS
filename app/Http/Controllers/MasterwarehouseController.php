@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Masterwarehouse;
 use Illuminate\Http\Request;
+use App\Models\Masterwarehouse;
+use App\Models\MasterWarehouseInventory;
+use App\Models\Warehouse;
+use App\Models\WarehouseAssignment;
 
 class MasterwarehouseController extends Controller
 {
@@ -12,7 +15,39 @@ class MasterwarehouseController extends Controller
      */
     public function index()
     {
-        return view('warehouse.dashboard');
+        $user = auth()->user();
+        if (auth()->user()->role->slug == "master-warehouse") {
+            $lowStockInventory = MasterWarehouseInventory::with('product')
+                ->whereBetween('quantity', [1, 10])
+                ->orderBy('quantity', 'asc')
+                ->paginate(10);
+            return view('warehouse.dashboard', compact('lowStockInventory'));
+        } else {
+            // i need inventroy of sub warehouse from MasterWarehouseInventory where the warehouse manager_id is current user id and also bring product name masterwarehouseinventrory
+
+            $subwarehouse = Warehouse::where('manager_id', $user->id)->get();
+
+            if (!empty($subwarehouse) && count($subwarehouse) > 0) {
+                $lowStockInventory = WarehouseAssignment::from('warehouse_assignments as wa')
+                    ->join('master_warehouse_inventory as mwi', 'wa.master_inventory_id', '=', 'mwi.id')
+                    ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
+                    ->where('wa.warehouse_id', $subwarehouse[0]->id)
+                    ->whereBetween('wa.quantity', [1, 10])
+                    ->select([
+                        'pl.name',
+                        'pl.serial_no',
+                        'wa.quantity',
+                        'wa.price',
+                        'wa.created_at',
+                    ])
+                    ->orderBy('quantity', 'asc')
+                    ->paginate(10);
+            }
+            return view('subwarehouse.dashboard', compact('lowStockInventory'));
+        }
+
+
+        return view('warehouse.dashboard', compact('lowStockInventory'));
     }
 
     /**
