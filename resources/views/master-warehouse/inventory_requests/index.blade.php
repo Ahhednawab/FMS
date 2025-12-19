@@ -5,10 +5,32 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h3 class="card-title mb-0">
                             <i class="fas fa-boxes"></i> My Inventory Requests
                         </h3>
+
+                        <!-- Status filter dropdown as a button with Select2 -->
+                        <form method="GET" class="d-flex align-items-center">
+                            <label for="status" class="me-2 text-white mb-0 mx-2">Filter:</label>
+                            <select name="status" id="status" class="form-select form-select-sm select2-status"
+                                style="width: 150px;">
+                                @php
+                                    $statuses = [
+                                        'pending' => 'Pending',
+                                        'approved' => 'Approved',
+                                        'rejected' => 'Rejected',
+                                    ];
+                                @endphp
+                                @foreach ($statuses as $key => $label)
+                                    <option value="{{ $key }}"
+                                        {{ ($status ?? 'pending') === $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+
                     </div>
 
                     <div class="card-body">
@@ -53,6 +75,7 @@
                                                 <td>
                                                     {{ \Carbon\Carbon::parse($request->created_at)->format('d M Y h:i A') }}
                                                 </td>
+
                                                 <td>
                                                     @if ($request->status === 'pending')
                                                         <button class="btn btn-sm btn-success approve-btn"
@@ -91,10 +114,26 @@
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on the status filter
+            $('.select2-status').select2({
+                theme: 'bootstrap-5', // optional, if you use Bootstrap 5
+                minimumResultsForSearch: Infinity // disables search box
+            });
+
+            // Submit form on change
+            $('.select2-status').on('change', function() {
+                $(this).closest('form').submit();
+            });
+        });
+    </script>
 @endpush
 
 @push('scripts')
@@ -102,7 +141,7 @@
         $(document).ready(function() {
 
             function handleAction(button, url) {
-                let requestId = button.data('id'); // Get the request ID
+                let requestId = button.data('id');
 
                 button.prop('disabled', true).text('Processing...');
 
@@ -111,7 +150,7 @@
                     method: 'POST',
                     data: {
                         _token: "{{ csrf_token() }}",
-                        request_id: requestId // send request_id to controller
+                        request_id: requestId
                     },
                     dataType: "json",
                     success: function(res) {
@@ -124,9 +163,11 @@
                                 showConfirmButton: false
                             });
 
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
+                            // Slide up row and remove
+                            button.closest('tr').slideUp(500, function() {
+                                $(this).remove();
+                            });
+
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -150,20 +191,73 @@
                 });
             }
 
-
             // Approve button click
             $('.approve-btn').click(function() {
                 let button = $(this);
                 let id = button.data('id');
-                handleAction(button, "{{ url('master-warehouse/inventory-requests') }}/" + id + "/approve");
+                handleAction(button, "{{ url('master-warehouse/inventory-requests') }}/" + id +
+                    "/approve");
             });
 
             // Reject button click
             $('.reject-btn').click(function() {
                 let button = $(this);
-                let id = button.data('id');
-                handleAction(button, "{{ url('master-warehouse/inventory-requests') }}/" + id + "/reject");
+                let requestId = button.data('id');
+
+                Swal.fire({
+                    title: 'Reason for rejection',
+                    input: 'textarea',
+                    inputPlaceholder: 'Enter reason...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Reject',
+                    preConfirm: (reason) => {
+                        if (!reason) {
+                            Swal.showValidationMessage('Reason is required');
+                        }
+                        return reason;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/master-warehouse/inventory-requests/${requestId}/reject`,
+                            method: 'POST',
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                reason: result.value
+                            },
+                            dataType: "json",
+                            success: function(res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Rejected',
+                                        text: res.message,
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                    button.closest('tr').slideUp();
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: res.message
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message ||
+                                    'Something went wrong';
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: msg
+                                });
+                            }
+                        });
+                    }
+                });
             });
+
 
         });
     </script>

@@ -51,19 +51,19 @@
                     class="nav-item nav-item-submenu 
                     {{ request()->routeIs('master-warehouse.inventoryWarehouses.*') ||
                     request()->routeIs('master-warehouse.master_warehouse_inventory.*') ||
-                    request()->routeIs('master-warehouse.purchases.*') ||
-                    request()->routeIs('master-warehouse.suppliers.*') ||
-                    request()->routeIs('master-warehouse.master_warehouse_inventory.index')
+                    request()->routeIs('sub-warehouse.assigned_inventory.index') ||
+                    request()->routeIs('sub-warehouse.master_warehouse_inventory.request_inventory') ||
+                    request()->routeIs('sub-warehouse.master_warehouse_inventory.requested_inventory_history')
                         ? 'nav-item-open'
                         : '' }}">
 
                     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
 
                     <ul class="nav nav-group-sub" data-submenu-title="Inventory"
-                        style="{{ request()->routeIs('master-warehouse.purchases.*') ||
+                        style="{{ request()->routeIs('sub-warehouse.assigned_inventory.index') ||
                         request()->routeIs('master-warehouse.assigned_inventory.*') ||
-                        request()->routeIs('master-warehouse.suppliers.*') ||
-                        request()->routeIs('master-warehouse.master_warehouse_inventory.index')
+                        request()->routeIs('sub-warehouse.master_warehouse_inventory.request_inventory') ||
+                        request()->routeIs('sub-warehouse.master_warehouse_inventory.requested_inventory_history')
                             ? 'display:block;'
                             : '' }}">
 
@@ -79,8 +79,14 @@
 
                         <li class="nav-item">
                             <a href="{{ route('sub-warehouse.master_warehouse_inventory.request_inventory') }}"
-                                class="nav-link {{ request()->routeIs('sub-warehouse.master_warehouse_inventory.*') ? 'active' : '' }}">
+                                class="nav-link {{ request()->routeIs('sub-warehouse.master_warehouse_inventory.request_inventory') ? 'active' : '' }}">
                                 Request Inventory
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sub-warehouse.master_warehouse_inventory.requested_inventory_history') }}"
+                                class="nav-link {{ request()->routeIs('sub-warehouse.master_warehouse_inventory.requested_inventory_history') ? 'active' : '' }}">
+                                Requested Inventory History
                             </a>
                         </li>
 

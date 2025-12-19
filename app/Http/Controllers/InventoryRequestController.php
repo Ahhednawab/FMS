@@ -64,13 +64,24 @@ class InventoryRequestController extends Controller
 
 
     // Optional: list requests for sub-warehouse
-    public function index()
+    public function index(Request $request)
     {
-        $requests = InventoryRequest::with('inventory.product')->where('status', 'pending')
-            ->latest()
-            ->paginate(10);
+        // Allowed statuses
+        $allowedStatuses = ['pending', 'approved', 'rejected'];
 
-        return view('master-warehouse.inventory_requests.index', compact('requests'));
+        // Get status from query and validate
+        $status = $request->query('status', 'pending');
+        if (!in_array($status, $allowedStatuses)) {
+            $status = 'pending';
+        }
+
+        $requests = InventoryRequest::with('inventory.product')
+            ->where('status', $status)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString(); // preserve query params in pagination
+
+        return view('master-warehouse.inventory_requests.index', compact('requests', 'status'));
     }
 
 
@@ -117,6 +128,10 @@ class InventoryRequestController extends Controller
 
     public function reject(Request $request, InventoryRequest $inventoryRequest)
     {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
         if ($inventoryRequest->status !== 'pending') {
             return response()->json([
                 'success' => false,
@@ -125,12 +140,26 @@ class InventoryRequestController extends Controller
             ], 200);
         }
 
-        $inventoryRequest->update(['status' => 'rejected']);
+        $inventoryRequest->update([
+            'status' => 'rejected',
+            'reason' => $request->reason
+        ]);
 
         return response()->json([
             'success' => true,
             'data' => [],
             'message' => 'Request rejected successfully'
         ]);
+    }
+
+    public function requestedInventoryHistory()
+    {
+        // Get the authenticated user's requested inventory
+        $requests = InventoryRequest::with('inventory.product')
+            ->where('requested_by', auth()->id())
+            ->latest()
+            ->paginate(10);
+
+        return view('master-warehouse.inventory_requests.requested_inventory_history', compact('requests'));
     }
 }

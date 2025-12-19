@@ -56,6 +56,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+
 Route::get('/run-migration/{name}', function ($name) {
     // Execute the migration command
     $output = Artisan::call("migrate --path=database/migrations/$name.php");
@@ -253,22 +254,8 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
         InventoryRequestController::class
     )->only(['index', 'store']); // ✅ FIX HERE
 
-
-    Route::resource('warehouses', WarehouseController::class);
-    Route::resource('productList', ProductListController::class);
-    Route::resource('suppliers', SupplierController::class);
-
-
-    //masterwarehouse route
-    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
-    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
-    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
-        ->name('master_warehouse_inventory.assign');
-
-    //purchase routes
-    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('requested-inventory-history', [InventoryRequestController::class, 'requestedInventoryHistory'])
+        ->name('master_warehouse_inventory.requested_inventory_history');
 });
 
 

@@ -11,6 +11,7 @@ class InventoryRequest extends Model
         'requested_by',
         'quantity',
         'price',
+        'reason',
         'status'
     ];
 
