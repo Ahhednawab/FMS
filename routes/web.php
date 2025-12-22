@@ -254,8 +254,7 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
         InventoryRequestController::class
     )->only(['index', 'store']); // ✅ FIX HERE
 
-    Route::get('requested-inventory-history', [InventoryRequestController::class, 'requestedInventoryHistory'])
-        ->name('master_warehouse_inventory.requested_inventory_history');
+    Route::get('requested-inventory-history', [InventoryRequestController::class, 'requestedInventoryHistory'])->name('master_warehouse_inventory.requested_inventory_history');
 });
 
 
