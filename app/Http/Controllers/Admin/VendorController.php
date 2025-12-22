@@ -9,22 +9,24 @@ use App\Models\VendorType;
 use App\Models\City;
 use App\Traits\DraftTrait;
 
-class    extends Controller
+class  VendorController  extends Controller
 {
     use DraftTrait;
-    public function index(){
-    	$vendors = Vendor::with(['city','vendorType'])->where('is_active',1)->orderBy('id','DESC')->get();
-    	return view('admin.vendors.index', compact('vendors'));
+    public function index()
+    {
+        $vendors = Vendor::with(['city', 'vendorType'])->where('is_active', 1)->orderBy('id', 'DESC')->get();
+        return view('admin.vendors.index', compact('vendors'));
     }
 
-    public function create(Request $request){
-    	$serial_no = Vendor::GetSerialNumber();
+    public function create(Request $request)
+    {
+        $serial_no = Vendor::GetSerialNumber();
         $vendor_types = VendorType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        $cities = City::where('is_active',1)->orderBy('name','ASC')->get();
-        
+        $cities = City::where('is_active', 1)->orderBy('name', 'ASC')->get();
+
         $draftInfo = $this->getDraftDataForView($request, 'vendors');
-        
-    	return view('admin.vendors.create', compact('serial_no','vendor_types','cities') + $draftInfo);
+
+        return view('admin.vendors.create', compact('serial_no', 'vendor_types', 'cities') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -69,14 +71,14 @@ class    extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vendors');
 
-    	return redirect()->route('admin.vendors.index')->with('success', 'Vendor created successfully.');
+        return redirect()->route('admin.vendors.index')->with('success', 'Vendor created successfully.');
     }
 
     public function edit(Vendor $vendor)
     {
         $vendor_types = VendorType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        $cities = City::where('is_active',1)->orderBy('name','ASC')->get();
-        return view('admin.vendors.edit', compact('vendor','vendor_types','cities'));
+        $cities = City::where('is_active', 1)->orderBy('name', 'ASC')->get();
+        return view('admin.vendors.edit', compact('vendor', 'vendor_types', 'cities'));
     }
 
     public function update(Request $request, Vendor $vendor)
@@ -116,7 +118,7 @@ class    extends Controller
 
     public function show(Vendor $vendor)
     {
-    	return view('admin.vendors.show', compact('vendor'));
+        return view('admin.vendors.show', compact('vendor'));
     }
 
     public function destroy(Vendor $vendor)
