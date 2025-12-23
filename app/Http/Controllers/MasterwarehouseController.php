@@ -46,7 +46,6 @@ class MasterwarehouseController extends Controller
             return view('subwarehouse.dashboard', compact('lowStockInventory'));
         }
 
-
         return view('warehouse.dashboard', compact('lowStockInventory'));
     }
 

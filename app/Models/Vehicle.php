@@ -11,7 +11,7 @@ class Vehicle extends Model
     protected $table = 'vehicles';
 
     protected $fillable = [
-    	'vehicle_no',
+        'vehicle_no',
         'make',
         'model',
         'chasis_no',
@@ -42,10 +42,10 @@ class Vehicle extends Model
         'insurance_file',
         'route_permit_date',
         'route_permit_expiry_date',
-        'route_permit_file',  
+        'route_permit_file',
         'tax_date',
         'next_tax_date',
-        'tax_file',  
+        'tax_file',
     ];
 
     public function vehicleType()
@@ -78,9 +78,9 @@ class Vehicle extends Model
         return $this->belongsTo(ShiftHours::class, 'shift_hour_id');
     }
 
-    
 
-    
+
+
 
     public static function GetSerialNumber()
     {
@@ -90,5 +90,4 @@ class Vehicle extends Model
 
         return $serial_no;
     }
-
 }

@@ -65,7 +65,6 @@ class MasterWarehouseInventoryController extends Controller
         ]);
 
         $masterwarehouse = Warehouse::where('type', 'master')->get();
-
         $master = MasterWarehouseInventory::with('product')->findOrFail($request->master_inventory_id);
         if ((int)$request->quantity > $master->quantity) {
             return response()->json([

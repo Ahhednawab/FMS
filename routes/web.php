@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
+use App\Http\Controllers\Admin\MaintainerController;
 
 Route::get('/', function () {
 
@@ -257,6 +258,34 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
     Route::get('requested-inventory-history', [InventoryRequestController::class, 'requestedInventoryHistory'])->name('master_warehouse_inventory.requested_inventory_history');
 });
 
+Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role:sub-warehouse')->group(function () {
+    Route::get('dashboard', [MasterwarehouseController::class, 'index'])->name('index');
+
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('productList', ProductListController::class);
+    Route::resource('suppliers', SupplierController::class);
+
+    Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
+        ->name('assigned_inventory.index');
+
+    //masterwarehouse route
+    Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
+    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
+    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
+        ->name('master_warehouse_inventory.assign');
+
+    //purchase routes
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+});
+
+
+Route::prefix('maintainer')->name('maintainer.')->middleware('auth', 'role:maintainer')->group(function () {
+    Route::get('dashboard', [MaintainerController::class, 'index'])->name('index');
+    Route::get('issues', [MaintainerController::class, 'issues'])->name('issues');
+});
 
 Route::get('/clear', function () {
     Auth::logout();
