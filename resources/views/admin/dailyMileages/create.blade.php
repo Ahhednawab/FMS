@@ -124,7 +124,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <strong>Current KMs</strong>
-                                    <input type="number" min="0" step="1"
+                                    <input type="number" min="0" step="1" tabindex="{{ $key + 1 }}"
                                         class="form-control current_km
             @if ($draftData && !isset($draftData->data['current_kms'][$key])) is-invalid @endif"
                                         name="current_km[{{ $key }}]"

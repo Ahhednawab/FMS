@@ -37,7 +37,7 @@ class DailyMileageController extends Controller
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
-            ->with(['vehicle.station'])->orderby('id', 'DESC')
+            ->with(['vehicle.station'])->orderby('report_date', 'DESC')
             ->get();
 
         $vehicles = Vehicle::where('is_active', 1)->get();
