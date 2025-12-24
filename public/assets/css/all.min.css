@@ -995,6 +995,22 @@ pre code {
     margin-left: 91.66667%
 }
 
+
+.sidebar-content {
+    height: calc(100vh - 0px); /* full viewport height */
+    overflow-y: auto;
+}
+
+/* Optional: smoother scrolling */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+
 @media (min-width:576px) {
     .col-sm {
         -ms-flex-preferred-size: 0;
