@@ -6,7 +6,7 @@
 
 }
 .sidebar.sidebar-dark.sidebar-main.sidebar-expand-lg {
-    height: 100vh;
+  height: calc(100vh - 93px);
     overflow-y: auto;
     padding-right: 10px;
 }
