@@ -374,4 +374,11 @@ class DailyMileageController extends Controller
         $dailyMileage->save();
         return redirect()->route('admin.dailyMileages.index')->with('delete_msg', 'Daily Mileage deleted successfully.');
     }
+
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->ids;
+        DailyMileageReport::whereIn('id', $ids)->update(['is_active' => 0]);
+        return response()->json(['success' => true]);
+    }
 }

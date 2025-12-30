@@ -12,7 +12,8 @@ use Carbon\Carbon;
 
 class VehiclesAttendanceController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
         $toDate = $request->filled('to_date') ? Carbon::parse($request->to_date) : Carbon::now();
         $station_id = $request->station_id;
@@ -21,7 +22,7 @@ class VehiclesAttendanceController extends Controller
             ->whereHas('vehicle', function ($query) {
                 $query->where('is_active', 1);
             })
-            ->with(['attendanceStatus','vehicle.station','vehicle.ibcCenter','vehicle.shiftHours'])->orderby('id','DESC')
+            ->with(['attendanceStatus', 'vehicle.station', 'vehicle.ibcCenter', 'vehicle.shiftHours'])->orderby('id', 'DESC')
             ->with('vehicle');
 
         if ($request->filled('station_id')) {
@@ -40,18 +41,19 @@ class VehiclesAttendanceController extends Controller
             $fromDate->toDateString(),
             $toDate->toDateString(),
         ]);
-        $vehicleAttendances = $vehicleAttendances->orderBy('id','DESC');
+        $vehicleAttendances = $vehicleAttendances->orderBy('id', 'DESC');
         $vehicleAttendances = $vehicleAttendances->get();
 
-            $stations = Station::orderBy('area', 'asc')->get(); // get list for dropdown
+        $stations = Station::orderBy('area', 'asc')->get(); // get list for dropdown
 
-        return view('admin.vehicleAttendances.index', compact('vehicleAttendances','stations'));
+        return view('admin.vehicleAttendances.index', compact('vehicleAttendances', 'stations'));
     }
 
-    public function create(Request $request){
-       $excludeStatuses = ['OFF'];
-        $attendanceStatus = AttendanceStatus::where('is_active', 1)->where('id','!=',3)->whereNotIn('name', $excludeStatuses)->orderBy('id')->pluck('name', 'id');
-        $vehicles = Vehicle::with(['station','shiftHours','ibcCenter']);
+    public function create(Request $request)
+    {
+        $excludeStatuses = ['OFF'];
+        $attendanceStatus = AttendanceStatus::where('is_active', 1)->where('id', '!=', 3)->whereNotIn('name', $excludeStatuses)->orderBy('id')->pluck('name', 'id');
+        $vehicles = Vehicle::with(['station', 'shiftHours', 'ibcCenter']);
         $poolvehicles = Vehicle::where('pool_vehicle', 1)->get();
         $vehicles = $vehicles->where('is_active', 1);
         if (isset($request->station_id)) {
@@ -67,7 +69,7 @@ class VehiclesAttendanceController extends Controller
 
         $vehicleData = array();
 
-        foreach($vehicles as $vehicle){
+        foreach ($vehicles as $vehicle) {
 
             $vehicleData[] = array(
                 'vehicle_id'    =>  $vehicle->id,
@@ -90,7 +92,7 @@ class VehiclesAttendanceController extends Controller
 
         $selectedStation = $request->station_id ?? '';
 
-        return view('admin.vehicleAttendances.create', compact('vehicles','stations','selectedStation','vehicleData','attendanceStatus','poolvehicles'));
+        return view('admin.vehicleAttendances.create', compact('vehicles', 'stations', 'selectedStation', 'vehicleData', 'attendanceStatus', 'poolvehicles'));
     }
 
     public function store(Request $request)
@@ -167,7 +169,6 @@ class VehiclesAttendanceController extends Controller
             }
 
             $toInsert[] = $attendanceData;
-
         }
 
         if ($selectedCount === 0) {
@@ -191,18 +192,20 @@ class VehiclesAttendanceController extends Controller
         return redirect()->route('admin.vehicleAttendances.index')->with('success', 'Vehicle Attendances created successfully.');
     }
 
-    public function edit(VehiclesAttendance $vehicleAttendance){
-        $vehicleAttendance->load(['attendanceStatus','vehicle.station','vehicle.shiftHours']);
+    public function edit(VehiclesAttendance $vehicleAttendance)
+    {
+        $vehicleAttendance->load(['attendanceStatus', 'vehicle.station', 'vehicle.shiftHours']);
 
         $attendanceStatus = AttendanceStatus::where('is_active', 1)
-            ->where('id','!=',3)
+            ->where('id', '!=', 3)
             ->orderBy('id')
             ->pluck('name', 'id');
 
-        return view('admin.vehicleAttendances.edit',compact('vehicleAttendance','attendanceStatus'));
+        return view('admin.vehicleAttendances.edit', compact('vehicleAttendance', 'attendanceStatus'));
     }
 
-    public function update(Request $request, VehiclesAttendance $vehicleAttendance){
+    public function update(Request $request, VehiclesAttendance $vehicleAttendance)
+    {
         $validated = $request->validate([
             'date'   => ['required', 'date', 'before_or_equal:today'],
             'status' => ['required', 'exists:attendance_status,id'],
@@ -213,7 +216,7 @@ class VehiclesAttendanceController extends Controller
 
         $exists = VehiclesAttendance::where('vehicle_id', $vehicleAttendance->vehicle_id)
             ->where('date', $date)
-            ->where('is_active',1)
+            ->where('is_active', 1)
             ->where('id', '!=', $vehicleAttendance->id)
             ->exists();
 
@@ -233,15 +236,24 @@ class VehiclesAttendanceController extends Controller
             ->with('success', 'Vehicle Attendance updated successfully');
     }
 
-    public function show(VehiclesAttendance $vehicleAttendance){
-        $vehicleAttendance->load(['attendanceStatus','vehicle.station','vehicle.shiftHours']);
+    public function show(VehiclesAttendance $vehicleAttendance)
+    {
+        $vehicleAttendance->load(['attendanceStatus', 'vehicle.station', 'vehicle.shiftHours']);
         return view('admin.vehicleAttendances.show', compact('vehicleAttendance'));
     }
 
-    public function destroy(VehiclesAttendance $vehicleAttendance){
+    public function destroy(VehiclesAttendance $vehicleAttendance)
+    {
         $vehicleAttendance->is_active = 0;
         $vehicleAttendance->save();
 
         return redirect()->route('admin.vehicleAttendances.index')->with('delete_msg', 'Vehicle Attendances deleted successfully.');
+    }
+
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->ids;
+        VehiclesAttendance::whereIn('id', $ids)->update(['is_active' => 0]);
+        return response()->json(['success' => true]);
     }
 }

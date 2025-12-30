@@ -118,6 +118,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     Route::resource('productList', ProductListController::class);
 
     // Fleet Transactions
+    Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
     Route::resource('dailyMileages', DailyMileageController::class);
     Route::resource('dailyMileageReports', DailyMileageReportController::class);
     Route::resource('dailyFuels', DailyFuelController::class);
@@ -126,9 +127,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     // Attendance
     // Filter (POST) route to reuse create() for filtering
     Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
+    Route::post('driverAttendances/destroyMultiple', [DriversAttendanceController::class, 'destroyMultiple'])->name('driverAttendances.destroyMultiple');
     Route::resource('driverAttendances', DriversAttendanceController::class);
 
     Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
+    Route::post('vehicleAttendances/destroyMultiple', [VehiclesAttendanceController::class, 'destroyMultiple'])->name('vehicleAttendances.destroyMultiple');
     Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
 
 

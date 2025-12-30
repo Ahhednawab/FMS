@@ -47,6 +47,29 @@
             </div>
         @endif
 
+        <!-- Bulk Actions -->
+        <div class="bulk-actions card mb-3" id="bulkActions">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3">
+                        <span id="selectedCount">0</span> items selected
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown"
+                            aria-expanded="false">
+                            Bulk Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" id="deleteSelected">Delete Selected</a>
+                            <a class="dropdown-item d-none" href="#" id="exportSelected">Export Selected</a>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-link text-danger ml-auto" id="clearSelection">Clear
+                        Selection</button>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <form action="{{ route('admin.dailyMileages.index') }}" method="get">
@@ -187,6 +210,12 @@
                 <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
                     <thead>
                         <tr>
+                            <th width="50">
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" id="selectAll">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </th>
                             <th>Vehicle</th>
                             <th>Station</th>
                             <th>Report Date</th>
@@ -199,6 +228,12 @@
                     <tbody>
                         @foreach ($dailyMileages as $key => $value)
                             <tr>
+                                <td>
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" class="select-checkbox" value="{{ $value->id }}">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </td>
                                 <td>{{ $value->vehicle->vehicle_no }}</td>
                                 <td>{{ $value->vehicle->station->area }}</td>
                                 <td>{{ \Carbon\Carbon::parse($value->report_date)->format('d-M-Y') }}</td>
@@ -272,6 +307,9 @@
 
 
         $(document).ready(function() {
+
+            $("input[type=checkbox]").prop("checked", false);
+
             // Initialize DataTable
             var table = $('.datatable-colvis-basic').DataTable({
                 dom: "lrtip",
@@ -382,6 +420,59 @@
                 $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
             });
         });
+
+        /* ============================
+           CHECKBOX SELECTION LOGIC
+        ============================ */
+
+        $('#selectAll').on('change', function() {
+            const checked = this.checked;
+            $('.select-checkbox').prop('checked', checked);
+            updateBulkActions();
+        });
+
+        $(document).on('change', '.select-checkbox', function() {
+            $('#selectAll').prop(
+                'checked',
+                $('.select-checkbox').length === $('.select-checkbox:checked').length
+            );
+            updateBulkActions();
+        });
+
+        $('#clearSelection').on('click', function() {
+            $('.select-checkbox, #selectAll').prop('checked', false);
+            updateBulkActions();
+        });
+
+        $('#deleteSelected').on('click', function(e) {
+            e.preventDefault();
+            const ids = getSelectedIds();
+            if (!ids.length) return alert('Select at least one driver');
+
+            if (confirm('Delete selected drivers?')) {
+                $.post("{{ route('admin.dailyMileages.destroyMultiple') }}", {
+                    _token: '{{ csrf_token() }}',
+                    ids: ids
+                }, res => res.success ? location.reload() : alert('Delete failed'));
+            }
+        });
+
+        function getSelectedIds() {
+            return $('.select-checkbox:checked').map(function() {
+                return this.value;
+            }).get();
+        }
+
+        function updateBulkActions() {
+            const count = $('.select-checkbox:checked').length;
+            $('#selectedCount').text(count);
+            $('#bulkActions').toggleClass('show', count > 0);
+        }
+
+        /* ============================
+           AUTO HIDE ALERT
+        ============================ */
+
 
 
         setTimeout(function() {

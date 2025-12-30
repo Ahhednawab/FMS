@@ -19,8 +19,8 @@ class DriverController extends Controller
     use DraftTrait;
     public function index()
     {
-        $drivers = Driver::with(['driverStatus','vehicle','maritalStatus','licenseCategory','shiftTiming'])
-            ->where('is_active',1)->latest()
+        $drivers = Driver::with(['driverStatus', 'vehicle', 'maritalStatus', 'licenseCategory', 'shiftTiming'])
+            ->where('is_active', 1)->latest()
             ->get();
 
         // echo "<pre>";
@@ -60,11 +60,11 @@ class DriverController extends Controller
 
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        $shift_timings = ShiftTimings::select('id','name','start_time','end_time')
+        $shift_timings = ShiftTimings::select('id', 'name', 'start_time', 'end_time')
             ->where('is_active', 1)
             ->orderBy('start_time')
             ->get()
-            ->mapWithKeys(function($shift) {
+            ->mapWithKeys(function ($shift) {
                 return [
                     $shift->id => $shift->name . ' ('
                         . date('h:i a', strtotime($shift->start_time))
@@ -81,7 +81,7 @@ class DriverController extends Controller
         );
         $draftInfo = $this->getDraftDataForView($request, 'drivers');
 
-        return view('admin.drivers.create', compact('serial_no','driver_status','marital_status','licence_category','status','vehicles','shift_timings') + $draftInfo);
+        return view('admin.drivers.create', compact('serial_no', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -131,23 +131,24 @@ class DriverController extends Controller
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
                 'cnic_no' =>  'required|unique:drivers,cnic_no|string|size:15',
                 'cnic_expiry_date' =>  'required|date',
-                'cnic_file' =>  ($draftAttached['cnic_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'cnic_file' => ($draftAttached['cnic_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 // 'eobi_no' =>  'required',
                 // 'eobi_start_date' =>  'required',
                 // 'eobi_card_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'picture_file' =>  ($draftAttached['picture_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'picture_file' => ($draftAttached['picture_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 // 'medical_report_file' =>  'required|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'authority_letter_file' =>  ($draftAttached['authority_letter_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'authority_letter_file' => ($draftAttached['authority_letter_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'employment_date' =>  'nullable|date',
-                'employee_card_file' =>  ($draftAttached['employee_card_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'ddc_file' =>  ($draftAttached['ddc_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'employee_card_file' => ($draftAttached['employee_card_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'ddc_file' => ($draftAttached['ddc_file'] ? 'nullable' : 'nullable') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'license_no' =>  'required|unique:drivers,license_no',
                 'license_category_id' =>  'required',
                 'license_expiry_date' =>  'required|date',
-                'license_file' =>  ($draftAttached['license_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'license_file' => ($draftAttached['license_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'uniform_issue_date'    =>  'nullable|date',
                 'sandal_issue_date'    =>  'nullable|date',
+                'last_date'    =>  'nullable|date',
                 'address' =>  'nullable',
             ],
             [
@@ -165,7 +166,7 @@ class DriverController extends Controller
                 'shift_timing_id.required'          => 'Shift Timing is required.',
                 'shift_timing_id.exists'            => 'Selected Shift Timing is invalid.',
                 'cnic_no.required'                  =>  'CNIC No is required',
-                    'cnic_no.unique'                     => 'This CNIC number already exists.',
+                'cnic_no.unique'                     => 'This CNIC number already exists.',
                 'cnic_expiry_date.required'         =>  'CNIC Expiry Date is required',
                 'cnic_file.required'                =>  'CNIC is required',
                 'cnic_file.mimes'                   =>  'File must be type: pdf, doc, docx, jpg, jpeg, png.',
@@ -244,6 +245,7 @@ class DriverController extends Controller
         $driver->license_expiry_date    =   $request->license_expiry_date;
         $driver->uniform_issue_date    =   $request->uniform_issue_date;
         $driver->sandal_issue_date    =   $request->sandal_issue_date;
+        $driver->last_date    =   $request->last_date;
         $driver->address                =   $request->address;
 
         $cnicFileName = null;
@@ -355,11 +357,17 @@ class DriverController extends Controller
                 $updated = false;
                 foreach ($map as $field => $attr) {
                     // Skip if user uploaded a new file already
-                    if (!empty($driver->{$attr})) { continue; }
+                    if (!empty($driver->{$attr})) {
+                        continue;
+                    }
                     $info = $draft->file_info[$field] ?? null;
-                    if (!$info || empty($info['path'])) { continue; }
+                    if (!$info || empty($info['path'])) {
+                        continue;
+                    }
                     $draftFull = public_path($info['path']);
-                    if (!file_exists($draftFull)) { continue; }
+                    if (!file_exists($draftFull)) {
+                        continue;
+                    }
                     $ext = pathinfo($draftFull, PATHINFO_EXTENSION);
                     $filename = time() . '_' . $field . '.' . $ext;
                     $dest = $permanentDir . DIRECTORY_SEPARATOR . $filename;
@@ -385,7 +393,8 @@ class DriverController extends Controller
         return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully.');
     }
 
-    public function edit(Driver $driver){
+    public function edit(Driver $driver)
+    {
         $driver_status = DriverStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
         $vehicles = Vehicle::where('is_active', 1)
@@ -414,11 +423,11 @@ class DriverController extends Controller
 
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        $shift_timings = ShiftTimings::select('id','name','start_time','end_time')
+        $shift_timings = ShiftTimings::select('id', 'name', 'start_time', 'end_time')
             ->where('is_active', 1)
             ->orderBy('start_time')
             ->get()
-            ->mapWithKeys(function($shift) {
+            ->mapWithKeys(function ($shift) {
                 return [
                     $shift->id => $shift->name . ' ('
                         . date('h:i a', strtotime($shift->start_time))
@@ -433,60 +442,61 @@ class DriverController extends Controller
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.edit', compact('driver','driver_status','marital_status','licence_category','status','vehicles','shift_timings'));
+        return view('admin.drivers.edit', compact('driver', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings'));
     }
 
     public function update(Request $request, Driver $driver)
     {
         $rules = [
-                'full_name' =>  'nullable',
-                'father_name' =>  'nullable',
-                'mother_name' =>  'nullable',
-                'phone' =>  'nullable|string|size:12',
-                'salary' =>  'nullable|numeric',
-                'account_no' =>  'nullable',
-                'driver_status_id' =>  'nullable',
-                'marital_status_id' =>  'nullable',
-                'dob' =>  'nullable|date',
-                // 'vehicle_id' =>  'required',
+            'full_name' =>  'nullable',
+            'father_name' =>  'nullable',
+            'mother_name' =>  'nullable',
+            'phone' =>  'nullable|string|size:12',
+            'salary' =>  'nullable|numeric',
+            'account_no' =>  'nullable',
+            'driver_status_id' =>  'nullable',
+            'marital_status_id' =>  'nullable',
+            'dob' =>  'nullable|date',
+            // 'vehicle_id' =>  'required',
 
-                'shift_timing_id' =>  'nullable|exists:shift_timing,id',
-                // 'cnic_no' =>  'required|string|size:15|unique:drivers,cnic_no,' . $driver->id,
-                'cnic_expiry_date' =>  'required|date',
-                'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                // 'eobi_no' =>  'required',
-                // 'eobi_start_date' =>  'required',
-                // 'eobi_card_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'picture_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                // 'medical_report_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'authority_letter_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'employment_date' =>  'nullable|date',
-                'employee_card_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'ddc_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                // 'license_no' =>  'required |unique:drivers,license_no,' . $driver->id,
-                'license_category_id' =>  'required',
-                'license_expiry_date' =>  'required|date',
-                'license_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'uniform_issue_date'    =>  'nullable|date',
-                'sandal_issue_date'    =>  'nullable|date',
-                'address' =>  'nullable',
-            ];
-            if ($request->has('vehicle_id') && $request->vehicle_id != $driver->vehicle_id) {
-                $rules['vehicle_id'] = 'nullable|unique:drivers,vehicle_id';
-            } else {
-                $rules['vehicle_id'] = 'nullable';
-            }
-            if ($request->has('cnic_no') && $request->cnic_no != $driver->cnic_no) {
-                $rules['cnic_no'] = 'required|string|size:15|unique:drivers,cnic_no';
-            } else {
-                $rules['cnic_no'] = 'required|string|size:15';
-            }
-            if ($request->has('license_no') && $request->license_no != $driver->license_no) {
-                $rules['license_no'] = 'required|unique:drivers,license_no';
-            } else {
-                $rules['license_no'] = 'required';
-            }
+            'shift_timing_id' =>  'nullable|exists:shift_timing,id',
+            // 'cnic_no' =>  'required|string|size:15|unique:drivers,cnic_no,' . $driver->id,
+            'cnic_expiry_date' =>  'required|date',
+            'cnic_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            // 'eobi_no' =>  'required',
+            // 'eobi_start_date' =>  'required',
+            // 'eobi_card_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'picture_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            // 'medical_report_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'authority_letter_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'employment_date' =>  'nullable|date',
+            'employee_card_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'ddc_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'third_party_driver_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            // 'license_no' =>  'required |unique:drivers,license_no,' . $driver->id,
+            'license_category_id' =>  'required',
+            'license_expiry_date' =>  'required|date',
+            'license_file' =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'uniform_issue_date'    =>  'nullable|date',
+            'sandal_issue_date'    =>  'nullable|date',
+            'last_date'    =>  'nullable|date',
+            'address' =>  'nullable',
+        ];
+        if ($request->has('vehicle_id') && $request->vehicle_id != $driver->vehicle_id) {
+            $rules['vehicle_id'] = 'nullable|unique:drivers,vehicle_id';
+        } else {
+            $rules['vehicle_id'] = 'nullable';
+        }
+        if ($request->has('cnic_no') && $request->cnic_no != $driver->cnic_no) {
+            $rules['cnic_no'] = 'required|string|size:15|unique:drivers,cnic_no';
+        } else {
+            $rules['cnic_no'] = 'required|string|size:15';
+        }
+        if ($request->has('license_no') && $request->license_no != $driver->license_no) {
+            $rules['license_no'] = 'required|unique:drivers,license_no';
+        } else {
+            $rules['license_no'] = 'required';
+        }
 
 
 
@@ -584,6 +594,7 @@ class DriverController extends Controller
         $driver->license_expiry_date    =   $request->license_expiry_date;
         $driver->uniform_issue_date    =   $request->uniform_issue_date;
         $driver->sandal_issue_date    =   $request->sandal_issue_date;
+        $driver->last_date    =   $request->last_date;
         $driver->address                =   $request->address;
 
         $cnicFileName = null;

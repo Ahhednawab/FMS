@@ -20,17 +20,19 @@ use Illuminate\Support\Facades\File;
 class VehicleController extends Controller
 {
     use DraftTrait;
-    public function index(){
-        $vehicles = Vehicle::with(['vehicleType','station','ibcCenter','fabricationVendor','shiftHours'])
-            ->where('is_active',1)
-            ->orderby('id','DESC')
+    public function index()
+    {
+        $vehicles = Vehicle::with(['vehicleType', 'station', 'ibcCenter', 'fabricationVendor', 'shiftHours'])
+            ->where('is_active', 1)
+            ->orderby('id', 'DESC')
             ->get();
 
         return view('admin.vehicles.index', compact('vehicles'));
     }
 
-    public function create(Request $request){
-    	$serial_no = Vehicle::GetSerialNumber();
+    public function create(Request $request)
+    {
+        $serial_no = Vehicle::GetSerialNumber();
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $vehicleTypes = VehicleType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)
@@ -53,7 +55,7 @@ class VehicleController extends Controller
             '2' =>  'No',
         );
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
-        return view('admin.vehicles.create', compact('serial_no','insurance_companies','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -84,42 +86,44 @@ class VehicleController extends Controller
         }
 
         $rules = [
-                'vehicle_no'                =>  'required|unique:vehicles,vehicle_no',
-                'make'                      =>  'required',
-                'model'                     =>  'required',
-                'chasis_no'                 =>  'required',
-                'engine_no'                 =>  'required',
-                'ownership'                 =>  'required',
-                'pool_vehicle'              =>   'required|in:1,0',
-                'shift_hour_id'             =>  'required',
-                'vehicle_type_id'           =>  'required',
-                'cone'                      =>  'nullable|numeric|min:0',
-                'station_id'                =>  'required',
-                'ibc_center_id'             =>  'required_if:pool_vehicle,0',
-                'medical_box'               =>  'nullable',
-                'on_duty_status'            =>  'required',
-                'seat_cover'                =>  'nullable',
-                'fire_extenguisher'         =>  'nullable',
-                'tracker_installation_date' =>  'required|date',
-                'inspection_date'           =>  'required|date',
-                'next_inspection_date'      =>  'required|date|after:inspection_date',
-                'induction_date'            =>  'required|date',
-                'pso_card'                  =>  'required',
-                'akpl'                      =>  'required',
-                'registration_file'         =>  ($draftAttached['registration_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'fitness_date'              =>  'required|date',
-                'next_fitness_date'         =>  'required|date|after:fitness_date',
-                'fitness_file'              =>  ($draftAttached['fitness_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'insurance_company_id'      =>  'required',
-                'insurance_date'            =>  'required|date',
-                'insurance_expiry_date'     =>  'required|date|after:insurance_date',
-                'insurance_file'            =>  ($draftAttached['insurance_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'route_permit_date'         =>  'required|date',
-                'route_permit_expiry_date'  =>  'required|date|after:route_permit_date',
-                'route_permit_file'         =>  ($draftAttached['route_permit_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-                'tax_date'                  =>  'required|date',
-                'next_tax_date'             =>  'required|date|after:tax_date',
-                'tax_file'                  =>  ($draftAttached['tax_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'vehicle_no'                =>  'required|unique:vehicles,vehicle_no',
+            'make'                      =>  'required',
+            'model'                     =>  'required',
+            'chasis_no'                 =>  'required',
+            'engine_no'                 =>  'required',
+            'ownership'                 =>  'required',
+            'pool_vehicle'              =>   'required|in:1,0',
+            'shift_hour_id'             =>  'required',
+            'vehicle_type_id'           =>  'required',
+            'cone'                      =>  'nullable|numeric|min:0',
+            'station_id'                =>  'required',
+            'ibc_center_id'             =>  'required_if:pool_vehicle,0',
+            'medical_box'               =>  'nullable',
+            'on_duty_status'            =>  'required',
+            'seat_cover'                =>  'nullable',
+            'fire_extenguisher'         =>  'nullable',
+            'tracker_installation_date' =>  'required|date',
+            'inspection_date'           =>  'required|date',
+            'next_inspection_date'      =>  'required|date|after:inspection_date',
+            'induction_date'            =>  'required|date',
+            'pso_card'                  =>  'required',
+            'akpl'                      =>  'required',
+            'registration_file'         => ($draftAttached['registration_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'fitness_date'              =>  'required|date',
+            'next_fitness_date'         =>  'required|date|after:fitness_date',
+            'fitness_file'              => ($draftAttached['fitness_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'insurance_policy_no'       =>  'nullable|string',
+
+            'insurance_company_id'      =>  'required',
+            'insurance_date'            =>  'required|date',
+            'insurance_expiry_date'     =>  'required|date|after:insurance_date',
+            'insurance_file'            => ($draftAttached['insurance_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'route_permit_date'         =>  'required|date',
+            'route_permit_expiry_date'  =>  'required|date|after:route_permit_date',
+            'route_permit_file'         => ($draftAttached['route_permit_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            'tax_date'                  =>  'required|date',
+            'next_tax_date'             =>  'required|date|after:tax_date',
+            'tax_file'                  => ($draftAttached['tax_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
         ];
 
         $validator = \Validator::make(
@@ -190,7 +194,7 @@ class VehicleController extends Controller
         $vehicle->station_id                =   $request->station_id;
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
-//        $vehicle->medical_box               =   $request->medical_box;
+        //        $vehicle->medical_box               =   $request->medical_box;
         $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
@@ -202,6 +206,7 @@ class VehicleController extends Controller
         $vehicle->akpl                      =   $request->akpl;
         $vehicle->fitness_date              =   $request->fitness_date;
         $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_policy_no       =   $request->insurance_policy_no;
         $vehicle->insurance_company_id      =   $request->insurance_company_id;
         $vehicle->insurance_date            =   $request->insurance_date;
         $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
@@ -277,11 +282,17 @@ class VehicleController extends Controller
                 $updated = false;
                 foreach ($map as $field => $attr) {
                     // Skip if user uploaded a new file already
-                    if (!empty($vehicle->{$attr})) { continue; }
+                    if (!empty($vehicle->{$attr})) {
+                        continue;
+                    }
                     $info = $draft->file_info[$field] ?? null;
-                    if (!$info || empty($info['path'])) { continue; }
+                    if (!$info || empty($info['path'])) {
+                        continue;
+                    }
                     $draftFull = public_path($info['path']);
-                    if (!file_exists($draftFull)) { continue; }
+                    if (!file_exists($draftFull)) {
+                        continue;
+                    }
                     // Generate permanent filename preserving field extension
                     $ext = pathinfo($draftFull, PATHINFO_EXTENSION);
                     $filename = time() . '_' . $field . '.' . $ext;
@@ -307,7 +318,7 @@ class VehicleController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vehicles');
 
-    	return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle created successfully.');
+        return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle created successfully.');
     }
 
     public function edit(Vehicle $vehicle)
@@ -333,7 +344,7 @@ class VehicleController extends Controller
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit',compact('vehicle','insurance_companies','vehicleTypes','stations','status','ladder_maker','ibc_center','vendors','shift_hours'));
+        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -369,6 +380,7 @@ class VehicleController extends Controller
                 'fitness_date'              =>  'required|date',
                 'next_fitness_date'         =>  'required|date|after:fitness_date',
                 'fitness_file'              =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'insurance_policy_no'       =>  'nullable|string',
                 'insurance_company_id'      =>  'required',
                 'insurance_date'            =>  'required|date',
                 'insurance_expiry_date'     =>  'required|date|after:insurance_date',
@@ -442,7 +454,7 @@ class VehicleController extends Controller
         $vehicle->station_id                =   $request->station_id;
         $vehicle->ibc_center_id             =   $request->ibc_center_id;
         $vehicle->fabrication_vendor_id     =   $request->fabrication_vendor_id;
-//        $vehicle->medical_box               =   $request->medical_box;
+        //        $vehicle->medical_box               =   $request->medical_box;
         $vehicle->on_duty_status            =   $request->on_duty_status;
         $vehicle->seat_cover                =   $request->seat_cover;
         $vehicle->fire_extenguisher         =   $request->fire_extenguisher;
@@ -454,6 +466,7 @@ class VehicleController extends Controller
         $vehicle->akpl                      =   $request->akpl;
         $vehicle->fitness_date              =   $request->fitness_date;
         $vehicle->next_fitness_date         =   $request->next_fitness_date;
+        $vehicle->insurance_policy_no       =   $request->insurance_policy_no;
         $vehicle->insurance_company_id      =   $request->insurance_company_id;
         $vehicle->insurance_date            =   $request->insurance_date;
         $vehicle->insurance_expiry_date     =   $request->insurance_expiry_date;
@@ -509,7 +522,7 @@ class VehicleController extends Controller
 
     public function show(Vehicle $vehicle)
     {
-    	$register_on_portal = array(
+        $register_on_portal = array(
             '1' =>  'Registered',
             '2' =>  'Not Registered',
         );
@@ -517,7 +530,7 @@ class VehicleController extends Controller
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.show', compact('vehicle','register_on_portal','status'));
+        return view('admin.vehicles.show', compact('vehicle', 'register_on_portal', 'status'));
     }
 
     public function destroy(Vehicle $vehicle)
