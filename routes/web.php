@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
+use App\Http\Controllers\IssueController;
 
 Route::get('/', function () {
 
@@ -104,6 +105,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     Route::resource('ibcCenters', IbcController::class);
     Route::resource('warehouses', WarehouseController::class);
     Route::resource('suppliers', SupplierController::class);
+    Route::resource('issues', IssueController::class);
 
 
     // Master Data
