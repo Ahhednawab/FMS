@@ -30,10 +30,18 @@ class ExpiredVehiclesTable extends Component
     public function export()
     {
         // This re-uses EXACTLY the same query as your main table
-        $vehicles = $this->getFilteredVehicles()->get(); // ->get() instead of paginate()
+        $vehicles = $this->getFilteredVehicles()->get();
+
+        // Create a custom collection with formatted expiry reason and date
+        $formattedVehicles = $vehicles->map(function ($vehicle) {
+            $reasonData = $this->getVehicleReasonLabel($vehicle);
+            $vehicle->formatted_reason = $reasonData['reason'];
+            $vehicle->formatted_date = $reasonData['date'];
+            return $vehicle;
+        });
 
         return Excel::download(
-            new ExpiredVehiclesExport($vehicles),
+            new ExpiredVehiclesExport($formattedVehicles),
             'expired-vehicles-' . now()->format('Y-m-d') . '.xlsx'
         );
     }
@@ -45,7 +53,8 @@ class ExpiredVehiclesTable extends Component
     {
         $this->resetPage();
     }
-    public function updatingdReason()
+
+    public function updatingReason()
     {
         $this->resetPage();
     }
@@ -72,6 +81,7 @@ class ExpiredVehiclesTable extends Component
             ->where('is_active', 1)
             ->with(['vehicleType', 'station']);
     }
+
     public function getFilteredVehicles()
     {
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
@@ -123,44 +133,56 @@ class ExpiredVehiclesTable extends Component
 
     /**
      * Helper used by Blade to show a human readable reason label(s) for a vehicle.
-     * Blade calls $this->getVehicleReasonLabel($vehicle) — so keep this public.
+     * Now returns an array with 'reason' and 'date' keys.
      */
     public function getVehicleReasonLabel($v)
     {
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
-        $labels = [];
 
         // If a specific reason filter is active → return ONLY that reason
         if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-
             $field = $this->reason;
             $date  = $v->$field;
 
             if (!empty($date) && Carbon::parse($date)->lte($nextMonthEnd)) {
-                return $this->reasonList[$field] . " (" . Carbon::parse($date)->format('d-M-Y') . ")";
+                return [
+                    'reason' => $this->reasonList[$field],
+                    'date' => Carbon::parse($date)->format('d-M-Y')
+                ];
             }
 
-            return "-";  // if for some reason doesn't match
+            return ['reason' => '-', 'date' => '-'];  // if for some reason doesn't match
         }
 
         // Otherwise → return ALL expired reasons
+        $reasons = [];
+        $dates = [];
+
         if (!empty($v->next_inspection_date) && Carbon::parse($v->next_inspection_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Inspection (" . Carbon::parse($v->next_inspection_date)->format('d-M-Y') . ")";
+            $reasons[] = "Next Inspection";
+            $dates[] = Carbon::parse($v->next_inspection_date)->format('d-M-Y');
         }
         if (!empty($v->next_fitness_date) && Carbon::parse($v->next_fitness_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Fitness (" . Carbon::parse($v->next_fitness_date)->format('d-M-Y') . ")";
+            $reasons[] = "Next Fitness";
+            $dates[] = Carbon::parse($v->next_fitness_date)->format('d-M-Y');
         }
         if (!empty($v->insurance_expiry_date) && Carbon::parse($v->insurance_expiry_date)->lte($nextMonthEnd)) {
-            $labels[] = "Insurance (" . Carbon::parse($v->insurance_expiry_date)->format('d-M-Y') . ")";
+            $reasons[] = "Insurance";
+            $dates[] = Carbon::parse($v->insurance_expiry_date)->format('d-M-Y');
         }
         if (!empty($v->route_permit_expiry_date) && Carbon::parse($v->route_permit_expiry_date)->lte($nextMonthEnd)) {
-            $labels[] = "Route Permit (" . Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y') . ")";
+            $reasons[] = "Route Permit";
+            $dates[] = Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y');
         }
         if (!empty($v->next_tax_date) && Carbon::parse($v->next_tax_date)->lte($nextMonthEnd)) {
-            $labels[] = "Next Tax (" . Carbon::parse($v->next_tax_date)->format('d-M-Y') . ")";
+            $reasons[] = "Next Tax";
+            $dates[] = Carbon::parse($v->next_tax_date)->format('d-M-Y');
         }
 
-        return count($labels) ? implode(', ', $labels) : '-';
+        return [
+            'reason' => count($reasons) ? implode(', ', $reasons) : '-',
+            'date' => count($dates) ? implode(', ', $dates) : '-'
+        ];
     }
 
 

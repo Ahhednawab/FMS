@@ -20,7 +20,7 @@ class MasterWarehouseInventoryController extends Controller
 
         $inventory = MasterWarehouseInventory::with('product')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         $warehouses = Warehouses::where('is_active', true)->where('type', 'sub')
             ->orderBy('name')

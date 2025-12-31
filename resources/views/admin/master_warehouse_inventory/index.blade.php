@@ -23,7 +23,8 @@
                             <th>Product</th>
                             <th>Batch</th>
                             <th>Expiry</th>
-                            <th>Price</th>
+                            <th>Unit Price</th>
+                            <th>Total Price</th>
                             <th>Available Qty</th>
                             <th class="text-center">Assign Stock</th>
                         </tr>
@@ -46,9 +47,9 @@
                                     @endif
                                 </td>
                                 <td>Rs. {{ number_format($item->price, 2) }}</td>
+                                <td>Rs. {{ number_format($item->price * $item->quantity, 2) }}</td>
                                 <td>
-                                    <span title="{{ $item->quantity }}"
-                                        class="badge qty-badge bg-{{ $item->quantity > 0 ? 'success' : 'danger' }}">
+                                    <span class="badge bg-{{ $item->quantity > 0 ? 'success' : 'danger' }}">
                                         {{ $item->quantity }}
                                     </span>
                                 </td>
@@ -80,6 +81,8 @@
                                     @else
                                         <span class="text-muted">No stock</span>
                                     @endif
+
+
                                 </td>
                             </tr>
                         @empty
@@ -87,8 +90,16 @@
                                 <td colspan="6" class="text-center py-4 text-muted">No inventory records found.</td>
                             </tr>
                         @endforelse
+                        <tr>
+                            <td colspan="7">
+                                <div class="float-right">
+                                    {{ $inventory->links() }}
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
+
             </div>
         </div>
 

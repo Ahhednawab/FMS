@@ -1,4 +1,3 @@
-
 <div>
     <!-- Page header -->
     <div class="page-header page-header-light">
@@ -73,6 +72,7 @@
                                 <th class="font-size-sm">Type</th>
                                 <th class="font-size-sm">Station</th>
                                 <th class="font-size-sm">Reason</th>
+                                <th class="font-size-sm">Expiry Date</th> <!-- NEW COLUMN -->
                                 <th class="text-center font-size-sm">Actions</th>
                             </tr>
                             </thead>
@@ -80,6 +80,9 @@
                             <tbody>
                             @if($mainVehicles->count() > 0)
                             @foreach($mainVehicles as $vehicle)
+                                @php
+                                    $reasonData = $this->getVehicleReasonLabel($vehicle);
+                                @endphp
                                 <tr>
                                     <td class="font-size-sm" data-label="Serial No">{{ str_pad($vehicle->id, 9, '0', STR_PAD_LEFT) }}</td>
                                     <td class="font-size-sm" data-label="Vehicle No">{{ $vehicle->vehicle_no }}</td>
@@ -88,7 +91,12 @@
                                     <td class="font-size-sm" data-label="Station">{{ $vehicle->station->area ?? 'N/A' }}</td>
                                     <td class="font-size-sm" data-label="Reason">
                                     <span class="text-danger">
-                                        {{ $this->getVehicleReasonLabel($vehicle) }}
+                                        {{ $reasonData['reason'] }}
+                                    </span>
+                                    </td>
+                                    <td class="font-size-sm" data-label="Expiry Date">
+                                    <span class="text-danger">
+                                        {{ $reasonData['date'] }}
                                     </span>
                                     </td>
                                     <td class="text-center" data-label="Actions">
@@ -109,7 +117,7 @@
                                 </tr>
                             @endforeach
                             @else
-                            <tr><td colspan="7">
+                            <tr><td colspan="8"> <!-- Changed from 7 to 8 -->
                                 <div class="card">
                                     <div class="card-body text-center py-5">
                                         <i class="icon-checkmark-circle text-success" style="font-size: 4rem;"></i>
@@ -175,11 +183,15 @@
                                 <th>Type</th>
                                 <th>Station</th>
                                 <th>Reason</th>
+                                <th>Expiry Date</th> <!-- NEW COLUMN -->
                             </tr>
                             </thead>
 
                             <tbody>
                             @foreach($modalVehicles as $vehicle)
+                                @php
+                                    $reasonData = $this->getVehicleReasonLabel($vehicle);
+                                @endphp
                                 <tr>
                                     <td>{{ str_pad($vehicle->id, 9, '0', STR_PAD_LEFT) }}</td>
                                     <td>{{ $vehicle->vehicle_no }}</td>
@@ -187,7 +199,10 @@
                                     <td>{{ $vehicle->vehicleType->name ?? 'N/A' }}</td>
                                     <td>{{ $vehicle->station->area ?? 'N/A' }}</td>
                                     <td class="text-danger">
-                                        {{ $this->getVehicleReasonLabel($vehicle) }}
+                                        {{ $reasonData['reason'] }}
+                                    </td>
+                                    <td class="text-danger">
+                                        {{ $reasonData['date'] }}
                                     </td>
                                 </tr>
                             @endforeach

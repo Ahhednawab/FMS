@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid pt-2">
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
@@ -22,7 +22,8 @@
                                                 <th>Product</th>
                                                 <th>Batch / Expiry</th>
                                                 <th>Quantity Assigned</th>
-                                                <th>Price</th>
+                                                <th>Unit Price</th>
+                                                <th>Total Price</th>
                                                 <th>Warehouse</th>
                                                 <th>Assigned By</th>
                                                 <th>Date & Time</th>
@@ -55,7 +56,8 @@
                                                 <td>
                                                     <span class="badge bg-success fs-6">{{ $assign->quantity }}</span>
                                                 </td>
-                                                <td>Rs. {{ number_format($assign->price, 2) }}</td>
+                                                <td>RS. {{ number_format($assign->price, 2) }}</td>
+                                                <td>RS. {{ number_format($assign->quantity * $assign->price, 2) }}</td>
                                                 <td>
                                                     <span class="badge bg-info">
                                                         {{ $assign->warehouse?->name ?? 'Unknown' }}
@@ -76,7 +78,7 @@
                                 </table>
                             </div>
 
-                            <div class="mt-3">
+                            <div class="mt-3 float-right">
                                 {{ $assignments->links() }}
                             </div>
                         @else
