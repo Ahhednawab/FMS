@@ -34,7 +34,7 @@ class IssuesTableSeeder extends Seeder
             DB::table('issues')->insert([
                 'title'      => $issue['title'],
                 'is_active'  => true,
-                'created_by' => 1, // system admin / default user
+                'created_by' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

@@ -89,11 +89,14 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
     ->middleware(['auth', 'can:access-admin-dashboard'])
     ->name('admin.index');
 
+Route::get('users/getmanagers', [UserController::class, 'getManagers'])
+    ->name('users.getmanagers');
+
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {
 
     //General  
-    Route::get('users/getmanagers', [UserController::class, 'getManagers'])
-        ->name('users.getmanagers');
+    // Route::get('users/getmanagers', [UserController::class, 'getManagers'])
+    //     ->name('users.getmanagers');
 
     Route::resource('users', UserController::class);
     Route::resource('cities', CityController::class);
@@ -208,6 +211,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
 });
 
 Route::prefix('master-warehouse')->name('master-warehouse.')->middleware('auth', 'role:master-warehouse')->group(function () {
+
     Route::get('dashboard', [MasterwarehouseController::class, 'index'])->name('index');
 
     Route::resource('warehouses', WarehouseController::class);

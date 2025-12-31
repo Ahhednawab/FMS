@@ -165,7 +165,7 @@
                 }
 
                 $.ajax({
-                    url: "{{ route('admin.users.getmanagers') }}",
+                    url: "{{ route('users.getmanagers') }}",
                     type: "GET",
                     data: {
                         type: type
