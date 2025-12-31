@@ -32,7 +32,7 @@ class PurchaseController extends Controller
     {
         $role_slug = $request->get('roleSlug');
 
-        // try {
+        // Validate the input data
         $validated = $request->validate([
             'product_id' => 'required|exists:products_list,id',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -42,14 +42,20 @@ class PurchaseController extends Controller
             'purchase_date' => 'required|date',
         ]);
 
+        // Store the new purchase
+        Purchase::create($validated);
 
-        Purchase::create($validated);  // Store the new purchase
+        // Generate the batch number
+        $batchNumber = MasterWarehouseInventory::GetBatchNumber();
 
-        MasterWarehouseInventory::create($validated);
+        // Prepare the data to store in MasterWarehouseInventory
+        $inventoryData = array_merge($validated, [
+            'batch_number' => $batchNumber,
+        ]);
+
+        // Create the inventory record
+        MasterWarehouseInventory::create($inventoryData);
 
         return redirect()->route($role_slug . '.purchases.index')->with('success', 'Purchase added successfully!');
-        // } catch (\Throwable $th) {
-        //     return redirect()->route('admin.purchases.create')->with('error', 'Something went wrong!');
-        // }
     }
 }

@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Warehouse;
 use App\Models\Warehouses;
+use App\Models\JobCartItem;
 use App\Models\ProductList;
 use Illuminate\Http\Request;
 use App\Models\InventoryRequest;
+use App\Models\JobCartAssignment;
+use Illuminate\Support\Facades\DB;
 use App\Models\WarehouseAssignment;
 use App\Http\Controllers\Controller;
 use App\Models\MasterWarehouseInventory;
@@ -42,20 +45,28 @@ class MasterWarehouseInventoryController extends Controller
     {
         $role_slug = $request->get('roleSlug');
 
+        // Validate the input data
         $validated = $request->validate([
             'product_id' => 'required|exists:products_list,id',
-            'batch_number' => 'nullable|string|max:255',
             'expiry_date' => 'nullable|date',
             'quantity' => 'required|integer|min:1',
             'price' => 'required|decimal:0,2',
         ]);
 
+        // Set default supplier_id if not provided
         $validated['supplier_id'] = 1;
 
+        // Generate batch number if not provided
+        if (empty($validated['batch_number'])) {
+            $validated['batch_number'] = MasterWarehouseInventory::GetBatchNumber();
+        }
+
+        // Create a new inventory record
         MasterWarehouseInventory::create($validated);  // Save new inventory item
 
         return redirect()->route($role_slug . '.master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
     }
+
 
     public function assignStock(Request $request)
     {
@@ -151,5 +162,74 @@ class MasterWarehouseInventoryController extends Controller
     public function request()
     {
         dd("here");
+    }
+
+    public function assign(Request $request)
+    {
+        $request->validate([
+            'assignment_id'   => 'required|exists:warehouse_assignments,id',
+            'inventory_id'    => 'required|exists:master_warehouse_inventory,id',
+            'product_id'      => 'required|exists:products_list,id',
+            'jobcart_item_id' => 'required|exists:job_cart_items,id',
+            'jobcart_id'      => 'required|exists:job_carts,id',
+            'quantity'        => 'required|integer|min:1',
+        ]);
+
+        DB::transaction(function () use ($request) {
+
+            // 🔒 Lock warehouse assignment
+            $warehouseAssignment = WarehouseAssignment::lockForUpdate()
+                ->findOrFail($request->assignment_id);
+
+            // 1️⃣ Check warehouse stock
+            if ($request->quantity > $warehouseAssignment->quantity) {
+                throw new \Exception('Insufficient quantity in warehouse');
+            }
+
+            // 🔒 Lock job cart item
+            $jobCartItem = JobCartItem::lockForUpdate()
+                ->where('id', $request->jobcart_item_id)
+                ->where('product_id', $request->product_id)
+                ->firstOrFail();
+
+            $requestedQty = $jobCartItem->quantity;
+
+            // 🔒 Check existing job cart assignment
+            $jobCartAssignment = JobCartAssignment::where('product_id', $request->product_id)
+                ->where('job_cart_id', $request->jobcart_id) // new filter
+                ->lockForUpdate()
+                ->first();
+
+            $alreadyAssignedQty = $jobCartAssignment?->quantity ?? 0;
+
+            // 2️⃣ Enforce requested quantity limit
+            if (($alreadyAssignedQty + $request->quantity) > $requestedQty) {
+                throw new \Exception(
+                    'Assigned quantity exceeds requested quantity'
+                );
+            }
+
+            // 3️⃣ Deduct from warehouse
+            $warehouseAssignment->decrement('quantity', $request->quantity);
+
+            // 4️⃣ Update or create job cart assignment
+            if ($jobCartAssignment) {
+                $jobCartAssignment->increment('quantity', $request->quantity);
+            } else {
+                JobCartAssignment::create([
+                    'job_cart_id'      => $request->jobcart_id, // new column
+                    'assigned_by'     => auth()->id(),
+                    'assigned_to'     => auth()->id(), // technician
+                    'inventory_id'    => $request->inventory_id,
+                    'product_id'      => $request->product_id,
+                    'quantity'        => $request->quantity,
+                ]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job cart assignment processed successfully',
+        ]);
     }
 }

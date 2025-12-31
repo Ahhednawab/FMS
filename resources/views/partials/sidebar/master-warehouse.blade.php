@@ -153,6 +153,28 @@
                     </ul>
                 </li>
 
+                <li
+                    class="nav-item nav-item-submenu 
+                    {{ request()->routeIs('master-warehouse.jobcarts.index') ? 'nav-item-open' : '' }}">
+
+                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Job cart</span></a>
+
+                    <ul class="nav nav-group-sub" data-submenu-title="Inventory"
+                        style="{{ request()->routeIs('master-warehouse.warehouses.index') ? 'display:block;' : '' }}">
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('master-warehouse.jobcarts.index') }}"
+                                class="nav-link {{ request()->routeIs('master-warehouse.jobcarts.index') ? 'active' : '' }}">
+                                Job Cart Requests
+                            </a>
+                        </li>
+
+
+                    </ul>
+                </li>
+
             </ul>
         </div>
         <!-- /main navigation -->

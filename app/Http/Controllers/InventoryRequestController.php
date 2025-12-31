@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use App\Models\InventoryRequest;
 use Illuminate\Support\Facades\DB;
+use App\Models\WarehouseAssignment;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MasterWarehouseInventory;
 
@@ -49,6 +51,7 @@ class InventoryRequestController extends Controller
             InventoryRequest::create([
                 'master_inventory_id' => $inventory->id,
                 'requested_by'        => Auth::id(),
+                'product_id'          => $inventory->product_id,
                 'quantity'            => $request->quantity,
                 'price'               => $inventory->price,
                 'status'              => 'pending',
@@ -88,6 +91,9 @@ class InventoryRequestController extends Controller
     public function approve(Request $request)
     {
         $inventoryRequest = InventoryRequest::findOrFail($request->request_id);
+        if (empty($inventoryRequest)) {
+            // return error as json with success , data and message
+        }
         $requestedUseDetails = User::with('warehouse')->find($inventoryRequest->requested_by);
         $warehouseId = $requestedUseDetails->warehouse->id;
         $inventory = $inventoryRequest->inventory()->lockForUpdate()->first();

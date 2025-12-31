@@ -9,6 +9,7 @@ class InventoryRequest extends Model
     protected $fillable = [
         'master_inventory_id',
         'requested_by',
+        'product_id',
         'quantity',
         'price',
         'reason',

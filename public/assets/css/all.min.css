@@ -1,6 +1,6 @@
 @charset "UTF-8";
 .content-wrapper.flex-grow-1 {
-  max-height: 100vh;
+  max-height: calc(100vh - 94px);
     overflow-y: auto;
     padding-right: 10px;
 

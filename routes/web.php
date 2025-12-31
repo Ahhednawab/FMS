@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\JobCartController;
 use App\Http\Controllers\Admin\IbcController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\UserController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Admin\CountriesController;
 use App\Http\Controllers\Admin\DailyFuelController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\MasterwarehouseController;
+use App\Http\Controllers\Admin\MaintainerController;
 use App\Http\Controllers\Admin\WarehousesController;
 use App\Http\Controllers\Auth\CustomLoginController;
 use App\Http\Controllers\InventoryRequestController;
@@ -47,7 +49,6 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
-use App\Http\Controllers\Admin\MaintainerController;
 
 Route::get('/', function () {
 
@@ -239,6 +240,13 @@ Route::prefix('master-warehouse')->name('master-warehouse.')->middleware('auth',
 
     Route::post('inventory-requests/{inventoryRequest}/reject', [InventoryRequestController::class, 'reject'])
         ->name('inventory-requests.reject');
+
+    Route::resource('jobcarts', JobCartController::class);
+    Route::post('/inventory/assign', [MasterWarehouseInventoryController::class, 'assign'])
+        ->name('inventory.assign');
+
+    Route::post('jobcarts/update-status', [JobCartController::class, 'updateStatus'])
+        ->name('jobcarts.updateStatus');
 });
 
 Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role:sub-warehouse')->group(function () {
@@ -288,6 +296,9 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
 Route::prefix('maintainer')->name('maintainer.')->middleware('auth', 'role:maintainer')->group(function () {
     Route::get('dashboard', [MaintainerController::class, 'index'])->name('index');
     Route::get('issues', [MaintainerController::class, 'issues'])->name('issues');
+    // Route::get('jobcart', [MaintainerController::class, 'jobcart'])->name('jobcart');
+    // Route::post('jobcart', [MaintainerController::class, 'createJobCart'])->name('createjobcart');
+    Route::resource('jobcarts', JobCartController::class);
 });
 
 Route::get('/clear', function () {

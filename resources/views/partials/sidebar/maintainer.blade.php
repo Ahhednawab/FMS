@@ -49,9 +49,9 @@
 
                 <li
                     class="nav-item nav-item-submenu 
-                    {{ request()->routeIs('maintainer.issues') ? 'nav-item-open' : '' }}">
+                    {{ request()->routeIs('maintainer.issues') || request()->routeIs('maintainer.jobcart') ? 'nav-item-open' : '' }}">
 
-                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Issues</span></a>
+                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Maintenance</span></a>
 
                     <ul class="nav nav-group-sub" data-submenu-title="Inventory"
                         style="{{ request()->routeIs('maintainer.issues') ? 'display:block;' : '' }}">
@@ -59,10 +59,11 @@
 
 
 
+                     
                         <li class="nav-item">
-                            <a href="{{ route('maintainer.issues') }}"
-                                class="nav-link {{ request()->routeIs('maintainer.issues') ? 'active' : '' }}">
-                                Issue Management
+                            <a href="{{ route('maintainer.jobcarts.index') }}"
+                                class="nav-link {{ request()->routeIs('maintainer.jobcarts.index') ? 'active' : '' }}">
+                                Maintenance Issues
                             </a>
                         </li>
 
@@ -73,6 +74,8 @@
             </ul>
         </div>
         <!-- /main navigation -->
+
+
     </div>
     <!-- /sidebar content -->
 </div>
