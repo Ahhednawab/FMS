@@ -90,7 +90,7 @@ class WarehouseController extends Controller
     {
         $role_slug = $request->get('roleSlug');
 
-        $warehouse = Warehouse::with('country', 'city')->findOrFail($id);
+        $warehouse = Warehouse::with('station')->findOrFail($id);
         return view('admin.warehouses.show', compact('warehouse', 'role_slug'));
     }
 
@@ -100,7 +100,15 @@ class WarehouseController extends Controller
 
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
-        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers', 'role_slug'));
+
+        $warehouses = Warehouse::where('type', 'master')->get();
+
+        if (count($warehouses) > 0) {
+            $types = ["sub"];
+        } else {
+            $types = ["master", "sub"];
+        };
+        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers', 'role_slug', 'types'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
@@ -111,11 +119,13 @@ class WarehouseController extends Controller
             $request->all(),
             [
                 'name'          =>  'required|string|max:255',
+                'type'        => 'required|in:master,sub',
                 'manager_id'    =>  'required',
                 'station_id'    =>  'required',
             ],
             [
                 'name.required'         =>  'Warehouse Name is required',
+                'type.required'       => 'Warehouse type is required.',
                 'manager_id.required'   =>  'Warehouse Manager is required',
                 'station_id.required'   =>  'Station is required',
             ]
@@ -126,6 +136,7 @@ class WarehouseController extends Controller
         }
 
         $warehouse->name        =   $request->name;
+        $warehouse->type        = $request->type;
         $warehouse->manager_id  =   $request->manager_id;
         $warehouse->station_id  =   $request->station_id;
         $warehouse->save();
