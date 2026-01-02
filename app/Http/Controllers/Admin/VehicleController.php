@@ -441,7 +441,7 @@ class VehicleController extends Controller
             mkdir($uploadPath, 0755, true);
         }
 
-        $vehicle->vehicle_no                =   $request->vehicle_no;
+        // $vehicle->vehicle_no                =   $request->vehicle_no;
         $vehicle->make                      =   $request->make;
         $vehicle->model                     =   $request->model;
         $vehicle->chasis_no                 =   $request->chasis_no;
