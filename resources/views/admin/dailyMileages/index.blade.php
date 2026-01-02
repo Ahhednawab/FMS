@@ -324,6 +324,9 @@
                 },
                 columns: [{
                         visible: true
+                    }, // Checkbox
+                    {
+                        visible: true
                     }, // Vehicle
                     {
                         visible: true
@@ -398,9 +401,8 @@
 
             // Custom search input
             $('#customSearch').on('keyup', function() {
-                table.search(this.value).draw();
+                table.search(this.value).draw(); // ✅ This works
             });
-
             // Initialize select2
             $('.vehicle').select2({
                 placeholder: "--Select--",
