@@ -394,7 +394,7 @@ class VehicleController extends Controller
             ],
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
-                'vehicle_no.unique'   => 'This vehicle number already exists.',
+                // 'vehicle_no.unique'   => 'This vehicle number already exists.',
                 'make.required'                         =>  'Make is required',
                 'model.required'                        =>  'Model is required',
                 'chasis_no.required'                    =>  'Chasis No is required',
