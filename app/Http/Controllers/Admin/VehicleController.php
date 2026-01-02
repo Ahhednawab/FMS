@@ -354,7 +354,7 @@ class VehicleController extends Controller
             [
                 'vehicle_no' => [
                     'required',
-                    \Illuminate\Validation\Rule::unique('vehicles', 'vehicle_no')->ignore($vehicle->id),
+                    // \Illuminate\Validation\Rule::unique('vehicles', 'vehicle_no')->ignore($vehicle->id),
                 ],
                 'make'                      =>  'required',
                 'model'                     =>  'required',
@@ -514,7 +514,6 @@ class VehicleController extends Controller
             $authority->move($uploadPath, $taxFileName);
             $vehicle->tax_file          =   $taxFileName;
         }
-
         $vehicle->save();
 
         return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle Updated successfully.');
