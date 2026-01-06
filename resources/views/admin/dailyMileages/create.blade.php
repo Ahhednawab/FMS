@@ -32,17 +32,19 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id" id="station_id">
+                                <select class="custom-select select2" name="station_id[]" id="station_id" multiple>
                                     <option value="">ALL</option>
+
                                     @foreach ($stations as $key => $value)
                                         <option value="{{ $key }}"
-                                            {{ (string) $selectedStation === (string) $key ? 'selected' : '' }}>
+                                            {{ in_array($key, (array) $selectedStation) ? 'selected' : '' }}>
                                             {{ $value }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
+
 
                         <div class="col-md-3">
                             <div class="form-group">
@@ -84,7 +86,7 @@
                             </div>
                         </div>
                     </div>
-                    <input type="hidden" name="station_id" value="{{ $selectedStation }}">
+                    {{-- <input type="hidden" name="station_id[]" value="{{ $selectedStation }}"> --}}
                     @foreach ($vehicleData as $key => $value)
                         <div class="row kilometer">
                             <input type="hidden" class="form-control" name="vehicle_id[]"
@@ -189,12 +191,24 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            function fillform() {
+                if (lock) {
+
+                    let prev = $('.previous_km');
+
+                    $('.current_km').each(function(index) {
+                        $(this).val(parseInt($(prev[index]).val()) + 1);
+                    });
+                }
+
+            }
             // Initialize Select2 for Vehicle No filter
             $('#vehicle_no_filter').select2({
                 theme: 'bootstrap4',
                 placeholder: "Select Vehicle No",
                 allowClear: true
             });
+
 
             function calculateMileage() {
                 $('.kilometer').each(function() {

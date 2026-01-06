@@ -56,6 +56,7 @@ class DailyMileageController extends Controller
         // Initialize selectedStation as empty
         $selectedStation = $request->station_id ?? '';
 
+
         // If draftData is available, use the selected station from the draft
         if ($draftData) {
             $selectedStation = $draftData->data['selectedstations'] ?? $selectedStation;
@@ -65,7 +66,7 @@ class DailyMileageController extends Controller
         $vehicles = Vehicle::with('station')
             ->where('is_active', 1)
             ->when($selectedStation, function ($query) use ($selectedStation) {
-                return $query->where('station_id', $selectedStation);  // Filter vehicles by the selected station
+                return $query->whereIn('station_id', $selectedStation);  // Filter vehicles by the selected station
             })
             ->orderBy(Station::select('area')->whereColumn('stations.id', 'vehicles.station_id')->limit(1))
             ->orderBy('vehicle_no')
@@ -269,6 +270,11 @@ class DailyMileageController extends Controller
 
             // You can implement your Draft model saving logic here
             // Assuming you have a Draft model for saving drafts
+            Draft::where('module', 'dailymileage')
+                ->where('created_by', auth()->id())
+                ->where('data->report_date ', $report_date) // notice space in key
+                ->delete();
+
             Draft::create([
                 'module' => 'dailymileage',
                 'created_by' => auth()->id(),
@@ -277,6 +283,10 @@ class DailyMileageController extends Controller
 
             return redirect()->back()->with('success', 'Draft saved successfully.');
         } else {
+            Draft::where('module', 'dailymileage')
+                ->where('created_by', auth()->id())
+                ->where('data->report_date ', $report_date) // notice space in key
+                ->delete();
             // Save as a final report if all fields are filled
             foreach ($vehicle_ids as $index => $vehicle_id) {
                 if (isset($current_kms[$index])) {
