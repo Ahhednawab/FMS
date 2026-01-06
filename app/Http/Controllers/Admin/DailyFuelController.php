@@ -15,6 +15,13 @@ use App\Http\Controllers\Controller;
 
 class DailyFuelController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('daily_fuels')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();

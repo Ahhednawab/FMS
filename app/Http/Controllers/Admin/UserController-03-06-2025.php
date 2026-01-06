@@ -51,14 +51,14 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
 
     public function edit(User $user)
     {
         $countries = Country::with('cities')->get(); // eager-load cities
-        return view('admin.users.form', compact('user','countries'));
+        return view('admin.users.form', compact('user', 'countries'));
     }
 
     public function update(Request $request, User $user)
@@ -94,5 +94,4 @@ class UserController extends Controller
     {
         return view('admin.users.show', compact('user'));
     }
-
 }

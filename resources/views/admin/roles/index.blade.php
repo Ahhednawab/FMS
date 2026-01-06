@@ -1,19 +1,19 @@
 @extends('layouts.admin')
 
-@section('title', 'Users List')
+@section('title', 'Roles List')
 
 @section('content')
     <!-- Page header -->
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
             <div class="page-title d-flex">
-                <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Users List</span></h4>
+                <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Roles List</span></h4>
                 <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
                     <a href="{{ route('users.create') }}" class="btn btn-primary">
-                        <span>Add User <i class="icon-plus3 ml-2"></i></span>
+                        <span>Add Role <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
             </div>
@@ -60,24 +60,18 @@
                 <table class="table datatable-colvis-basic dataTable">
                     <thead>
                         <tr>
-                            <th>Serial no</th>
-                            <th>Full name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Designation</th>
-                            <th>Full Address</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Last Updated</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($users as $key => $value)
+                        @foreach ($roles as $key => $value)
                             <tr>
-                                <td>{{ $value->serial_no }}</td>
                                 <td>{{ $value->name }}</td>
-                                <td>{{ $value->email }}</td>
-                                <td>{{ $value->phone }}</td>
-                                <td>{{ $value->role->name }}</td>
-                                <td>{{ $value->address }}</td>
+                                <td>{{ $value->description }}</td>
+                                <td>{{ $value->updated_at }}</td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">
@@ -91,6 +85,11 @@
                                                 <a href="{{ route('users.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
+                                                <a href="{{ route('admin.role-permissions.edit', $value->id) }}"
+                                                    class="dropdown-item">
+                                                    <i class="icon-pencil7"></i> Manage Permissions
+                                                </a>
+
                                                 <form action="{{ route('users.destroy', $value->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')

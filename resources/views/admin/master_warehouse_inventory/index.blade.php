@@ -11,7 +11,7 @@
             </div>
         @endif
 
-        <a href="{{ route($role_slug . '.master_warehouse_inventory.create') }}" class="btn btn-primary mb-3">
+        <a href="{{ route('master_warehouse_inventory.create') }}" class="btn btn-primary mb-3">
             Add New Inventory
         </a>
 

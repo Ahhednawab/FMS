@@ -20,6 +20,13 @@ use Illuminate\Support\Facades\File;
 class VehicleController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('vehicles')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
         $vehicles = Vehicle::with(['vehicleType', 'station', 'ibcCenter', 'fabricationVendor', 'shiftHours'])

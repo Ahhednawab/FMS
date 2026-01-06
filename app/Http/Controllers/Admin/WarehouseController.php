@@ -15,6 +15,13 @@ use App\Http\Controllers\Controller;
 class WarehouseController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('warehouses')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $role_slug = $request->get('roleSlug');

@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Validator;
 
 class InsuranceCompanyController extends Controller
 {
+
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('users')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
         $companies = InsuranceCompany::where('is_active', 1)

@@ -15,7 +15,7 @@ class PurchaseController extends Controller
     {
         $role_slug = $request->get('roleSlug');
 
-        $purchases = Purchase::with('supplier')->get();
+        $purchases = Purchase::with('supplier')->paginate(10);
         return view('admin.purchases.index', compact('purchases', 'role_slug'));
     }
 

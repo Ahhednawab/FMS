@@ -19,6 +19,10 @@ class MasterWarehouseInventoryController extends Controller
 
     public function index(Request $request)
     {
+        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
         $role_slug = $request->get('roleSlug');
 
         $inventory = MasterWarehouseInventory::with('product')
@@ -34,6 +38,9 @@ class MasterWarehouseInventoryController extends Controller
 
     public function create(Request $request)
     {
+        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
         $role_slug = $request->get('roleSlug');
 
         $products = ProductList::all();
@@ -43,6 +50,9 @@ class MasterWarehouseInventoryController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
         $role_slug = $request->get('roleSlug');
 
         // Validate the input data
@@ -70,6 +80,13 @@ class MasterWarehouseInventoryController extends Controller
 
     public function assignStock(Request $request)
     {
+        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
+        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
         $valid = $request->validate([
             'warehouse_id'         => 'required|exists:warehouses,id',
             'quantity'            => 'required|integer|min:1'
@@ -105,6 +122,9 @@ class MasterWarehouseInventoryController extends Controller
     }
     public function assigned(Request $request)
     {
+        if (!auth()->user()->hasPermission('assigned_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
         if (auth()->user()->role->slug == "master-warehouse" || auth()->user()->role->slug == "admin") {
             $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
                 ->orderBy('assigned_at', 'desc')
@@ -166,6 +186,8 @@ class MasterWarehouseInventoryController extends Controller
 
     public function assign(Request $request)
     {
+
+
         $request->validate([
             'assignment_id'   => 'required|exists:warehouse_assignments,id',
             'inventory_id'    => 'required|exists:master_warehouse_inventory,id',

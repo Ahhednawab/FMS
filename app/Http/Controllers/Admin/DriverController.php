@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\File;
 class DriverController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('drivers')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
         $drivers = Driver::with(['driverStatus', 'vehicle', 'maritalStatus', 'licenseCategory', 'shiftTiming'])

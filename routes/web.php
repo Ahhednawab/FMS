@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\JobCartController;
 use App\Http\Controllers\Admin\IbcController;
 use App\Http\Controllers\Admin\CityController;
@@ -19,6 +21,8 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\UserPermissionController;
 use App\Http\Controllers\Admin\CountriesController;
 use App\Http\Controllers\Admin\DailyFuelController;
 use App\Http\Controllers\Admin\WarehouseController;
@@ -49,7 +53,6 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
-use App\Http\Controllers\IssueController;
 
 Route::get('/', function () {
 
@@ -93,19 +96,87 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
 Route::get('users/getmanagers', [UserController::class, 'getManagers'])
     ->name('users.getmanagers');
 
+Route::middleware(['auth'])->group(function () {
+
+    Route::resource('users', UserController::class);
+
+
+    Route::resource('cities', CityController::class);
+    Route::resource('stations', StationController::class);
+    Route::resource('ibcCenters', IbcController::class);
+
+
+    Route::resource('insurance-companies', InsuranceCompanyController::class);
+
+    Route::resource('vehicles', VehicleController::class);
+    Route::post('vehicles/destroyMultiple', [VehicleController::class, 'destroyMultiple'])->name('vehicles.destroyMultiple');
+    Route::resource('drivers', DriverController::class);
+    Route::post('drivers/destroyMultiple', [DriverController::class, 'destroyMultiple'])->name('drivers.destroyMultiple');
+    Route::resource('vendors', VendorController::class);
+
+    Route::resource('brands', BrandController::class);
+    Route::resource('categories', CategoryController::class);
+    Route::resource('productList', ProductListController::class);
+    // Fleet Transactions
+    Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
+    Route::resource('dailyMileages', DailyMileageController::class);
+    Route::resource('dailyMileageReports', DailyMileageReportController::class);
+    Route::resource('dailyFuels', DailyFuelController::class);
+    Route::resource('dailyFuelReports', DailyFuelReportController::class);
+
+    Route::get('/warehouses/assign', [WarehousesController::class, 'assignWarehouse'])->name('warehouses.assign');
+    Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
+    Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
+    Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
+    Route::resource('warehouses', WarehouseController::class);
+
+    Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
+        ->name('assigned_inventory.index');
+
+
+    Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
+    Route::get('/master-warehouse-inventory/create', [MasterWarehouseInventoryController::class, 'create'])->name('master_warehouse_inventory.create');
+    Route::post('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'store'])->name('master_warehouse_inventory.store');
+    Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
+        ->name('master_warehouse_inventory.assign');
+
+
+
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('issues', IssueController::class);
+
+
+    // Accidents
+    Route::resource('accidentDetails', AccidentDetailController::class);
+    Route::resource('accidentReports', AccidentReportController::class);
+});
+
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {
 
     //General  
     // Route::get('users/getmanagers', [UserController::class, 'getManagers'])
     //     ->name('users.getmanagers');
 
-    Route::resource('users', UserController::class);
+
+    // Route::resource('user-permissions', UserPermissionController::class)->only(['edit', 'update']);
+    Route::get('role-permissions/{role}/edit', [RolePermissionController::class, 'edit'])
+        ->name('role-permissions.edit');
+
+    Route::put('role-permissions/{role}', [RolePermissionController::class, 'update'])
+        ->name('role-permissions.update');
+
+    Route::resource('roles', RoleController::class);
     Route::resource('cities', CityController::class);
     Route::resource('stations', StationController::class);
     Route::resource('ibcCenters', IbcController::class);
     Route::resource('warehouses', WarehouseController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('issues', IssueController::class);
+
 
 
     // Master Data

@@ -9,6 +9,13 @@ use App\Models\Vehicle;
 
 class DailyFuelReportController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('daily_fuel_reports')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $query = DB::table('daily_fuel_reports as d')
@@ -33,7 +40,7 @@ class DailyFuelReportController extends Controller
             ->orderBy('v.vehicle_no', 'asc');
 
         // ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
-            // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
+        // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
 
         if ($request->filled('vehicle_id')) {
             $query->where('v.vehicle_no', $request->vehicle_id);

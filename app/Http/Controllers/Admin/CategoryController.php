@@ -8,9 +8,17 @@ use App\Models\ProductCategory;
 
 class CategoryController extends Controller
 {
-    public function index(){
-    	$categories = ProductCategory::where('is_active',1)->orderby('id','DESC')->get();
-    	return view('admin.categories.index', compact('categories'));
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('categories')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
+        $categories = ProductCategory::where('is_active', 1)->orderby('id', 'DESC')->get();
+        return view('admin.categories.index', compact('categories'));
     }
 
     public function create()
@@ -24,10 +32,10 @@ class CategoryController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'name'			=>	'required|string|max:255',
+                'name'            =>    'required|string|max:255',
             ],
             [
-                'name.required'	=>	'Category Name is required',
+                'name.required'    =>    'Category Name is required',
             ]
         );
         if ($validator->fails()) {
@@ -53,10 +61,10 @@ class CategoryController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'name'			=> 'required|string|max:255',
+                'name'            => 'required|string|max:255',
             ],
             [
-                'name.required'	=>  'Category Name is required',
+                'name.required'    =>  'Category Name is required',
             ]
         );
         if ($validator->fails()) {
@@ -79,7 +87,7 @@ class CategoryController extends Controller
     {
         $category->is_active = 0;
         $category->save();
-        
+
         return redirect()->route('admin.categories.index')->with('delete_msg', 'Category deleted successfully.');
     }
 }

@@ -95,4 +95,14 @@ class User extends Authenticatable
         // Assumes each user has ONE warehouse assigned, foreign key in warehouses table: user_id
         return $this->hasOne(\App\Models\Warehouse::class, 'manager_id', 'id');
     }
+    public function hasPermission(string $permissionLabel): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role
+            ->permissions
+            ->contains('label', $permissionLabel);
+    }
 }

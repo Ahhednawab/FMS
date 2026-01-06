@@ -14,6 +14,13 @@ use Carbon\Carbon;
 
 class DailyMileageController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('daily_mileages')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
 

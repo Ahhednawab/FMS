@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 
 class WarehousesController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('warehouses')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function createWarehouse(Request $request)
     {
         $validated = $request->validate([
@@ -49,7 +56,5 @@ class WarehousesController extends Controller
         return redirect()->route('admin.warehouses.index');
     }
 
-    public function assignWarehouse() {
-        
-    }
+    public function assignWarehouse() {}
 }

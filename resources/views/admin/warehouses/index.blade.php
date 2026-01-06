@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.warehouses.create') }}" class="btn btn-primary">
+                    <a href="{{ route('warehouses.create') }}" class="btn btn-primary">
                         <span>Add Warehouse <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -73,16 +73,14 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route($role_slug . '.warehouses.show', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('warehouses.show', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-file-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route($role_slug . '.warehouses.edit', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('warehouses.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route($role_slug . '.warehouses.destroy', $value->id) }}"
-                                                    method="POST" onsubmit="return confirm('Are you sure?');">
+                                                <form action="{{ route('warehouses.destroy', $value->id) }}" method="POST"
+                                                    onsubmit="return confirm('Are you sure?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item text-danger">

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Admin Panel')</title>
@@ -10,8 +11,9 @@
     <link href="{{ asset('assets/css/icons/icomoon/styles.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/all.min.css') }}" rel="stylesheet">
 
+
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png')}}" />
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}" />
 
     {{-- Core JS --}}
     <script src="{{ asset('assets/js/main/jquery.min.js') }}"></script>
@@ -26,6 +28,7 @@
     <script src="{{ asset('assets/js/demo_pages/dashboard.js') }}"></script>
     <script src="{{ asset('assets/js/draft.js') }}"></script>
 </head>
+
 <body>
 
     {{-- Header --}}
@@ -45,4 +48,5 @@
 
     @stack('scripts')
 </body>
+
 </html>

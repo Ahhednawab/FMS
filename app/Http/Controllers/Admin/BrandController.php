@@ -8,9 +8,18 @@ use App\Models\Brand;
 
 class BrandController extends Controller
 {
-    public function index(){
-    	$brands = Brand::where('is_active',1)->orderby('id','DESC')->get();
-    	return view('admin.brands.index', compact('brands'));
+
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('brands')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
+        $brands = Brand::where('is_active', 1)->orderby('id', 'DESC')->get();
+        return view('admin.brands.index', compact('brands'));
     }
 
     public function create()
@@ -24,10 +33,10 @@ class BrandController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'name'			=>	'required|string|max:255',
+                'name'            =>    'required|string|max:255',
             ],
             [
-                'name.required'	=>	'Brand Name is required',
+                'name.required'    =>    'Brand Name is required',
             ]
         );
         if ($validator->fails()) {
@@ -53,10 +62,10 @@ class BrandController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'name'			=> 'required|string|max:255',
+                'name'            => 'required|string|max:255',
             ],
             [
-                'name.required'	=>  'Brand Name is required',
+                'name.required'    =>  'Brand Name is required',
             ]
         );
         if ($validator->fails()) {
@@ -79,7 +88,7 @@ class BrandController extends Controller
     {
         $brand->is_active = 0;
         $brand->save();
-        
+
         return redirect()->route('admin.brands.index')->with('delete_msg', 'Brand deleted successfully.');
     }
 }

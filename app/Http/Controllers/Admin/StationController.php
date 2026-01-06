@@ -13,18 +13,25 @@ use Illuminate\Support\Facades\Auth;
 class StationController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('stations')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
-    	$stations = Station::where('is_active',1)->get();
-    	return view('admin.stations.index',compact('stations'));
+        $stations = Station::where('is_active', 1)->get();
+        return view('admin.stations.index', compact('stations'));
     }
 
     public function create(Request $request)
     {
         $serial_no = Station::GetSerialNumber();
-        
+
         $draftInfo = $this->getDraftDataForView($request, 'stations');
-        
+
         return view('admin.stations.create', compact('serial_no') + $draftInfo);
     }
 
@@ -37,8 +44,8 @@ class StationController extends Controller
 
         $validator = \Validator::make(
             $request->all(),
-            [ 'area'         	=> 'required', ],
-            [ 'area.required'        	=> 'Area is required', ]
+            ['area'             => 'required',],
+            ['area.required'            => 'Area is required',]
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
@@ -66,10 +73,10 @@ class StationController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'area'         	=> 'required',
+                'area'             => 'required',
             ],
             [
-                'area.required'        	=> 'Area is required',
+                'area.required'            => 'Area is required',
             ]
         );
         if ($validator->fails()) {
@@ -93,6 +100,6 @@ class StationController extends Controller
 
     public function show(Station $station)
     {
-    	return view('admin.stations.show', compact('station'));
+        return view('admin.stations.show', compact('station'));
     }
 }
