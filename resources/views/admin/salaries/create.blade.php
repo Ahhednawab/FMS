@@ -83,18 +83,23 @@
 
     <script>
         /* -----------------------------
-                                                                                                               DATE PICKER (MONTH)
-                                                                                                            ----------------------------- */
+                                                                            DATE PICKER (MONTH)
+                                                                        ----------------------------- */
         $('.date-picker').datepicker({
             changeMonth: true,
             changeYear: true,
+            showButtonPanel: true, // show Done button
             dateFormat: 'yy-mm',
             onClose: function(dateText, inst) {
-                let m = inst.selectedMonth + 1;
-                let y = inst.selectedYear;
-                m = m < 10 ? '0' + m : m;
-                $(this).val(y + '-' + m);
+                let month = inst.selectedMonth + 1;
+                let year = inst.selectedYear;
+                month = month < 10 ? '0' + month : month;
+                $(this).val(year + '-' + month);
                 loadTable();
+            },
+            beforeShow: function(input, inst) {
+                // Hide the calendar grid
+                $(inst.dpDiv).addClass('month-year-only');
             }
         });
 
@@ -175,6 +180,9 @@
 
 
             $('[name="drivers[' + driverId + '][gross]"]').val(gross);
+            console.log($('[name="drivers[' + driverId + '][gross]"]').parent().children('.display-text').text());
+            console.log(gross);
+            $('[name="drivers[' + driverId + '][gross]"]').parent().children('.display-text').text(gross);
 
 
             let totalRecovered = parseFloat(

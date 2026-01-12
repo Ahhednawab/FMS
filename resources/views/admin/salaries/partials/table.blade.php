@@ -155,7 +155,7 @@
                         {{-- Gross --}}
                         <td>
                             <span class="display-text"
-                                style="display: {{ $isPaid ? 'inline' : 'none' }}">{{ $salary->gross_salary ?? 0 }}</span>
+                                style="display: {{ $isPaid ? 'inline' : 'none' }}">{{ $salary->gross_salary ?? $driver->salary }}</span>
                             <input type="number" class="form-control gross border border-success"
                                 name="drivers[{{ $driver->id }}][gross]" readonly
                                 style="display: {{ $isPaid ? 'none' : 'block' }}">

@@ -12,6 +12,9 @@ body {
   color: #333;
   text-align: left;
 }
+.month-year-only .ui-datepicker-calendar {
+    display: none;
+}
 .content-wrapper.flex-grow-1 {
   max-height: calc(100vh - 94px);
     overflow-y: auto;
