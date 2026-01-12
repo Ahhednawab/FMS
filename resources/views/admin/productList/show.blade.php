@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.productList.index') }}" class="btn btn-primary"><span>View Products <i
+                    <a href="{{ route('productList.index') }}" class="btn btn-primary"><span>View Products <i
                                 class="icon-list ml-2"></i></span></a>
                 </div>
             </div>
@@ -76,10 +76,9 @@
                     <div class="col-md-12">
                         <label for=""></label>
                         <div class="text-right">
-                            <a href="{{ route($role_slug . '.productList.edit', $productList->id) }}"
-                                class="btn btn-warning">Edit</a>
-                            <a href="{{ route($role_slug . '.productList.index') }}" class="btn btn-secondary">Back</a>
-                            <form action="{{ route($role_slug . '.productList.destroy', $productList->id) }}" method="POST"
+                            <a href="{{ route('productList.edit', $productList->id) }}" class="btn btn-warning">Edit</a>
+                            <a href="{{ route('productList.index') }}" class="btn btn-secondary">Back</a>
+                            <form action="{{ route('productList.destroy', $productList->id) }}" method="POST"
                                 style="display:inline-block;"
                                 onsubmit="return confirm('Are you sure you want to delete this Product?');">
                                 @csrf

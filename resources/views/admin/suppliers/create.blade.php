@@ -5,7 +5,7 @@
         <h2>Add Supplier</h2>
 
         @include('admin.suppliers.form', [
-            'route' => route($role_slug . '.suppliers.store'),
+            'route' => route('suppliers.store'),
             'method' => 'POST',
         ])
     </div>

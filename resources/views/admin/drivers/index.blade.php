@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.drivers.create') }}" class="btn btn-primary">
+                    <a href="{{ route('drivers.create') }}" class="btn btn-primary">
                         <span>Add Driver <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -154,12 +154,12 @@
                                             <a href="#" class="list-icons-item" data-toggle="dropdown"><i
                                                     class="icon-menu9"></i></a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.drivers.show', $value->id) }}"
-                                                    class="dropdown-item"><i class="icon-eye"></i> View</a>
-                                                <a href="{{ route('admin.drivers.edit', $value->id) }}"
+                                                <a href="{{ route('drivers.show', $value->id) }}" class="dropdown-item"><i
+                                                        class="icon-eye"></i> View</a>
+                                                <a href="{{ route('drivers.edit', $value->id) }}"
                                                     class="dropdown-item"><i class="icon-pencil7"></i> Edit</a>
-                                                <form action="{{ route('admin.drivers.destroy', $value->id) }}"
-                                                    method="POST" class="d-inline">
+                                                <form action="{{ route('drivers.destroy', $value->id) }}" method="POST"
+                                                    class="d-inline">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="dropdown-item"
                                                         onclick="return confirm('Are you sure?')"><i
@@ -355,7 +355,7 @@
                 if (!ids.length) return alert('Select at least one driver');
 
                 if (confirm('Delete selected drivers?')) {
-                    $.post("{{ route('admin.drivers.destroyMultiple') }}", {
+                    $.post("{{ route('drivers.destroyMultiple') }}", {
                         _token: '{{ csrf_token() }}',
                         ids: ids
                     }, res => res.success ? location.reload() : alert('Delete failed'));

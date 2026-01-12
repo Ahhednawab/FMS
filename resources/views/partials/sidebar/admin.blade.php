@@ -55,13 +55,42 @@
                 </li>
                 @if (auth()->user()->hasPermission('drafts'))
                     <li class="nav-item">
-                        <a href="{{ route('admin.drafts.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.drafts.*') ? 'active' : '' }}">
+                        <a href="{{ route('drafts.index') }}"
+                            class="nav-link {{ request()->routeIs('drafts.*') ? 'active' : '' }}">
                             <i class="icon-copy"></i>
                             <span>Drafts</span>
                         </a>
                     </li>
                 @endif
+                <li
+                    class="nav-item nav-item-submenu
+          {{ request()->routeIs('salaries.*') || request()->routeIs('vehicleAttendances.*') ? 'nav-item-open' : '' }}">
+
+                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
+
+                    <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+                        style="{{ request()->routeIs('salaries.*') || request()->routeIs('vehicleAttendances.*') ? 'display:block;' : '' }}">
+                        @if (auth()->user()->hasPermission('driver_attendances'))
+                            <li class="nav-item"><a href="{{ route('salaries.index') }}"
+                                    class="nav-link {{ request()->routeIs('salaries .*') ? 'active' : '' }}">Salaries</a>
+                            </li>
+                        @endif
+                        @if (auth()->user()->hasPermission('driver_attendances'))
+                            <li class="nav-item">
+                                <a href="{{ route('advance.index') }}"
+                                    class="nav-link {{ request()->routeIs('advance.*') ? 'active' : '' }}">
+                                    Issued Advance
+                                </a>
+                            </li>
+                        @endif
+
+                        @if (auth()->user()->hasPermission('vehicle_attendances'))
+                            <li class="nav-item"><a href="{{ route('vehicleAttendances.index') }}"
+                                    class="nav-link {{ request()->routeIs('vehicleAttendances.*') ? 'active' : '' }}">Invoice</a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
                 @if (auth()->user()->hasPermission('users') ||
                         auth()->user()->hasPermission('cities') ||
                         auth()->user()->hasPermission('stations') ||
@@ -208,7 +237,8 @@
           request()->routeIs('dailyFuelReports.*')
               ? 'nav-item-open'
               : '' }}">
-                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Fleet Transaction</span></a>
+                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Fleet
+                                Transaction</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                             style="{{ request()->routeIs('dailyMileages.*') ||
@@ -378,12 +408,12 @@
                                 : '' }}">
                             @if (auth()->user()->hasPermission('accident_details'))
                                 <li class="nav-item"><a href="{{ route('accidentDetails.index') }}"
-                                        class="nav-link {{ request()->routeIs('accidentDetails.*') ? 'active' : '' }}"">Accident
+                                        class="nav-link {{ request()->routeIs('accidentDetails.*') ? 'active' : '' }}">Accident
                                         Details</a></li>
                             @endif
                             @if (auth()->user()->hasPermission('accident_reports'))
                                 <li class="nav-item"><a href="{{ route('accidentReports.index') }}"
-                                        class="nav-link {{ request()->routeIs('accidentReports.*') ? 'active' : '' }}"">Accident
+                                        class="nav-link {{ request()->routeIs('accidentReports.*') ? 'active' : '' }}">Accident
                                         Report</a></li>
                             @endif
                         </ul>
@@ -392,23 +422,34 @@
                 @if (auth()->user()->hasPermission('client_invoices') ||
                         auth()->user()->hasPermission('cash_payments') ||
                         auth()->user()->hasPermission('bank_payments'))
-                    <li class="nav-item nav-item-submenu">
+                    <li
+                        class="nav-item nav-item-submenu {{ request()->routeIs('clientInvoices.*') ||
+                        request()->routeIs('cashPayments.*') ||
+                        request()->routeIs('bankPayments.*')
+                            ? 'nav-item-open'
+                            : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
 
-                        <ul class="nav nav-group-sub" data-submenu-title="Layouts">
+                        <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+                            style="{{ request()->routeIs('clientInvoices.*') ||
+                            request()->routeIs('cashPayments.*') ||
+                            request()->routeIs('bankPayments.*')
+                                ? 'display:block;'
+                                : '' }}">
                             @if (auth()->user()->hasPermission('client_invoices'))
-                                <li class="nav-item"><a href="{{ route('admin.clientInvoices.index') }}"
-                                        class="nav-link">Client Invoice</a></li>
+                                <li class="nav-item"><a href="{{ route('clientInvoices.index') }}"
+                                        class="nav-link {{ request()->routeIs('clientInvoices.*') ? 'active' : '' }}">Client
+                                        Invoice</a></li>
                             @endif
                             @if (auth()->user()->hasPermission('cash_payments'))
-                                <li class="nav-item"><a href="{{ route('admin.cashPayments.index') }}"
-                                        class="nav-link">Cash
+                                <li class="nav-item"><a href="{{ route('cashPayments.index') }}"
+                                        class="nav-link {{ request()->routeIs('cashPayments.*') ? 'active' : '' }}">Cash
                                         Payment Voucher</a></li>
                             @endif
 
                             @if (auth()->user()->hasPermission('bank_payments'))
-                                <li class="nav-item"><a href="{{ route('admin.bankPayments.index') }}"
-                                        class="nav-link">Bank
+                                <li class="nav-item"><a href="{{ route('bankPayments.index') }}"
+                                        class="nav-link {{ request()->routeIs('bankPayments.*') ? 'active' : '' }}">Bank
                                         Payment Voucher</a></li>
                             @endif
                         </ul>
@@ -417,18 +458,26 @@
                 @if (auth()->user()->hasPermission('vehicle_maintenances') ||
                         auth()->user()->hasPermission('vehicle_maintenance_reports'))
 
-                    <li class="nav-item nav-item-submenu">
+                    <li
+                        class="nav-item nav-item-submenu {{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*')
+                            ? 'nav-item-open'
+                            : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Vehicle
                                 Maintenance</span></a>
 
-                        <ul class="nav nav-group-sub" data-submenu-title="Layouts">
+                        <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+                            style="{{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*')
+                                ? 'display:block;'
+                                : '' }}">
                             @if (auth()->user()->hasPermission('vehicle_maintenances'))
-                                <li class="nav-item"><a href="{{ route('admin.vehicleMaintenances.index') }}"
-                                        class="nav-link">Vehicle Maintenance</a></li>
+                                <li class="nav-item"><a href="{{ route('vehicleMaintenances.index') }}"
+                                        class="nav-link {{ request()->routeIs('vehicleMaintenances.*') ? 'active' : '' }}">Vehicle
+                                        Maintenance</a></li>
                             @endif
                             @if (auth()->user()->hasPermission('vehicle_maintenance_reports'))
-                                <li class="nav-item"><a href="{{ route('admin.vehicleMaintenanceReports.index') }}"
-                                        class="nav-link">Vehicle Maintenance Report</a></li>
+                                <li class="nav-item"><a href="{{ route('vehicleMaintenanceReports.index') }}"
+                                        class="nav-link {{ request()->routeIs('vehicleMaintenanceReports.*') ? 'active' : '' }}">Vehicle
+                                        Maintenance Report</a></li>
                             @endif
                         </ul>
                     </li>
@@ -436,29 +485,31 @@
                 @if (auth()->user()->hasPermission('driver_attendances') || auth()->user()->hasPermission('vehicle_attendances'))
                     <li
                         class="nav-item nav-item-submenu
-          {{ request()->routeIs('admin.driverAttendances.*') || request()->routeIs('admin.vehicleAttendances.*')
+          {{ request()->routeIs('driverAttendances.*') || request()->routeIs('vehicleAttendances.*')
               ? 'nav-item-open'
               : '' }}">
 
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Attendece</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                            style="{{ request()->routeIs('admin.driverAttendances.*') || request()->routeIs('admin.vehicleAttendances.*')
+                            style="{{ request()->routeIs('driverAttendances.*') || request()->routeIs('vehicleAttendances.*')
                                 ? 'display:block;'
                                 : '' }}">
                             @if (auth()->user()->hasPermission('driver_attendances'))
-                                <li class="nav-item"><a href="{{ route('admin.driverAttendances.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.driverAttendances.*') ? 'active' : '' }}">Driver
+                                <li class="nav-item"><a href="{{ route('driverAttendances.index') }}"
+                                        class="nav-link {{ request()->routeIs('driverAttendances.*') ? 'active' : '' }}">Driver
                                         Attendance</a></li>
                             @endif
                             @if (auth()->user()->hasPermission('vehicle_attendances'))
-                                <li class="nav-item"><a href="{{ route('admin.vehicleAttendances.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.vehicleAttendances.*') ? 'active' : '' }}">Vehicle
+                                <li class="nav-item"><a href="{{ route('vehicleAttendances.index') }}"
+                                        class="nav-link {{ request()->routeIs('vehicleAttendances.*') ? 'active' : '' }}">Vehicle
                                         Attendance</a></li>
                             @endif
                         </ul>
                     </li>
+
                 @endif
+
             </ul>
         </div>
         <!-- /main navigation -->

@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.dailyFuels.create') }}" class="btn btn-primary">
+                    <a href="{{ route('dailyFuels.create') }}" class="btn btn-primary">
                         <span>Add Daily Fuel <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -49,7 +49,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyFuels.index') }}" method="get">
+                <form action="{{ route('dailyFuels.index') }}" method="get">
                     <div class="row">
                         <!-- Vehicle No -->
                         <div class="col-md-3">
@@ -92,7 +92,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.dailyFuels.index') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('dailyFuels.index') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
 
@@ -229,15 +229,15 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.dailyFuels.show', $value->id) }}"
+                                                <a href="{{ route('dailyFuels.show', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('admin.dailyFuels.edit', $value->id) }}"
+                                                <a href="{{ route('dailyFuels.edit', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route('admin.dailyFuels.destroy', $value->id) }}"
+                                                <form action="{{ route('dailyFuels.destroy', $value->id) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')
@@ -266,8 +266,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
-          <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
-          <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script> -->
+              <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
+              <script src="{{ asset('assets/js/demo_pages/datatables_extension_colvis.js') }}"></script> -->
 
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>

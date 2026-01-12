@@ -23,7 +23,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.drivers.index') }}" class="btn btn-primary">
+                    <a href="{{ route('drivers.index') }}" class="btn btn-primary">
                         <span>View Drivers <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -36,7 +36,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.drivers.update', $driver->id) }}"
+                        <form method="POST" action="{{ route('drivers.update', $driver->id) }}"
                             enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
@@ -480,7 +480,7 @@
                                     <label for=""></label>
                                     <div class="text-right">
                                         <button type="submit" class="btn btn-primary">Update</button>
-                                        <a href="{{ route('admin.drivers.index') }}" class="btn btn-warning">Cancel</a>
+                                        <a href="{{ route('drivers.index') }}" class="btn btn-warning">Cancel</a>
                                     </div>
                                 </div>
                             </div>

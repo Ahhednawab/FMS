@@ -41,7 +41,17 @@
         {{-- @include('partials.sidebar') --}}
 
         {{-- Main Content --}}
-        <div class="content-wrapper flex-grow-1">
+        <div class="content-wrapper flex-grow-1 mx-3 mt-2">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @yield('content')
         </div>
     </div>

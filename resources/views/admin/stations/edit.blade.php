@@ -24,7 +24,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.stations.update', $station->id) }}">
+                        <form method="POST" action="{{ route('stations.update', $station->id) }}">
                             @csrf
                             @method('PUT')
 
@@ -55,7 +55,7 @@
                                     <label for=""></label>
                                     <div class="text-right">
                                         <button type="submit" class="btn btn-primary">Update</button>
-                                        <a href="{{ route('admin.stations.index') }}" class="btn btn-warning">Cancel</a>
+                                        <a href="{{ route('stations.index') }}" class="btn btn-warning">Cancel</a>
                                     </div>
                                 </div>
                             </div>

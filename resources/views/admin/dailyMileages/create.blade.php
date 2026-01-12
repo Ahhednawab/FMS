@@ -15,7 +15,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-primary">
+                    <a href="{{ route('dailyMileages.index') }}" class="btn btn-primary">
                         <span>View Daily Mileage <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -26,7 +26,7 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyMileages.create') }}" method="get">
+                <form action="{{ route('dailyMileages.create') }}" method="get">
                     <div class="row">
                         <!-- Station Filter -->
                         <div class="col-md-3">
@@ -59,7 +59,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.dailyMileages.create') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('dailyMileages.create') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
                     </div>
@@ -69,95 +69,69 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyMileages.store') }}" method="POST">
+                <form action="{{ route('dailyMileages.store') }}" method="POST">
                     @csrf
-                    <div class="row">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <strong>Report Date</strong>
-                                <input type="date" class="form-control" name="report_date"
-                                    value="{{ old('report_date', isset($draftData->data['report_date ']) ? $draftData->data['report_date '] : '') }}"
-                                    max="{{ date('Y-m-d') }}">
-                                @error('report_date')
-                                    <label class="text-danger">{{ $message }}</label>
-                                @enderror
-                            </div>
+                    {{-- Report Date --}}
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label><strong>Report Date</strong></label>
+                            <input type="date" name="report_date" id="report_date" class="form-control"
+                                max="{{ date('Y-m-d') }}" required>
                         </div>
                     </div>
-                    <input type="hidden" name="station_id" value="{{ $selectedStation }}">
-                    @foreach ($vehicleData as $key => $value)
-                        <div class="row kilometer">
-                            <input type="hidden" class="form-control" name="vehicle_id[]"
-                                value="{{ $value['vehicle_id'] }}">
 
-                            <!-- Station -->
+                    {{-- Vehicle Rows --}}
+                    @foreach ($vehicleData as $value)
+                        @php $vid = $value['vehicle_id']; @endphp
+
+                        <div class="row kilometer border-bottom py-2">
+
+                            {{-- Hidden Vehicle ID --}}
+                            <input type="hidden" name="vehicles[{{ $vid }}][vehicle_id]"
+                                value="{{ $vid }}">
+
+                            {{-- Station --}}
                             <div class="col-md-3">
-                                <div class="form-group">
-                                    <strong>Station</strong>
-                                    <input type="text" class="form-control" name="station[]"
-                                        value="{{ old('station.' . $key, isset($draftData->data['station'][$key]) ? $draftData->data['station'][$key] : $value['station']) }}"
-                                        readonly>
-                                </div>
+                                <label>Station</label>
+                                <input type="text" class="form-control" value="{{ $value['station'] }}" readonly>
                             </div>
 
-                            <!-- Vehicle No -->
+                            {{-- Vehicle No --}}
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <strong>Vehicle No</strong>
-                                    <input type="text" class="form-control" name="vehicle_no"
-                                        value="{{ $value['vehicle_no'] }}" readonly>
-                                </div>
+                                <label>Vehicle No</label>
+                                <input type="text" class="form-control" value="{{ $value['vehicle_no'] }}" readonly>
                             </div>
 
-                            <!-- Previous KMs -->
+                            {{-- Previous KM --}}
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <strong>Previous KMs</strong>
-                                    <input type="number" min="0" step="1" class="form-control previous_km"
-                                        name="previous_km[]"
-                                        value="{{ old('previous_km.' . $key, isset($draftData->data['previous_kms'][$key]) ? $draftData->data['previous_kms'][$key] : $value['previous_km']) }}"
-                                        readonly>
-                                </div>
+                                <label>Previous KM</label>
+                                <input type="number" class="form-control previous_km"
+                                    name="vehicles[{{ $vid }}][previous_km]" value="{{ $value['previous_km'] }}"
+                                    readonly>
                             </div>
 
-                            <!-- Current KMs -->
+                            {{-- Current KM --}}
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <strong>Current KMs</strong>
-                                    <input type="number" min="0" step="1" tabindex="{{ $key + 1 }}"
-                                        class="form-control current_km
-            @if ($draftData && !isset($draftData->data['current_kms'][$key])) is-invalid @endif"
-                                        name="current_km[{{ $key }}]"
-                                        value="{{ old('current_km.' . $key, isset($draftData->data['current_kms'][$key]) ? $draftData->data['current_kms'][$key] : '') }}">
-
-                                    @error('current_km.' . $key)
-                                        <label class="text-danger">{{ $message }}</label>
-                                    @enderror
-                                </div>
+                                <label>Current KM</label>
+                                <input type="number" class="form-control current_km"
+                                    name="vehicles[{{ $vid }}][current_km]" min="0">
                             </div>
 
-                            <!-- Mileage -->
+                            {{-- Mileage --}}
                             <div class="col-md-2">
-                                <div class="form-group">
-                                    <strong>Mileage</strong>
-                                    {{--                                    <input type="number" min="0" step="1" class="form-control" name="mileage[]" value="{{ old('mileage.' . $key) }}" readonly> --}}
-
-                                    <input type="number" min="0" step="1" class="form-control"
-                                        name="mileage[]"
-                                        value="{{ old('mileages.' . $key, isset($draftData->data['mileages'][$key]) ? $draftData->data['mileages'][$key] : '') }}"
-                                        readonly>
-
-                                </div>
+                                <label>Mileage</label>
+                                <input type="number" class="form-control mileage"
+                                    name="vehicles[{{ $vid }}][mileage]" readonly>
                             </div>
+
                         </div>
                     @endforeach
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="text-right">
-                                <button type="submit" class="btn btn-primary">Save</button>
-                                <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-warning">Cancel</a>
-                            </div>
+                    {{-- Buttons --}}
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-right">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <a href="{{ route('dailyMileages.index') }}" class="btn btn-warning">Cancel</a>
                         </div>
                     </div>
                 </form>
@@ -168,54 +142,60 @@
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            function calculateMileage() {
-                $('.kilometer').each(function() {
-                    var previous_km = $(this).find('.previous_km').val() || 0;
-                    var current_km = $(this).find('.current_km').val() || 0;
-                    var mileage = current_km - previous_km;
-                    if (mileage < 0) mileage = 0;
-                    $(this).find('input[name="mileage[]"]').val(mileage.toFixed(0))
-                });
-            }
 
-            $('.current_km').on('input', function() {
-                calculateMileage();
-            });
-        });
-    </script>
 @endsection
 @push('scripts')
     <script>
+        function fillForm() {
+            $('.kilometer').each(function() {
+                let $row = $(this);
+
+                let prevKm = parseInt($row.find('.previous_km').val(), 10) || 0;
+                let $currentKmInput = $row.find('.current_km');
+
+                // Only auto-fill if empty
+                if ($currentKmInput.val() === '') {
+                    $currentKmInput.val(prevKm + 1);
+                }
+            });
+            $('.current_km').trigger('change');
+        }
+        let mileageMap = {};
+
         $(document).ready(function() {
-            // Initialize Select2 for Vehicle No filter
+
+            // ================= Mileage Calculation =================
+            function calculateMileage(row) {
+                let prevKm = parseInt(row.find('.previous_km').val(), 10) || 0;
+                let currKm = parseInt(row.find('.current_km').val(), 10);
+
+                if (isNaN(currKm)) {
+                    row.find('.mileage').val('');
+                    return;
+                }
+
+                let mileage = currKm - prevKm;
+                row.find('.mileage').val(mileage >= 0 ? mileage : 0);
+            }
+
+            // When user types Current KM
+            $('body').on('change', '.current_km', function() {
+                calculateMileage($(this).closest('.kilometer'));
+            });
+
+            // ================= Vehicle Filter =================
             $('#vehicle_no_filter').select2({
                 theme: 'bootstrap4',
                 placeholder: "Select Vehicle No",
                 allowClear: true
             });
 
-            function calculateMileage() {
-                $('.kilometer').each(function() {
-                    var previous_km = $(this).find('.previous_km').val() || 0;
-                    var current_km = $(this).find('.current_km').val() || 0;
-                    var mileage = current_km - previous_km;
-                    if (mileage < 0) mileage = 0;
-                    $(this).find('input[name="mileage[]"]').val(mileage.toFixed(0))
-                });
-            }
-
-            $('.current_km').on('input', function() {
-                calculateMileage();
-            });
-
-            // Vehicle No filter logic
             $('#vehicle_no_filter').on('change', function() {
-                var selectedVehicle = $(this).val();
+                let selectedVehicle = $(this).val();
 
                 $('.kilometer').each(function() {
-                    var vehicleNo = $(this).find('input[name="vehicle_no"]').val();
+                    let vehicleNo = $(this).find('input[readonly]').eq(1).val();
+
                     if (!selectedVehicle || vehicleNo === selectedVehicle) {
                         $(this).show();
                     } else {
@@ -223,6 +203,78 @@
                     }
                 });
             });
+
+            // ================= Date Change AJAX =================
+            $('#report_date').on('change', function() {
+
+                let reportDate = $(this).val();
+                if (!reportDate) return;
+
+                $.ajax({
+                    url: "{{ route('fetchDailyMilages') }}",
+                    type: "GET",
+                    data: {
+                        report_date: reportDate
+                    },
+                    dataType: "json",
+                    success: function(response) {
+
+                        mileageMap = {};
+
+                        if (!response.success) return;
+
+                        response.data.forEach(item => {
+                            mileageMap[item.vehicle_id] = item;
+                        });
+
+                        let $container = $('.kilometer').parent();
+                        let filledRows = [];
+                        let unfilledRows = [];
+
+                        $('.kilometer').each(function() {
+                            let row = $(this);
+                            let vehicleId = row.find('input[name$="[vehicle_id]"]')
+                            .val();
+
+                            // Reset bootstrap classes
+                            row.find('.current_km, .mileage')
+                                .removeClass('border border-danger is-invalid');
+
+                            if (mileageMap[vehicleId]) {
+                                let data = mileageMap[vehicleId];
+
+                                row.find('.previous_km').val(data.previous_km);
+                                row.find('.current_km').val(data.current_km);
+                                row.find('.mileage').val(data.mileage);
+
+                                if (!data.current_km) {
+                                    row.find('.current_km, .mileage')
+                                        .addClass('border border-danger is-invalid');
+                                    unfilledRows.push(row);
+                                } else {
+                                    filledRows.push(row);
+                                }
+
+                            } else {
+                                row.find('.current_km').val('');
+                                row.find('.mileage').val('');
+                                row.find('.current_km, .mileage')
+                                    .addClass('border border-danger is-invalid');
+                                unfilledRows.push(row);
+                            }
+                        });
+
+                        // Unfilled vehicles on top
+                        $container.append(unfilledRows);
+                        $container.append(filledRows);
+                    },
+
+                    error: function() {
+                        alert('Failed to fetch mileage data');
+                    }
+                });
+            });
+
         });
     </script>
 @endpush

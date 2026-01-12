@@ -49,7 +49,7 @@ class BrandController extends Controller
         $brand->name = $request->name;
         $brand->save();
 
-        return redirect()->route('admin.brands.index')->with('success', 'Brand created successfully.');
+        return redirect()->route('brands.index')->with('success', 'Brand created successfully.');
     }
 
     public function edit(Brand $brand)
@@ -76,7 +76,7 @@ class BrandController extends Controller
         $brand->name = $request->name;
         $brand->save();
 
-        return redirect()->route('admin.brands.index')->with('success', 'Brand updated successfully.');
+        return redirect()->route('brands.index')->with('success', 'Brand updated successfully.');
     }
 
     public function show(Brand $brand)
@@ -89,6 +89,6 @@ class BrandController extends Controller
         $brand->is_active = 0;
         $brand->save();
 
-        return redirect()->route('admin.brands.index')->with('delete_msg', 'Brand deleted successfully.');
+        return redirect()->route('brands.index')->with('delete_msg', 'Brand deleted successfully.');
     }
 }

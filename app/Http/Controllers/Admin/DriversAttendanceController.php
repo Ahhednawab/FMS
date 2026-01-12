@@ -13,6 +13,13 @@ use Carbon\Carbon;
 
 class DriversAttendanceController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('driver_attendances')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
@@ -129,7 +136,7 @@ class DriversAttendanceController extends Controller
             DriversAttendance::create($row);
         }
 
-        return redirect()->route('admin.driverAttendances.index')->with('success', 'Driver Attendance marked successfully');
+        return redirect()->route('driverAttendances.index')->with('success', 'Driver Attendance marked successfully');
     }
 
     public function edit(DriversAttendance $driverAttendance)
@@ -169,7 +176,7 @@ class DriversAttendanceController extends Controller
             'status' => $status,
         ]);
 
-        return redirect()->route('admin.driverAttendances.index')
+        return redirect()->route('driverAttendances.index')
             ->with('success', 'Driver Attendance updated successfully');
     }
 
@@ -183,7 +190,7 @@ class DriversAttendanceController extends Controller
     {
         $driverAttendance->is_active = 0;
         $driverAttendance->save();
-        return redirect()->route('admin.driverAttendances.index')->with('delete_msg', 'Driver Attendance deleted successfully.');
+        return redirect()->route('driverAttendances.index')->with('delete_msg', 'Driver Attendance deleted successfully.');
     }
 
     public function destroyMultiple(Request $request)

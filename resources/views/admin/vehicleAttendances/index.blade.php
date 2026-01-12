@@ -13,7 +13,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.vehicleAttendances.create') }}" class="btn btn-primary">
+                    <a href="{{ route('vehicleAttendances.create') }}" class="btn btn-primary">
                         <span>Add Vehicle Attendance <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -74,7 +74,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.vehicleAttendances.index') }}" method="GET">
+                <form action="{{ route('vehicleAttendances.index') }}" method="GET">
                     @csrf
                     <div class="row">
                         @php
@@ -119,7 +119,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.vehicleAttendances.index') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('vehicleAttendances.index') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
 
@@ -191,15 +191,15 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.vehicleAttendances.show', $value->id) }}"
+                                                <a href="{{ route('vehicleAttendances.show', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('admin.vehicleAttendances.edit', $value->id) }}"
+                                                <a href="{{ route('vehicleAttendances.edit', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route('admin.vehicleAttendances.destroy', $value->id) }}"
+                                                <form action="{{ route('vehicleAttendances.destroy', $value->id) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')
@@ -310,7 +310,7 @@
                 if (!ids.length) return alert('Select at least one driver');
 
                 if (confirm('Delete selected drivers?')) {
-                    $.post("{{ route('admin.vehicleAttendances.destroyMultiple') }}", {
+                    $.post("{{ route('vehicleAttendances.destroyMultiple') }}", {
                         _token: '{{ csrf_token() }}',
                         ids: ids
                     }, res => res.success ? location.reload() : alert('Delete failed'));

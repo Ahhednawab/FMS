@@ -60,7 +60,7 @@ class StationController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'stations');
 
-        return redirect()->route('admin.stations.index')->with('success', 'Station created successfully.');
+        return redirect()->route('stations.index')->with('success', 'Station created successfully.');
     }
 
     public function edit(Station $station)
@@ -87,7 +87,7 @@ class StationController extends Controller
         $station->area = $request->area;
         $station->save();
 
-        return redirect()->route('admin.stations.index')->with('success', 'Station updated successfully.');
+        return redirect()->route('stations.index')->with('success', 'Station updated successfully.');
     }
 
     public function destroy(Station $station)
@@ -95,7 +95,7 @@ class StationController extends Controller
         $station->is_active = 0;
         $station->save();
 
-        return redirect()->route('admin.stations.index')->with('delete_msg', 'User deleted successfully.');
+        return redirect()->route('stations.index')->with('delete_msg', 'User deleted successfully.');
     }
 
     public function show(Station $station)

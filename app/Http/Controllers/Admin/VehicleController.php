@@ -325,7 +325,7 @@ class VehicleController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vehicles');
 
-        return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle created successfully.');
+        return redirect()->route('vehicles.index')->with('success', 'Vehicle created successfully.');
     }
 
     public function edit(Vehicle $vehicle)
@@ -524,7 +524,7 @@ class VehicleController extends Controller
 
         $vehicle->save();
 
-        return redirect()->route('admin.vehicles.index')->with('success', 'Vehicle Updated successfully.');
+        return redirect()->route('vehicles.index')->with('success', 'Vehicle Updated successfully.');
     }
 
     public function show(Vehicle $vehicle)
@@ -545,7 +545,7 @@ class VehicleController extends Controller
         $vehicle->is_active = 0;
         $vehicle->save();
 
-        return redirect()->route('admin.vehicles.index')->with('delete_msg', 'Vehicle deleted successfully.');
+        return redirect()->route('vehicles.index')->with('delete_msg', 'Vehicle deleted successfully.');
     }
     public function destroyMultiple(Request $request)
     {

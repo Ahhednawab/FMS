@@ -58,7 +58,7 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyMileageReports.index') }}" method="get">
+                <form action="{{ route('dailyMileageReports.index') }}" method="get">
                     <div class="row">
                         <!-- Vehicle No -->
                         <div class="col-md-3">
@@ -94,7 +94,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.dailyMileageReports.index') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('dailyMileageReports.index') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
 

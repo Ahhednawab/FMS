@@ -8,32 +8,41 @@ use Illuminate\Http\Request;
 
 class BankPaymentController extends Controller
 {
-    public function index(){
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('bank_payments')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
         $bankPayments = '';
         return view('admin.bankPayments.index', compact('bankPayments'));
     }
 
-    public function create(){
+    public function create()
+    {
         $serial_no = '654412364';
-        return view('admin.bankPayments.create',compact('serial_no'));
+        return view('admin.bankPayments.create', compact('serial_no'));
     }
 
     public function store(Request $request)
     {
 
 
-        return redirect()->route('admin.bankPayments.index')->with('success', 'Bank Pyament Voucher created successfully.');
+        return redirect()->route('bankPayments.index')->with('success', 'Bank Pyament Voucher created successfully.');
     }
 
     public function show()
     {
-        $bankPayments='';
+        $bankPayments = '';
         return view('admin.bankPayments.show', compact('bankPayments'));
     }
 
     public function destroy()
     {
-        
-        return redirect()->route('admin.bankPayments.index')->with('delete_msg', 'Bank Pyament Voucher deleted successfully.');
+
+        return redirect()->route('bankPayments.index')->with('delete_msg', 'Bank Pyament Voucher deleted successfully.');
     }
 }

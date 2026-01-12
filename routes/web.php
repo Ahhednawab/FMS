@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\JobCartController;
 use App\Http\Controllers\Admin\IbcController;
 use App\Http\Controllers\Admin\CityController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\UserPermissionController;
 use App\Http\Controllers\Admin\CountriesController;
 use App\Http\Controllers\Admin\DailyFuelController;
 use App\Http\Controllers\Admin\WarehouseController;
+use App\Http\Controllers\EmployeeAdvanceController;
 use App\Http\Controllers\MasterwarehouseController;
 use App\Http\Controllers\Admin\MaintainerController;
 use App\Http\Controllers\Admin\WarehousesController;
@@ -98,31 +100,45 @@ Route::get('users/getmanagers', [UserController::class, 'getManagers'])
 
 Route::middleware(['auth'])->group(function () {
 
+
+    // Drafts Management
+    Route::get('/drafts', [App\Http\Controllers\Admin\DraftController::class, 'index'])->name('drafts.index');
+    Route::get('/drafts/{draft}/edit', [App\Http\Controllers\Admin\DraftController::class, 'edit'])->name('drafts.edit');
+    Route::delete('/drafts/{draft}', [App\Http\Controllers\Admin\DraftController::class, 'destroy'])->name('drafts.destroy');
+    Route::get('/drafts/download/{path}', [App\Http\Controllers\Admin\DraftController::class, 'downloadFile'])->name('drafts.download');
+    Route::get('/drafts/view/{path}', [App\Http\Controllers\Admin\DraftController::class, 'viewFile'])->name('drafts.view');
+    Route::post('/drafts/{draft}/remove-file', [App\Http\Controllers\Admin\DraftController::class, 'removeFile'])->name('drafts.removeFile');
+
+
     Route::resource('users', UserController::class);
-
-
     Route::resource('cities', CityController::class);
     Route::resource('stations', StationController::class);
     Route::resource('ibcCenters', IbcController::class);
 
 
-    Route::resource('insurance-companies', InsuranceCompanyController::class);
+
+
 
     Route::resource('vehicles', VehicleController::class);
     Route::post('vehicles/destroyMultiple', [VehicleController::class, 'destroyMultiple'])->name('vehicles.destroyMultiple');
     Route::resource('drivers', DriverController::class);
     Route::post('drivers/destroyMultiple', [DriverController::class, 'destroyMultiple'])->name('drivers.destroyMultiple');
     Route::resource('vendors', VendorController::class);
+    Route::resource('insurance-companies', InsuranceCompanyController::class);
 
     Route::resource('brands', BrandController::class);
     Route::resource('categories', CategoryController::class);
-    Route::resource('productList', ProductListController::class);
     // Fleet Transactions
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
     Route::resource('dailyMileages', DailyMileageController::class);
+    Route::get('fetchDailyMilages', [DailyMileageController::class, 'fetchDailyMilages'])->name('fetchDailyMilages');
+
     Route::resource('dailyMileageReports', DailyMileageReportController::class);
     Route::resource('dailyFuels', DailyFuelController::class);
     Route::resource('dailyFuelReports', DailyFuelReportController::class);
+
+    Route::resource('productList', ProductListController::class);
+
 
     Route::get('/warehouses/assign', [WarehousesController::class, 'assignWarehouse'])->name('warehouses.assign');
     Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
@@ -140,6 +156,23 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/master-inventory/assign', [MasterWarehouseInventoryController::class, 'assignStock'])
         ->name('master_warehouse_inventory.assign');
 
+    // Route::get(
+    //     'inventory-requests',
+    //     [InventoryRequestController::class, 'index']
+    // )->name('inventory-requests.index');
+
+
+    Route::resource(
+        'inventory-requests',
+        InventoryRequestController::class
+    )->only(['index', 'store']);
+
+    Route::post('inventory-requests/{inventoryRequest}/approve', [InventoryRequestController::class, 'approve'])
+        ->name('inventory-requests.approve');
+
+    Route::post('inventory-requests/{inventoryRequest}/reject', [InventoryRequestController::class, 'reject'])
+        ->name('inventory-requests.reject');
+
 
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
@@ -153,6 +186,46 @@ Route::middleware(['auth'])->group(function () {
     // Accidents
     Route::resource('accidentDetails', AccidentDetailController::class);
     Route::resource('accidentReports', AccidentReportController::class);
+
+    Route::resource('clientInvoices', ClientInvoiceController::class);
+    Route::resource('cashPayments', CashPaymentController::class);
+    Route::resource('bankPayments', BankPaymentController::class);
+
+
+    // Vehicle Maintenance
+    Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
+    Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
+
+
+    // Attendance
+    // Filter (POST) route to reuse create() for filtering
+    Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
+    Route::post('driverAttendances/destroyMultiple', [DriversAttendanceController::class, 'destroyMultiple'])->name('driverAttendances.destroyMultiple');
+    Route::resource('driverAttendances', DriversAttendanceController::class);
+
+    Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
+    Route::post('vehicleAttendances/destroyMultiple', [VehiclesAttendanceController::class, 'destroyMultiple'])->name('vehicleAttendances.destroyMultiple');
+    Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
+
+
+
+    Route::get('/salaries/by-month/{month}', [SalaryController::class, 'getByMonth'])
+        ->name('salaries.byMonth');
+    Route::resource('salaries', SalaryController::class);
+
+
+    //   Route::post('salaries/store', [SalaryController::class, 'store'])
+    //     ->name('salaries.store');
+
+    // 🔥 AJAX per-row save
+    Route::post('salaries/save-single', [SalaryController::class, 'saveSingle'])
+        ->name('salaries.save-single');
+
+    Route::resource('employee-advances', EmployeeAdvanceController::class);
+
+    Route::get('advances/', [EmployeeAdvanceController::class, 'index'])->name('advance.index');
+    Route::get('advances/create', [EmployeeAdvanceController::class, 'create'])->name('advance.create');
+    Route::post('advances/store', [EmployeeAdvanceController::class, 'store'])->name('advance.store');
 });
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {

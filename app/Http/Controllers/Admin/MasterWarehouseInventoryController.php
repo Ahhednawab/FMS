@@ -23,7 +23,7 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
 
-        $role_slug = $request->get('roleSlug');
+
 
         $inventory = MasterWarehouseInventory::with('product')
             ->orderBy('created_at', 'desc')
@@ -33,7 +33,7 @@ class MasterWarehouseInventoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses', 'role_slug'));
+        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses'));
     }
 
     public function create(Request $request)
@@ -41,7 +41,7 @@ class MasterWarehouseInventoryController extends Controller
         if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
             abort(403, 'You do not have permission to access this page.');
         }
-        $role_slug = $request->get('roleSlug');
+        $role_slug = auth()->user()->role->slug;
 
         $products = ProductList::all();
 
@@ -53,7 +53,7 @@ class MasterWarehouseInventoryController extends Controller
         if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
             abort(403, 'You do not have permission to access this page.');
         }
-        $role_slug = $request->get('roleSlug');
+
 
         // Validate the input data
         $validated = $request->validate([
@@ -74,25 +74,32 @@ class MasterWarehouseInventoryController extends Controller
         // Create a new inventory record
         MasterWarehouseInventory::create($validated);  // Save new inventory item
 
-        return redirect()->route($role_slug . '.master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
+        return redirect()->route('master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
     }
 
 
     public function assignStock(Request $request)
     {
-        if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
+        $allowed_roles = ['admin', 'master-warehouse'];
+
+        if (!in_array(auth()->user()->role->slug, $allowed_roles)) {
             abort(403, 'You do not have permission to access this page.');
         }
 
         if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
             abort(403, 'You do not have permission to access this page.');
         }
-        $valid = $request->validate([
-            'warehouse_id'         => 'required|exists:warehouses,id',
-            'quantity'            => 'required|integer|min:1'
-        ]);
-
-        $masterwarehouse = Warehouse::where('type', 'master')->get();
+        $validator = \Validator::make(
+            $request->all(),
+            [
+                'warehouse_id'         => 'required|exists:warehouses,id',
+                'quantity'            => 'required|integer|min:1'
+            ]
+        );
+        if ($validator->fails()) {
+            $messages = $validator->getMessageBag();
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
         $master = MasterWarehouseInventory::with('product')->findOrFail($request->master_inventory_id);
         if ((int)$request->quantity > $master->quantity) {
             return response()->json([
@@ -101,7 +108,7 @@ class MasterWarehouseInventoryController extends Controller
             ], 400);
         }
         // Create assignment record
-        \App\Models\WarehouseAssignment::create([
+        WarehouseAssignment::create([
             'master_inventory_id' => $master->id,
             'warehouse_id'        => $request->warehouse_id,
             'quantity'            => $request->quantity,
@@ -128,7 +135,7 @@ class MasterWarehouseInventoryController extends Controller
         if (auth()->user()->role->slug == "master-warehouse" || auth()->user()->role->slug == "admin") {
             $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
                 ->orderBy('assigned_at', 'desc')
-                ->paginate(25);
+                ->paginate(10);
             return view('admin.master_warehouse_inventory.assigned', compact('assignments'));
         } else {
 

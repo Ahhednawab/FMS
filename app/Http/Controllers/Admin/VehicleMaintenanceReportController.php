@@ -19,13 +19,15 @@ use Illuminate\Http\Request;
 
 class VehicleMaintenanceReportController extends Controller
 {
-    public function index(){
-        $vehicleMaintenanceReports = VehicleMaintenanceReport::with(['vehicle','fuelType','maintenanceCategory','serviceProvider','parts','tyreCondition','brakeCondition','engineCondition','batteryCondition'])->where('is_active',1)->get();
+    public function index()
+    {
+        $vehicleMaintenanceReports = VehicleMaintenanceReport::with(['vehicle', 'fuelType', 'maintenanceCategory', 'serviceProvider', 'parts', 'tyreCondition', 'brakeCondition', 'engineCondition', 'batteryCondition'])->where('is_active', 1)->get();
 
         return view('admin.vehicleMaintenanceReports.index', compact('vehicleMaintenanceReports'));
     }
 
-    public function create(){
+    public function create()
+    {
         $maintenance_report_id = VehicleMaintenanceReport::GetMaintenanceReportId();
         $vehicles = Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id');
         $fuel_types = FuelType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -36,8 +38,8 @@ class VehicleMaintenanceReportController extends Controller
         $brake_conditions = BrakeCondition::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $engine_conditions = EngineCondition::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $battery_conditions = BatteryCondition::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
-        return view('admin.vehicleMaintenanceReports.create',compact('maintenance_report_id','fuel_types','category','service_provider','parts','vehicles','tyre_conditions','brake_conditions','engine_conditions','battery_conditions'));
+
+        return view('admin.vehicleMaintenanceReports.create', compact('maintenance_report_id', 'fuel_types', 'category', 'service_provider', 'parts', 'vehicles', 'tyre_conditions', 'brake_conditions', 'engine_conditions', 'battery_conditions'));
     }
 
     public function store(Request $request)
@@ -104,7 +106,7 @@ class VehicleMaintenanceReportController extends Controller
         $vehicleMaintenanceReport->save();
 
 
-        return redirect()->route('admin.vehicleMaintenanceReports.index')->with('success', 'Vehicle Maintenance Report created successfully.');
+        return redirect()->route('vehicleMaintenanceReports.index')->with('success', 'Vehicle Maintenance Report created successfully.');
     }
 
     public function edit(VehicleMaintenanceReport $vehicleMaintenanceReport)
@@ -119,7 +121,7 @@ class VehicleMaintenanceReportController extends Controller
         $engine_conditions = EngineCondition::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $battery_conditions = BatteryCondition::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.vehicleMaintenanceReports.edit', compact('vehicleMaintenanceReport','fuel_types','category','service_provider','parts','vehicles','tyre_conditions','brake_conditions','engine_conditions','battery_conditions'));
+        return view('admin.vehicleMaintenanceReports.edit', compact('vehicleMaintenanceReport', 'fuel_types', 'category', 'service_provider', 'parts', 'vehicles', 'tyre_conditions', 'brake_conditions', 'engine_conditions', 'battery_conditions'));
     }
 
     public function update(Request $request, VehicleMaintenanceReport $vehicleMaintenanceReport)
@@ -184,7 +186,7 @@ class VehicleMaintenanceReportController extends Controller
         $vehicleMaintenanceReport->save();
 
 
-        return redirect()->route('admin.vehicleMaintenanceReports.index')->with('success', 'Vehicle Maintenance Report updated successfully.');
+        return redirect()->route('vehicleMaintenanceReports.index')->with('success', 'Vehicle Maintenance Report updated successfully.');
     }
 
     public function show(VehicleMaintenanceReport $vehicleMaintenanceReport)
@@ -196,6 +198,6 @@ class VehicleMaintenanceReportController extends Controller
     {
         $vehicleMaintenanceReport->is_active = 0;
         $vehicleMaintenanceReport->save();
-        return redirect()->route('admin.vehicleMaintenanceReports.index')->with('delete_msg', 'Vehicle Maintenance Report deleted successfully.');
+        return redirect()->route('vehicleMaintenanceReports.index')->with('delete_msg', 'Vehicle Maintenance Report deleted successfully.');
     }
 }

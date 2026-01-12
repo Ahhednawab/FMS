@@ -14,7 +14,7 @@
       </div>
       <div class="header-elements d-none">
         <div class="d-flex justify-content-center">
-          <a href="{{ route('admin.vehicleMaintenanceReports.index') }}" class="btn btn-primary">
+          <a href="{{ route('vehicleMaintenanceReports.index') }}" class="btn btn-primary">
             <span>View Vehicle Maintenance Report <i class="icon-list ml-2"></i></span>
           </a>
         </div>
@@ -27,7 +27,7 @@
       <div class="col-lg-12">
         <div class="card">
           <div class="card-body">
-            <form method="POST" action="{{ route('admin.vehicleMaintenanceReports.update', $vehicleMaintenanceReport->id) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('vehicleMaintenanceReports.update', $vehicleMaintenanceReport->id) }}" enctype="multipart/form-data">
               @csrf
               @method('PUT')
               
@@ -263,7 +263,7 @@
                   <label for=""></label>
                   <div class="text-right">
                     <button type="submit" class="btn btn-primary">Save</button>
-                    <a href="{{ route('admin.vehicleMaintenanceReports.index') }}" class="btn btn-warning">Cancel</a>
+                    <a href="{{ route('vehicleMaintenanceReports.index') }}" class="btn btn-warning">Cancel</a>
                   </div>
                 </div>
               </div>  

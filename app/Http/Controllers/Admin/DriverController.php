@@ -397,7 +397,7 @@ class DriverController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'drivers');
 
-        return redirect()->route('admin.drivers.index')->with('success', 'Driver created successfully.');
+        return redirect()->route('drivers.index')->with('success', 'Driver created successfully.');
     }
 
     public function edit(Driver $driver)
@@ -687,7 +687,7 @@ class DriverController extends Controller
 
         $driver->save();
 
-        return redirect()->route('admin.drivers.index')->with('success', 'Drive updated successfully.');
+        return redirect()->route('drivers.index')->with('success', 'Drive updated successfully.');
     }
 
 
@@ -703,7 +703,7 @@ class DriverController extends Controller
         $driver->is_active = 0;
         $driver->save();
 
-        return redirect()->route('admin.drivers.index')->with('delete_msg', 'Driver deleted successfully.');
+        return redirect()->route('drivers.index')->with('delete_msg', 'Driver deleted successfully.');
     }
 
     public function destroyMultiple(Request $request)

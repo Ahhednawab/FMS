@@ -8,8 +8,17 @@ use Illuminate\Http\Request;
 
 class AccidentDetailController extends Controller
 {
-    public function index(){
-        $accidentDetails = AccidentDetail::where('is_active',1)->get();
+
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('accident_details')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
+        $accidentDetails = AccidentDetail::where('is_active', 1)->get();
         $accident_types = array(
             '1' =>  'Accident 1',
             '2' =>  'Accident 2',
@@ -29,10 +38,11 @@ class AccidentDetailController extends Controller
             '1' =>  'Vehicle',
             '2' =>  'Equipment',
         );
-        return view('admin.accidentDetails.index', compact('accidentDetails','accident_types','users','injury_types','damage_types'));
+        return view('admin.accidentDetails.index', compact('accidentDetails', 'accident_types', 'users', 'injury_types', 'damage_types'));
     }
 
-    public function create(){
+    public function create()
+    {
         $accident_id = AccidentDetail::GetAccidentId();
         $accident_types = array(
             '1'     =>  'Accident 1',
@@ -53,7 +63,7 @@ class AccidentDetailController extends Controller
             '1' =>  'Vehicle',
             '2' =>  'Equipment',
         );
-        return view('admin.accidentDetails.create',compact('accident_id','accident_types','users','injury_types','damage_types'));
+        return view('admin.accidentDetails.create', compact('accident_id', 'accident_types', 'users', 'injury_types', 'damage_types'));
     }
 
     public function store(Request $request)
@@ -98,7 +108,7 @@ class AccidentDetailController extends Controller
         $accidentDetail->damage_type            =   $request->damage_type;
         $accidentDetail->save();
 
-        return redirect()->route('admin.accidentDetails.index')->with('success', 'Accident Details created successfully.');
+        return redirect()->route('accidentDetails.index')->with('success', 'Accident Details created successfully.');
     }
 
     public function edit(AccidentDetail $accidentDetail)
@@ -122,7 +132,7 @@ class AccidentDetailController extends Controller
             '1' =>  'Vehicle',
             '2' =>  'Equipment',
         );
-        return view('admin.accidentDetails.edit', compact('accidentDetail','accident_types','users','injury_types','damage_types'));
+        return view('admin.accidentDetails.edit', compact('accidentDetail', 'accident_types', 'users', 'injury_types', 'damage_types'));
     }
 
     public function update(Request $request, AccidentDetail $accidentDetail)
@@ -165,7 +175,7 @@ class AccidentDetailController extends Controller
         $accidentDetail->damage_type            =   $request->damage_type;
         $accidentDetail->save();
 
-        return redirect()->route('admin.accidentDetails.index')->with('success', 'Accident Details updated successfully.');
+        return redirect()->route('accidentDetails.index')->with('success', 'Accident Details updated successfully.');
     }
 
     public function show(AccidentDetail $accidentDetail)
@@ -189,13 +199,13 @@ class AccidentDetailController extends Controller
             '1' =>  'Vehicle',
             '2' =>  'Equipment',
         );
-        return view('admin.accidentDetails.show', compact('accidentDetail','accident_types','users','injury_types','damage_types'));
+        return view('admin.accidentDetails.show', compact('accidentDetail', 'accident_types', 'users', 'injury_types', 'damage_types'));
     }
 
     public function destroy(AccidentDetail $accidentDetail)
     {
         $accidentDetail->is_active = 0;
         $accidentDetail->save();
-        return redirect()->route('admin.accidentDetails.index')->with('delete_msg', 'Accident Details deleted successfully.');
+        return redirect()->route('accidentDetails.index')->with('delete_msg', 'Accident Details deleted successfully.');
     }
 }

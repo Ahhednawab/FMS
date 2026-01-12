@@ -66,7 +66,7 @@ class IbcController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'ibc_centers');
 
-        return redirect()->route('admin.ibcCenters.index')->with('success', 'IBC Center created successfully.');
+        return redirect()->route('ibcCenters.index')->with('success', 'IBC Center created successfully.');
     }
 
     public function edit(IbcCenter $ibcCenter)
@@ -97,7 +97,7 @@ class IbcController extends Controller
         $ibcCenter->name        =    $request->name;
         $ibcCenter->save();
 
-        return redirect()->route('admin.ibcCenters.index')->with('success', 'IBC Center updated successfully.');
+        return redirect()->route('ibcCenters.index')->with('success', 'IBC Center updated successfully.');
     }
 
     public function show(IbcCenter $ibcCenter)
@@ -110,6 +110,6 @@ class IbcController extends Controller
         $ibcCenter->is_active = 0;
         $ibcCenter->save();
 
-        return redirect()->route('admin.ibcCenters.index')->with('delete_msg', 'IBC Center deleted successfully.');
+        return redirect()->route('ibcCenters.index')->with('delete_msg', 'IBC Center deleted successfully.');
     }
 }

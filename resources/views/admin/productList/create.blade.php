@@ -10,7 +10,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.productList.index') }}" class="btn btn-primary">
+                    <a href="{{ route('productList.index') }}" class="btn btn-primary">
                         <span>View Products <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -21,7 +21,7 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route($role_slug . '.productList.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('productList.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="row">
@@ -123,7 +123,7 @@
                             <label></label>
                             <div class="text-right">
                                 <button type="submit" class="btn btn-primary">Save</button>
-                                <a href="{{ route($role_slug . '.productList.index') }}" class="btn btn-warning">Cancel</a>
+                                <a href="{{ route('productList.index') }}" class="btn btn-warning">Cancel</a>
                             </div>
                         </div>
                     </div>

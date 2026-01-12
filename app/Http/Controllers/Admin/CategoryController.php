@@ -48,7 +48,7 @@ class CategoryController extends Controller
         $category->name = $request->name;
         $category->save();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
     public function edit(ProductCategory $category)
@@ -75,7 +75,7 @@ class CategoryController extends Controller
         $category->name = $request->name;
         $category->save();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
     public function show(ProductCategory $category)
@@ -88,6 +88,6 @@ class CategoryController extends Controller
         $category->is_active = 0;
         $category->save();
 
-        return redirect()->route('admin.categories.index')->with('delete_msg', 'Category deleted successfully.');
+        return redirect()->route('categories.index')->with('delete_msg', 'Category deleted successfully.');
     }
 }

@@ -16,6 +16,9 @@ class InventoryRequestController extends Controller
 {
     public function store(Request $request)
     {
+        if (!auth()->user()->role->slug == "sub-warehouse") {
+            abort(403, 'You do not have permission to access this page.');
+        }
         $request->validate([
             'master_inventory_id' => 'required|exists:master_warehouse_inventory,id',
             'quantity' => 'required|integer|min:1'
@@ -69,6 +72,10 @@ class InventoryRequestController extends Controller
     // Optional: list requests for sub-warehouse
     public function index(Request $request)
     {
+        $allowed_role = ["sub-warehouse", "master-warehouse"];
+        if (!in_array(auth()->user()->role->slug, $allowed_role)) {
+            abort(403, 'You do not have permission to access this page.');
+        }
         // Allowed statuses
         $allowedStatuses = ['pending', 'approved', 'rejected'];
 
@@ -90,9 +97,21 @@ class InventoryRequestController extends Controller
 
     public function approve(Request $request)
     {
+        if (!auth()->user()->role->slug == "master-warehouse") {
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'message' => 'You do not have permission to access this page.'
+            ]);
+        }
         $inventoryRequest = InventoryRequest::findOrFail($request->request_id);
         if (empty($inventoryRequest)) {
             // return error as json with success , data and message
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'message' => 'You do not have permission to access this page.'
+            ]);
         }
         $requestedUseDetails = User::with('warehouse')->find($inventoryRequest->requested_by);
         $warehouseId = $requestedUseDetails->warehouse->id;
@@ -134,6 +153,13 @@ class InventoryRequestController extends Controller
 
     public function reject(Request $request, InventoryRequest $inventoryRequest)
     {
+        if (!auth()->user()->role->slug == "master-warehouse") {
+            return response()->json([
+                'success' => false,
+                'data' => [],
+                'message' => 'You do not have permission to access this page.'
+            ]);
+        }
         $request->validate([
             'reason' => 'required|string|max:1000',
         ]);

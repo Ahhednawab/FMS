@@ -148,7 +148,7 @@
                 button.prop('disabled', true).html('Requesting...');
 
                 $.ajax({
-                    url: "{{ route('sub-warehouse.inventory-requests.store') }}",
+                    url: "{{ route('inventory-requests.store') }}", //check logic not breaking
                     method: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
