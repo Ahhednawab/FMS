@@ -185,6 +185,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Accidents
     Route::resource('accidentDetails', AccidentDetailController::class);
+    Route::get('accidentDetails/get-vehicle-info/{vehicleNo}', [AccidentDetailController::class, 'getVehicleInfo'])->name('accidentDetails.getVehicleInfo');
+    Route::delete('accidentDetails/delete-file/{fileId}', [AccidentDetailController::class, 'deleteFile'])->name('accidentDetails.deleteFile');
     Route::resource('accidentReports', AccidentReportController::class);
 
     Route::resource('clientInvoices', ClientInvoiceController::class);
@@ -304,6 +306,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
 
     // Accidents
     Route::resource('accidentDetails', AccidentDetailController::class);
+    Route::get('accidentDetails/get-vehicle-info/{vehicleNo}', [AccidentDetailController::class, 'getVehicleInfo'])->name('accidentDetails.getVehicleInfo');
     Route::resource('accidentReports', AccidentReportController::class);
 
     // Accounts

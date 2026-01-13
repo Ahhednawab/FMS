@@ -62,6 +62,7 @@
                         </a>
                     </li>
                 @endif
+
                 <li
                     class="nav-item nav-item-submenu
           {{ request()->routeIs('salaries.*') || request()->routeIs('vehicleAttendances.*') ? 'nav-item-open' : '' }}">
@@ -92,7 +93,7 @@
                     </ul>
                 </li>
 
-                
+
                 @if (auth()->user()->hasPermission('users') ||
                         auth()->user()->hasPermission('cities') ||
                         auth()->user()->hasPermission('stations') ||

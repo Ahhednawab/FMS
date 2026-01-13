@@ -55,12 +55,13 @@
                 <table class="table datatable-colvis-basic dataTable">
                     <thead>
                         <tr>
-                            <th>Accident ID </th>
-                            <th>Accident Type</th>
-                            <th>Accident Date</th>
-                            <th>Accident Time</th>
-                            <th>Accident Description</th>
-                            <th>Location</th>
+                            <th>Accident ID</th>
+                            <th>Vehicle No</th>
+                            <th>Workshop</th>
+                            <th>Claim Amount</th>
+                            <th>Depreciation Amount</th>
+                            <th>Payment Status</th>
+                            <th>Bill to KE</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -68,11 +69,23 @@
                         @foreach ($accidentDetails as $key => $value)
                             <tr>
                                 <td>{{ $value->accident_id }}</td>
-                                <td>{{ $accident_types[$value->accident_type] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($value->accident_date)->format('d-M-Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($value->accident_time)->format('h:i A') }}</td>
-                                <td>{{ $value->accident_description }}</td>
-                                <td>{{ $value->location }}</td>
+                                <td>{{ $value->vehicle_no }}</td>
+                                <td>{{ $value->workshop }}</td>
+                                <td>{{ number_format($value->claim_amount) }}</td>
+                                <td>{{ number_format($value->depreciation_amount) }}</td>
+                                <td>
+                                    <span
+                                        class="badge badge-{{ $value->payment_status === 'pending' ? 'warning' : 'success' }}">
+                                        {{ ucfirst($payment_statuses[$value->payment_status] ?? $value->payment_status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if ($value->bill_to_ke == 1)
+                                        <span class="text-success">Yes</span>
+                                    @else
+                                        <span class="text-danger">No</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">

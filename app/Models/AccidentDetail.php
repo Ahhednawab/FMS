@@ -8,15 +8,32 @@ use Illuminate\Support\Facades\DB;
 class AccidentDetail extends Model
 {
     protected $fillable = [
-        'accident_type',
-        'location',
-        'accident_date',
-        'accident_time',
-        'accident_description',
-        'person_involved',
-        'injury_type',
-        'damage_type',
+        'accident_id',
+        'vehicle_no',
+        'insurance',
+        'ownership',
+        'driver_name',
+        'licence_no',
+        'policy_no',
+        'workshop',
+        'third_party',
+        'claim_amount',
+        'depreciation_amount',
+        'remarks',
+        'bill_to_ke',
+        'payment_status',
+        'created_by',
     ];
+
+    public function files()
+    {
+        return $this->hasMany(AccidentDetailFile::class, 'accident_detail_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public static function GetAccidentId()
     {
