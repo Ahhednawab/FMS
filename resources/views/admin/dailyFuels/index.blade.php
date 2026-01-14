@@ -203,9 +203,9 @@
                             <th>Report Date</th>
                             <th>Previous KM</th>
                             <th>Current KM</th>
-                            <th>Mileage</th>
-                            <th>Fuel Taken</th>
-                            <th>Fuel Avg.</th>
+                            <th>Mileage (Ltr)</th>
+                            <th>Fuel Taken (KM/Ltr)</th>
+                            <th>Fuel Avg. (KM/Ltr)</th>
                             <th>AKPL</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -219,9 +219,9 @@
                                 <td class="text-center">{{ $value->previous_km }}</td>
                                 <td class="text-center">{{ $value->current_km }}</td>
                                 <td class="text-center">{{ $value->mileage }}</td>
-                                <td class="text-center">{{ $value->fuel_taken }} Ltr</td>
-                                <td class="text-center">{{ $value->fuel_average }} KM/Ltr</td>
-                                <td class="text-center">{{ $value->vehicle->akpl }} KM/Ltr</td>
+                                <td class="text-center">{{ $value->fuel_taken }} </td>
+                                <td class="text-center">{{ $value->fuel_average }} </td>
+                                <td class="text-center">{{ $value->vehicle->akpl }} </td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">

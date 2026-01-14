@@ -63,6 +63,7 @@ class DailyMileageController extends Controller
         // Initialize selectedStation as empty
         $selectedStation = $request->station_id ?? '';
 
+
         // If draftData is available, use the selected station from the draft
         if ($draftData) {
             $selectedStation = $draftData->data['selectedstations'] ?? $selectedStation;
@@ -72,7 +73,7 @@ class DailyMileageController extends Controller
         $vehicles = Vehicle::with('station')
             ->where('is_active', 1)
             ->when($selectedStation, function ($query) use ($selectedStation) {
-                return $query->where('station_id', $selectedStation);  // Filter vehicles by the selected station
+                return $query->whereIn('station_id', $selectedStation);  // Filter vehicles by the selected station
             })
             ->orderBy(Station::select('area')->whereColumn('stations.id', 'vehicles.station_id')->limit(1))
             ->orderBy('vehicle_no')

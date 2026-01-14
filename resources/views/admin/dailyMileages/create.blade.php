@@ -32,17 +32,19 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id" id="station_id">
+                                <select class="custom-select select2" name="station_id[]" id="station_id" multiple>
                                     <option value="">ALL</option>
+
                                     @foreach ($stations as $key => $value)
                                         <option value="{{ $key }}"
-                                            {{ (string) $selectedStation === (string) $key ? 'selected' : '' }}>
+                                            {{ in_array($key, (array) $selectedStation) ? 'selected' : '' }}>
                                             {{ $value }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
+
 
                         <div class="col-md-3">
                             <div class="form-group">

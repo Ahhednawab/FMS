@@ -361,7 +361,7 @@ class VehicleController extends Controller
             [
                 'vehicle_no' => [
                     'required',
-                    \Illuminate\Validation\Rule::unique('vehicles', 'vehicle_no')->ignore($vehicle->id),
+                    // \Illuminate\Validation\Rule::unique('vehicles', 'vehicle_no')->ignore($vehicle->id),
                 ],
                 'make'                      =>  'required',
                 'model'                     =>  'required',
@@ -401,7 +401,7 @@ class VehicleController extends Controller
             ],
             [
                 'vehicle_no.required'                   =>  'Vehicle No is required',
-                'vehicle_no.unique'   => 'This vehicle number already exists.',
+                // 'vehicle_no.unique'   => 'This vehicle number already exists.',
                 'make.required'                         =>  'Make is required',
                 'model.required'                        =>  'Model is required',
                 'chasis_no.required'                    =>  'Chasis No is required',
@@ -448,7 +448,7 @@ class VehicleController extends Controller
             mkdir($uploadPath, 0755, true);
         }
 
-        $vehicle->vehicle_no                =   $request->vehicle_no;
+        // $vehicle->vehicle_no                =   $request->vehicle_no;
         $vehicle->make                      =   $request->make;
         $vehicle->model                     =   $request->model;
         $vehicle->chasis_no                 =   $request->chasis_no;
@@ -521,7 +521,6 @@ class VehicleController extends Controller
             $authority->move($uploadPath, $taxFileName);
             $vehicle->tax_file          =   $taxFileName;
         }
-
         $vehicle->save();
 
         return redirect()->route('vehicles.index')->with('success', 'Vehicle Updated successfully.');
