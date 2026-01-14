@@ -19,7 +19,7 @@
                     {{-- DRIVER --}}
                     <div class="mb-3">
                         <label>Driver</label>
-                        <select name="driver_id" class="form-control" required>
+                        <select name="driver_id" class="form-control select2" required>
                             <option value="">-- Select Driver --</option>
                             @foreach ($drivers as $driver)
                                 <option value="{{ $driver->id }}">
@@ -76,25 +76,61 @@
 @endsection
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const amountInput = document.querySelector('input[name="amount"]');
-            const deductionInput = document.querySelector('input[name="per_month_deduction"]');
+        (function() {
+            function loadSelect2AndInit(selector, options) {
+                options = options || {
+                    placeholder: '-- Select Driver --',
+                    allowClear: true,
+                    width: '100%'
+                };
 
-            function validateDeduction() {
-                const amount = parseFloat(amountInput.value) || 0;
-                const deduction = parseFloat(deductionInput.value) || 0;
-
-                if (deduction > amount) {
-                    alert('Per month deduction cannot be greater than the total advance amount.');
-                    deductionInput.value = amount; // reset to max allowed
+                if (typeof $().select2 === 'function') {
+                    $(selector).select2(options);
+                    return;
                 }
+
+                // Load CSS
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css';
+                document.head.appendChild(link);
+
+                // Load JS
+                var script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js';
+                script.onload = function() {
+                    try {
+                        $(selector).select2(options);
+                    } catch (e) {
+                        console.error('Select2 init failed', e);
+                    }
+                };
+                document.body.appendChild(script);
             }
 
-            // Validate whenever user types in the deduction field
-            deductionInput.addEventListener('input', validateDeduction);
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize Select2 on driver dropdown (with CDN fallback)
+                loadSelect2AndInit('.select2');
 
-            // Also validate if the user changes the total amount
-            amountInput.addEventListener('input', validateDeduction);
-        });
+                const amountInput = document.querySelector('input[name="amount"]');
+                const deductionInput = document.querySelector('input[name="per_month_deduction"]');
+
+                function validateDeduction() {
+                    const amount = parseFloat(amountInput.value) || 0;
+                    const deduction = parseFloat(deductionInput.value) || 0;
+
+                    if (deduction > amount) {
+                        alert('Per month deduction cannot be greater than the total advance amount.');
+                        deductionInput.value = amount; // reset to max allowed
+                    }
+                }
+
+                // Validate whenever user types in the deduction field
+                deductionInput.addEventListener('input', validateDeduction);
+
+                // Also validate if the user changes the total amount
+                amountInput.addEventListener('input', validateDeduction);
+            });
+        })();
     </script>
 @endpush

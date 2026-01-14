@@ -105,4 +105,9 @@ class User extends Authenticatable
             ->permissions
             ->contains('label', $permissionLabel);
     }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'created_by');
+    }
 }

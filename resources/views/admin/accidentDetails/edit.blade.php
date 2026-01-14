@@ -218,15 +218,23 @@
                                                                         alt="{{ $file->original_name }}" width="30"
                                                                         class="mr-2 rounded">
                                                                 @else
-                                                                    <i class="icon-file-pdf text-danger mr-2"></i>
+                                                                    <i class="icon-file-pdf text-danger mr-2 icon-2x"></i>
                                                                 @endif
                                                                 {{ $file->original_name }}
                                                                 ({{ number_format($file->file_size / 1024, 2) }} KB)
                                                             </span>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                                onclick="deleteFile({{ $file->id }}, '{{ $file->file_path }}')">
-                                                                <i class="icon-trash"></i> Delete
-                                                            </button>
+                                                            <div>
+                                                                <a href="{{ asset($file->file_path) }}"
+                                                                    download="{{ $file->original_name }}"
+                                                                    class="btn btn-sm btn-success mr-2">
+                                                                    <i class="icon-download"></i> Download
+                                                                </a>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger"
+                                                                    onclick="deleteFile({{ $file->id }}, '{{ $file->file_path }}')">
+                                                                    <i class="icon-trash"></i> Delete
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     @endforeach
                                                 </div>

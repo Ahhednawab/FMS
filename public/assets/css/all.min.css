@@ -29599,7 +29599,7 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     font-weight: 400
 }
 
-.ui-datepicker .ui-datepicker-next,
+/* .ui-datepicker .ui-datepicker-next,
 .ui-datepicker .ui-datepicker-prev {
     position: absolute;
     top: 50%;
@@ -29609,7 +29609,7 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     padding: .4375rem;
     cursor: pointer;
     border-radius: .25rem
-}
+} */
 
 .ui-datepicker .ui-datepicker-next:after,
 .ui-datepicker .ui-datepicker-prev:after {
@@ -29631,25 +29631,25 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     left: 0
 }
 
-.ui-datepicker .ui-datepicker-prev:after {
+/* .ui-datepicker .ui-datepicker-prev:after {
     content: ""
 }
 
 [dir=rtl] .ui-datepicker .ui-datepicker-prev:after {
     content: ""
-}
+} */
 
 .ui-datepicker .ui-datepicker-next {
     right: 0
 }
-
+/* 
 .ui-datepicker .ui-datepicker-next:after {
     content: ""
 }
 
 [dir=rtl] .ui-datepicker .ui-datepicker-next:after {
     content: ""
-}
+} */
 
 .ui-datepicker .ui-datepicker-next-hover,
 .ui-datepicker .ui-datepicker-prev-hover {

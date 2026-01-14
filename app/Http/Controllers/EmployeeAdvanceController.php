@@ -12,15 +12,33 @@ class EmployeeAdvanceController extends Controller
      * List all advances
      */
     // Show all issued advances
-    public function index()
+    public function index(Request $request)
     {
-        $advances = EmployeeAdvance::with('driver')
-            ->orderBy('advance_date', 'desc')
-            ->get();
+        $search = $request->query('search', '');
+        $status = $request->query('status', 'all');
+        $per_page = (int)$request->query('per_page', 10);
 
-        return view('admin.advances.index', compact('advances'));
+        $query = EmployeeAdvance::with('driver')->orderBy('advance_date', 'desc');
+
+        // Search across driver name and driver ID
+        if (!empty($search)) {
+            $query->whereHas('driver', function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('id', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($status === 'open') {
+            $query->where('is_closed', false);
+        } elseif ($status === 'closed') {
+            $query->where('is_closed', true);
+        }
+
+        $advances = $query->paginate($per_page);
+
+        return view('admin.advances.index', compact('advances', 'status'));
     }
-
     // Show create advance form
     public function create()
     {

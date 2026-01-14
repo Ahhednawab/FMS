@@ -8,6 +8,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\JobCartController;
 use App\Http\Controllers\Admin\IbcController;
 use App\Http\Controllers\Admin\CityController;
@@ -225,9 +226,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('employee-advances', EmployeeAdvanceController::class);
 
+
+
     Route::get('advances/', [EmployeeAdvanceController::class, 'index'])->name('advance.index');
     Route::get('advances/create', [EmployeeAdvanceController::class, 'create'])->name('advance.create');
     Route::post('advances/store', [EmployeeAdvanceController::class, 'store'])->name('advance.store');
+
+
+    Route::resource('invoices', InvoiceController::class);
 });
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {

@@ -17,14 +17,36 @@ class AccidentDetailController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
     }
-    public function index()
+    public function index(Request $request)
     {
-        $accidentDetails = AccidentDetail::get();
+        $status = $request->query('payment_status', 'all');
+        $search = $request->query('search', '');
+        $per_page = (int)$request->query('per_page', 10);
+
         $payment_statuses = array(
             'pending' => 'Pending',
             'received' => 'Received',
         );
-        return view('admin.accidentDetails.index', compact('accidentDetails', 'payment_statuses'));
+
+        $query = AccidentDetail::query();
+
+        // Filter by payment status
+        if ($status !== 'all' && array_key_exists($status, $payment_statuses)) {
+            $query->where('payment_status', $status);
+        }
+
+        // Search across multiple fields
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('accident_id', 'like', "%{$search}%")
+                    ->orWhere('vehicle_no', 'like', "%{$search}%")
+                    ->orWhere('workshop', 'like', "%{$search}%");
+            });
+        }
+
+        $accidentDetails = $query->paginate($per_page);
+
+        return view('admin.accidentDetails.index', compact('accidentDetails', 'payment_statuses', 'status'));
     }
 
     public function create()
@@ -40,6 +62,7 @@ class AccidentDetailController extends Controller
 
     public function store(Request $request)
     {
+        // the image should have been resized before upload
         $validator = \Validator::make(
             $request->all(),
             [

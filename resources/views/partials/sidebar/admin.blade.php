@@ -65,15 +65,15 @@
 
                 <li
                     class="nav-item nav-item-submenu
-          {{ request()->routeIs('salaries.*') || request()->routeIs('vehicleAttendances.*') ? 'nav-item-open' : '' }}">
+          {{ request()->routeIs('salaries.*') || request()->routeIs('advance.*') || request()->routeIs('invoices.*') ? 'nav-item-open' : '' }}">
 
                     <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
 
                     <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                        style="{{ request()->routeIs('salaries.*') || request()->routeIs('vehicleAttendances.*') ? 'display:block;' : '' }}">
+                        style="{{ request()->routeIs('salaries.*') || request()->routeIs('advance.*') || request()->routeIs('invoices.*') ? 'display:block;' : '' }}">
                         @if (auth()->user()->hasPermission('driver_attendances'))
                             <li class="nav-item"><a href="{{ route('salaries.index') }}"
-                                    class="nav-link {{ request()->routeIs('salaries .*') ? 'active' : '' }}">Salaries</a>
+                                    class="nav-link {{ request()->routeIs('salaries.*') ? 'active' : '' }}">Salaries</a>
                             </li>
                         @endif
                         @if (auth()->user()->hasPermission('driver_attendances'))
@@ -86,8 +86,8 @@
                         @endif
 
                         @if (auth()->user()->hasPermission('vehicle_attendances'))
-                            <li class="nav-item"><a href="{{ route('vehicleAttendances.index') }}"
-                                    class="nav-link {{ request()->routeIs('vehicleAttendances.*') ? 'active' : '' }}">Invoice</a>
+                            <li class="nav-item"><a href="{{ route('invoices.index') }}"
+                                    class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">Invoice</a>
                             </li>
                         @endif
                     </ul>
@@ -414,49 +414,54 @@
                                         class="nav-link {{ request()->routeIs('accidentDetails.*') ? 'active' : '' }}">Accident
                                         Details</a></li>
                             @endif
-                            @if (auth()->user()->hasPermission('accident_reports'))
-                                <li class="nav-item"><a href="{{ route('accidentReports.index') }}"
-                                        class="nav-link {{ request()->routeIs('accidentReports.*') ? 'active' : '' }}">Accident
-                                        Report</a></li>
+                            @if (false)
+
+                                @if (auth()->user()->hasPermission('accident_reports'))
+                                    <li class="nav-item"><a href="{{ route('accidentReports.index') }}"
+                                            class="nav-link {{ request()->routeIs('accidentReports.*') ? 'active' : '' }}">Accident
+                                            Report</a></li>
+                                @endif
                             @endif
                         </ul>
                     </li>
                 @endif
-                @if (auth()->user()->hasPermission('client_invoices') ||
-                        auth()->user()->hasPermission('cash_payments') ||
-                        auth()->user()->hasPermission('bank_payments'))
-                    <li
-                        class="nav-item nav-item-submenu {{ request()->routeIs('clientInvoices.*') ||
-                        request()->routeIs('cashPayments.*') ||
-                        request()->routeIs('bankPayments.*')
-                            ? 'nav-item-open'
-                            : '' }}">
-                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
-
-                        <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                            style="{{ request()->routeIs('clientInvoices.*') ||
+                @if (false)
+                    @if (auth()->user()->hasPermission('client_invoices') ||
+                            auth()->user()->hasPermission('cash_payments') ||
+                            auth()->user()->hasPermission('bank_payments'))
+                        <li
+                            class="nav-item nav-item-submenu {{ request()->routeIs('clientInvoices.*') ||
                             request()->routeIs('cashPayments.*') ||
                             request()->routeIs('bankPayments.*')
-                                ? 'display:block;'
+                                ? 'nav-item-open'
                                 : '' }}">
-                            @if (auth()->user()->hasPermission('client_invoices'))
-                                <li class="nav-item"><a href="{{ route('clientInvoices.index') }}"
-                                        class="nav-link {{ request()->routeIs('clientInvoices.*') ? 'active' : '' }}">Client
-                                        Invoice</a></li>
-                            @endif
-                            @if (auth()->user()->hasPermission('cash_payments'))
-                                <li class="nav-item"><a href="{{ route('cashPayments.index') }}"
-                                        class="nav-link {{ request()->routeIs('cashPayments.*') ? 'active' : '' }}">Cash
-                                        Payment Voucher</a></li>
-                            @endif
+                            <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
 
-                            @if (auth()->user()->hasPermission('bank_payments'))
-                                <li class="nav-item"><a href="{{ route('bankPayments.index') }}"
-                                        class="nav-link {{ request()->routeIs('bankPayments.*') ? 'active' : '' }}">Bank
-                                        Payment Voucher</a></li>
-                            @endif
-                        </ul>
-                    </li>
+                            <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+                                style="{{ request()->routeIs('clientInvoices.*') ||
+                                request()->routeIs('cashPayments.*') ||
+                                request()->routeIs('bankPayments.*')
+                                    ? 'display:block;'
+                                    : '' }}">
+                                @if (auth()->user()->hasPermission('client_invoices'))
+                                    <li class="nav-item"><a href="{{ route('clientInvoices.index') }}"
+                                            class="nav-link {{ request()->routeIs('clientInvoices.*') ? 'active' : '' }}">Client
+                                            Invoice</a></li>
+                                @endif
+                                @if (auth()->user()->hasPermission('cash_payments'))
+                                    <li class="nav-item"><a href="{{ route('cashPayments.index') }}"
+                                            class="nav-link {{ request()->routeIs('cashPayments.*') ? 'active' : '' }}">Cash
+                                            Payment Voucher</a></li>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('bank_payments'))
+                                    <li class="nav-item"><a href="{{ route('bankPayments.index') }}"
+                                            class="nav-link {{ request()->routeIs('bankPayments.*') ? 'active' : '' }}">Bank
+                                            Payment Voucher</a></li>
+                                @endif
+                            </ul>
+                        </li>
+                    @endif
                 @endif
                 @if (auth()->user()->hasPermission('vehicle_maintenances') ||
                         auth()->user()->hasPermission('vehicle_maintenance_reports'))
