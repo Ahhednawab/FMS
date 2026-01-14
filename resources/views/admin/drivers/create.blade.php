@@ -22,7 +22,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.drivers.index') }}" class="btn btn-primary">
+                    <a href="{{ route('drivers.index') }}" class="btn btn-primary">
                         <span>View Drivers <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -33,7 +33,7 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.drivers.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('drivers.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @if (isset($draftId))
                         <input type="hidden" name="draft_id" value="{{ $draftId }}">
@@ -248,7 +248,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['cnic_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['cnic_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['cnic_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['cnic_file']['original_name'] }}
@@ -285,7 +285,7 @@
                                     value="{{ $draftData['eobi_start_date'] ?? old('eobi_start_date') }}">
                                 @if (isset($draftData['file_info']['eobi_card_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['eobi_card_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['eobi_card_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['eobi_card_file']['original_name'] }}
@@ -326,7 +326,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['picture_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['picture_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['picture_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['picture_file']['original_name'] }}
@@ -340,7 +340,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['medical_report_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['medical_report_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['medical_report_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['medical_report_file']['original_name'] }}
@@ -376,7 +376,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['authority_letter_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['authority_letter_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['authority_letter_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['authority_letter_file']['original_name'] }}
@@ -401,7 +401,7 @@
                                     value="{{ $draftData['employment_date'] ?? old('employment_date') }}">
                                 @if (isset($draftData['file_info']['employee_card_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['employee_card_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['employee_card_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['employee_card_file']['original_name'] }}
@@ -415,7 +415,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['ddc_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['ddc_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['ddc_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['ddc_file']['original_name'] }}
@@ -429,7 +429,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['third_party_driver_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['third_party_driver_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['third_party_driver_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['third_party_driver_file']['original_name'] }}
@@ -534,7 +534,7 @@
                                 @endif
                                 @if (isset($draftData['file_info']['license_file']))
                                     <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('admin.drafts.view', base64_encode($draftData['file_info']['license_file']['path'])) }}"
+                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['license_file']['path'])) }}"
                                             target="_blank" class="text-success mr-2" title="View">
                                             <i class="icon-file"></i>
                                             {{ $draftData['file_info']['license_file']['original_name'] }}
@@ -609,7 +609,7 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="icon-check"></i> Save
                                 </button>
-                                <a href="{{ route('admin.drivers.index') }}" class="btn btn-warning">Cancel</a>
+                                <a href="{{ route('drivers.index') }}" class="btn btn-warning">Cancel</a>
                             </div>
                         </div>
                     </div>

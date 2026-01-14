@@ -12,12 +12,11 @@ class IssueController extends Controller
      */
     public function index(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
 
         $issues = Issue::orderBy('updated_at', 'desc')
             ->paginate(10);
 
-        return view('admin.issues.index', compact('issues', 'role_slug'));
+        return view('admin.issues.index', compact('issues'));
     }
 
     /**
@@ -25,9 +24,7 @@ class IssueController extends Controller
      */
     public function create(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
-
-        return view('admin.issues.create', compact('role_slug'));
+        return view('admin.issues.create');
     }
 
     /**
@@ -46,7 +43,7 @@ class IssueController extends Controller
         Issue::create($validated);
 
         return redirect()
-            ->route('admin.issues.index')
+            ->route('issues.index')
             ->with('success', 'Issue created successfully.');
     }
 
@@ -56,11 +53,10 @@ class IssueController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $role_slug = $request->get('roleSlug');
 
         $issue = Issue::findOrFail($id);
 
-        return view('admin.issues.show', compact('issue', 'role_slug'));
+        return view('admin.issues.show', compact('issue'));
     }
 
     /**
@@ -68,11 +64,10 @@ class IssueController extends Controller
      */
     public function edit(Request $request, string $id)
     {
-        $role_slug = $request->get('roleSlug');
 
         $issue = Issue::findOrFail($id);
 
-        return view('admin.issues.edit', compact('issue', 'role_slug'));
+        return view('admin.issues.edit', compact('issue'));
     }
 
     /**
@@ -89,7 +84,7 @@ class IssueController extends Controller
         $issue->update($validated);
 
         return redirect()
-            ->route('admin.issues.index')
+            ->route('issues.index')
             ->with('success', 'Issue updated successfully.');
     }
 
@@ -102,7 +97,7 @@ class IssueController extends Controller
         $issue->delete();
 
         return redirect()
-            ->route('admin.issues.index')
+            ->route('issues.index')
             ->with('success', 'Issue deleted successfully.');
     }
 }

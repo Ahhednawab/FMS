@@ -8,7 +8,7 @@
             </div>
 
             <div class="card-body">
-                <form action="{{ route($role_slug . '.issues.store') }}" method="POST">
+                <form action="{{ route('issues.store') }}" method="POST">
                     @csrf
 
                     {{-- Issue Title --}}
@@ -36,7 +36,7 @@
 
                     {{-- Buttons --}}
                     <div class="d-flex justify-content-end">
-                        <a href="{{ route($role_slug . '.issues.index') }}" class="btn btn-secondary me-2">
+                        <a href="{{ route('issues.index') }}" class="btn btn-secondary me-2">
                             Cancel
                         </a>
                         <button type="submit" class="btn btn-primary ml-2">

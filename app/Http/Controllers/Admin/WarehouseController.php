@@ -15,6 +15,13 @@ use App\Http\Controllers\Controller;
 class WarehouseController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('warehouses')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $role_slug = $request->get('roleSlug');
@@ -46,7 +53,6 @@ class WarehouseController extends Controller
 
     public function store(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
 
         // Handle draft saving (your existing logic)
         if ($this->handleDraftSave($request, 'warehouses')) {
@@ -82,13 +88,14 @@ class WarehouseController extends Controller
         $this->deleteDraftAfterSuccess($request, 'warehouses');
 
         return redirect()
-            ->route($role_slug . '.warehouses.index')
+            ->route('warehouses.index')
             ->with('success', 'Warehouse created successfully!');
     }
 
     public function show(Request $request, $id)
     {
-        $role_slug = $request->get('roleSlug');
+        $role_slug = auth()->user()->role->slug;
+
 
         $warehouse = Warehouse::with('station')->findOrFail($id);
         return view('admin.warehouses.show', compact('warehouse', 'role_slug'));
@@ -96,7 +103,8 @@ class WarehouseController extends Controller
 
     public function edit(Request $request, Warehouse $warehouse)
     {
-        $role_slug = $request->get('roleSlug');
+        $$role_slug = auth()->user()->role->slug;
+
 
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
@@ -113,7 +121,8 @@ class WarehouseController extends Controller
 
     public function update(Request $request, Warehouse $warehouse)
     {
-        $role_slug = $request->get('roleSlug');
+        $role_slug = auth()->user()->role->slug;
+
 
         $validator = \Validator::make(
             $request->all(),
@@ -141,16 +150,17 @@ class WarehouseController extends Controller
         $warehouse->station_id  =   $request->station_id;
         $warehouse->save();
 
-        return redirect()->route($role_slug . '.warehouses.index')->with('success', 'Warehouse updated successfully.');
+        return redirect()->route('warehouses.index')->with('success', 'Warehouse updated successfully.');
     }
 
     public function destroy(Request $request, Warehouse $warehouse)
     {
-        $role_slug = $request->get('roleSlug');
+        $$role_slug = auth()->user()->role->slug;
+
 
         $warehouse->is_active = 0;
         $warehouse->save();
 
-        return redirect()->route($role_slug . '.warehouses.index')->with('delete_msg', 'Warehouse deleted successfully.');
+        return redirect()->route('warehouses.index')->with('delete_msg', 'Warehouse deleted successfully.');
     }
 }

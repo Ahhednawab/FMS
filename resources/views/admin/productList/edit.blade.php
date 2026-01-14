@@ -11,7 +11,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.productList.index') }}" class="btn btn-primary">
+                    <a href="{{ route('productList.index') }}" class="btn btn-primary">
                         <span>View Products <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -24,7 +24,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" action="{{ route($role_slug . '.productList.update', $productList->id) }}">
+                        <form method="POST" action="{{ route('productList.update', $productList->id) }}">
                             @csrf
                             @method('PUT')
 
@@ -115,8 +115,7 @@
                                     <label></label>
                                     <div class="text-right">
                                         <button type="submit" class="btn btn-primary">Update</button>
-                                        <a href="{{ route($role_slug . '.productList.index') }}"
-                                            class="btn btn-warning">Cancel</a>
+                                        <a href="{{ route('productList.index') }}" class="btn btn-warning">Cancel</a>
                                     </div>
                                 </div>
                             </div>

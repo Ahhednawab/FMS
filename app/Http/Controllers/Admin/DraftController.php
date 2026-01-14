@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Auth;
 class DraftController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('drafts')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
         $drafts = Draft::where('created_by', Auth::id())
@@ -29,16 +36,16 @@ class DraftController extends Controller
 
         // Map module to create route
         $routeMap = [
-            'users' => 'admin.users.create',
-            'cities' => 'admin.cities.create',
-            'stations' => 'admin.stations.create',
-            'ibc_centers' => 'admin.ibcCenters.create',
-            'warehouses' => 'admin.warehouses.create',
-            'vehicles' => 'admin.vehicles.create',
-            'drivers' => 'admin.drivers.create',
-            'vendors' => 'admin.vendors.create',
-            'dailymileage' => 'admin.dailyMileages.create',
-            'inventory_demands' => 'admin.inventoryDemands.create',
+            'users' => 'users.create',
+            'cities' => 'cities.create',
+            'stations' => 'stations.create',
+            'ibc_centers' => 'ibcCenters.create',
+            'warehouses' => 'warehouses.create',
+            'vehicles' => 'vehicles.create',
+            'drivers' => 'drivers.create',
+            'vendors' => 'vendors.create',
+            'dailymileage' => 'dailyMileages.create',
+            'inventory_demands' => 'inventoryDemands.create',
         ];
 
         $route = $routeMap[$draft->module] ?? null;
@@ -64,7 +71,7 @@ class DraftController extends Controller
 
         $draft->delete();
 
-        return redirect()->route('admin.drafts.index')->with('success', 'Draft deleted successfully.');
+        return redirect()->route('drafts.index')->with('success', 'Draft deleted successfully.');
     }
 
     public function downloadFile($path)

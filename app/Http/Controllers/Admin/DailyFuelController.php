@@ -15,6 +15,13 @@ use App\Http\Controllers\Controller;
 
 class DailyFuelController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('daily_fuels')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
@@ -199,7 +206,7 @@ class DailyFuelController extends Controller
             $dailyFuel->save();
         }
 
-        return redirect()->route('admin.dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
+        return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
     }
 
     public function edit(DailyFuelReport $dailyFuel)
@@ -250,7 +257,7 @@ class DailyFuelController extends Controller
         $dailyFuel->fuel_average    =   $request->fuel_average;
         $dailyFuel->save();
 
-        return redirect()->route('admin.dailyFuels.index')->with('success', 'Daily Fuel updated successfully.');
+        return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel updated successfully.');
     }
 
     public function show(DailyFuelReport $dailyFuel)
@@ -263,6 +270,6 @@ class DailyFuelController extends Controller
         $dailyFuel->is_active = 0;
         $dailyFuel->save();
 
-        return redirect()->route('admin.dailyFuels.index')->with('delete_msg', 'Daily Fuel deleted successfully.');
+        return redirect()->route('dailyFuels.index')->with('delete_msg', 'Daily Fuel deleted successfully.');
     }
 }

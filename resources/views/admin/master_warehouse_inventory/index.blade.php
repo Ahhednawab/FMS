@@ -11,7 +11,7 @@
             </div>
         @endif
 
-        <a href="{{ route($role_slug . '.master_warehouse_inventory.create') }}" class="btn btn-primary mb-3">
+        <a href="{{ route('master_warehouse_inventory.create') }}" class="btn btn-primary mb-3">
             Add New Inventory
         </a>
 
@@ -108,7 +108,6 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            var role_slug = "{{ $role_slug }}";
             // Safe & working AJAX assignment script
             document.querySelectorAll('.assign-form').forEach(form => {
                 form.addEventListener('submit', async function(e) {

@@ -19,7 +19,7 @@
 
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.warehouses.index') }}" class="btn btn-primary">
+                    <a href="{{ route('warehouses.index') }}" class="btn btn-primary">
                         View Warehouse <i class="icon-list ml-2"></i>
                     </a>
                 </div>
@@ -35,7 +35,7 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <form action="{{ route($role_slug . '.warehouses.update', $warehouse->id) }}" method="POST">
+                        <form action="{{ route('warehouses.update', $warehouse->id) }}" method="POST">
                             @csrf
                             @method('PUT')
 
@@ -120,7 +120,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         <i class="icon-check"></i> Update
                                     </button>
-                                    <a href="{{ route($role_slug . '.warehouses.index') }}" class="btn btn-warning">
+                                    <a href="{{ route('warehouses.index') }}" class="btn btn-warning">
                                         Cancel
                                     </a>
                                 </div>

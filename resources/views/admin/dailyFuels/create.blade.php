@@ -22,7 +22,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.dailyFuels.index') }}" class="btn btn-primary">
+                    <a href="{{ route('dailyFuels.index') }}" class="btn btn-primary">
                         <span>View Daily Fuel <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -33,7 +33,7 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyFuels.create') }}" method="get">
+                <form action="{{ route('dailyFuels.create') }}" method="get">
                     <div class="row">
                         <div class="col-md-3">
                             <div class="form-group">
@@ -64,7 +64,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.dailyFuels.create') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('dailyFuels.create') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
                     </div>
@@ -74,7 +74,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyFuels.store') }}" method="POST">
+                <form action="{{ route('dailyFuels.store') }}" method="POST">
                     @csrf
                     <div class="row">
                         <!-- Report Date -->
@@ -180,7 +180,7 @@
                             <label for=""></label>
                             <div class="text-right">
                                 <button type="submit" class="btn btn-primary">Save</button>
-                                <a href="{{ route('admin.dailyFuels.index') }}" class="btn btn-warning">Cancel</a>
+                                <a href="{{ route('dailyFuels.index') }}" class="btn btn-warning">Cancel</a>
                             </div>
                         </div>
                     </div>

@@ -13,18 +13,25 @@ use Illuminate\Support\Facades\Auth;
 class StationController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('stations')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
-    	$stations = Station::where('is_active',1)->get();
-    	return view('admin.stations.index',compact('stations'));
+        $stations = Station::where('is_active', 1)->get();
+        return view('admin.stations.index', compact('stations'));
     }
 
     public function create(Request $request)
     {
         $serial_no = Station::GetSerialNumber();
-        
+
         $draftInfo = $this->getDraftDataForView($request, 'stations');
-        
+
         return view('admin.stations.create', compact('serial_no') + $draftInfo);
     }
 
@@ -37,8 +44,8 @@ class StationController extends Controller
 
         $validator = \Validator::make(
             $request->all(),
-            [ 'area'         	=> 'required', ],
-            [ 'area.required'        	=> 'Area is required', ]
+            ['area'             => 'required',],
+            ['area.required'            => 'Area is required',]
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
@@ -53,7 +60,7 @@ class StationController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'stations');
 
-        return redirect()->route('admin.stations.index')->with('success', 'Station created successfully.');
+        return redirect()->route('stations.index')->with('success', 'Station created successfully.');
     }
 
     public function edit(Station $station)
@@ -66,10 +73,10 @@ class StationController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'area'         	=> 'required',
+                'area'             => 'required',
             ],
             [
-                'area.required'        	=> 'Area is required',
+                'area.required'            => 'Area is required',
             ]
         );
         if ($validator->fails()) {
@@ -80,7 +87,7 @@ class StationController extends Controller
         $station->area = $request->area;
         $station->save();
 
-        return redirect()->route('admin.stations.index')->with('success', 'Station updated successfully.');
+        return redirect()->route('stations.index')->with('success', 'Station updated successfully.');
     }
 
     public function destroy(Station $station)
@@ -88,11 +95,11 @@ class StationController extends Controller
         $station->is_active = 0;
         $station->save();
 
-        return redirect()->route('admin.stations.index')->with('delete_msg', 'User deleted successfully.');
+        return redirect()->route('stations.index')->with('delete_msg', 'User deleted successfully.');
     }
 
     public function show(Station $station)
     {
-    	return view('admin.stations.show', compact('station'));
+        return view('admin.stations.show', compact('station'));
     }
 }

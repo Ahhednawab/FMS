@@ -13,24 +13,21 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
 
-        $purchases = Purchase::with('supplier')->get();
-        return view('admin.purchases.index', compact('purchases', 'role_slug'));
+        $purchases = Purchase::with('supplier')->paginate(10);
+        return view('admin.purchases.index', compact('purchases'));
     }
 
     public function create(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
 
         $suppliers = Supplier::all();
         $products = ProductList::all();
-        return view('admin.purchases.create', compact('suppliers', 'products', 'role_slug'));
+        return view('admin.purchases.create', compact('suppliers', 'products'));
     }
 
     public function store(Request $request)
     {
-        $role_slug = $request->get('roleSlug');
 
         // Validate the input data
         $validated = $request->validate([
@@ -56,6 +53,6 @@ class PurchaseController extends Controller
         // Create the inventory record
         MasterWarehouseInventory::create($inventoryData);
 
-        return redirect()->route($role_slug . '.purchases.index')->with('success', 'Purchase added successfully!');
+        return redirect()->route('purchases.index')->with('success', 'Purchase added successfully!');
     }
 }

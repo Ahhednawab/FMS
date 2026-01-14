@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Validator;
 
 class InsuranceCompanyController extends Controller
 {
+
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('users')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
         $companies = InsuranceCompany::where('is_active', 1)
@@ -44,7 +52,7 @@ class InsuranceCompanyController extends Controller
             'is_active' => true
         ]);
 
-        return redirect()->route('admin.insurance-companies.index')
+        return redirect()->route('insurance-companies.index')
             ->with('success', 'Insurance Company created successfully.');
     }
 
@@ -71,7 +79,7 @@ class InsuranceCompanyController extends Controller
             'name' => $request->name,
         ]);
 
-        return redirect()->route('admin.insurance-companies.index')
+        return redirect()->route('insurance-companies.index')
             ->with('success', 'Insurance Company updated successfully.');
     }
 
@@ -83,7 +91,7 @@ class InsuranceCompanyController extends Controller
     public function destroy(InsuranceCompany $insurance_company)
     {
         $insurance_company->update(['is_active' => false]);
-        return redirect()->route('admin.insurance-companies.index')
+        return redirect()->route('insurance-companies.index')
             ->with('success', 'Insurance Company deleted successfully.');
     }
 }

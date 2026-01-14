@@ -7,7 +7,7 @@
                 <h4>Issues Management</h4>
                 {{-- Filter by Status --}}
                 <div class="mb-3 d-flex align-items-end">
-                    <a href="{{ route('admin.issues.create') }}" class="btn btn-primary">Create New Issue</a>
+                    <a href="{{ route('issues.create') }}" class="btn btn-primary">Create New Issue</a>
                 </div>
             </div>
 
@@ -40,12 +40,11 @@
                                                     </a>
                                                     <div class="dropdown-menu dropdown-menu-right">
 
-                                                        <a href="{{ route($role_slug . '.issues.edit', $issue->id) }}"
+                                                        <a href="{{ route('issues.edit', $issue->id) }}"
                                                             class="dropdown-item">
                                                             <i class="icon-pencil7"></i> Edit
                                                         </a>
-                                                        <form
-                                                            action="{{ route($role_slug . '.issues.destroy', $issue->id) }}"
+                                                        <form action="{{ route('issues.destroy', $issue->id) }}"
                                                             method="POST" onsubmit="return confirm('Are you sure?');">
                                                             @csrf
                                                             @method('DELETE')

@@ -71,7 +71,7 @@ class  VendorController  extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vendors');
 
-        return redirect()->route('admin.vendors.index')->with('success', 'Vendor created successfully.');
+        return redirect()->route('vendors.index')->with('success', 'Vendor created successfully.');
     }
 
     public function edit(Vendor $vendor)
@@ -113,7 +113,7 @@ class  VendorController  extends Controller
         $vendor->description    =   $request->description;
         $vendor->save();
 
-        return redirect()->route('admin.vendors.index')->with('success', 'Vendor Updated successfully.');
+        return redirect()->route('vendors.index')->with('success', 'Vendor Updated successfully.');
     }
 
     public function show(Vendor $vendor)
@@ -125,6 +125,6 @@ class  VendorController  extends Controller
     {
         $vendor->is_active = 0;
         $vendor->save();
-        return redirect()->route('admin.vendors.index')->with('delete_msg', 'Vendor deleted successfully.');
+        return redirect()->route('vendors.index')->with('delete_msg', 'Vendor deleted successfully.');
     }
 }

@@ -12,6 +12,13 @@ use Carbon\Carbon;
 
 class VehiclesAttendanceController extends Controller
 {
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('vehicle_attendances')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index(Request $request)
     {
         $fromDate = $request->filled('from_date') ? Carbon::parse($request->from_date) : Carbon::now()->startOfMonth();
@@ -189,7 +196,7 @@ class VehiclesAttendanceController extends Controller
             VehiclesAttendance::create($row);
         }
 
-        return redirect()->route('admin.vehicleAttendances.index')->with('success', 'Vehicle Attendances created successfully.');
+        return redirect()->route('vehicleAttendances.index')->with('success', 'Vehicle Attendances created successfully.');
     }
 
     public function edit(VehiclesAttendance $vehicleAttendance)
@@ -232,7 +239,7 @@ class VehiclesAttendanceController extends Controller
             'status' => $status,
         ]);
 
-        return redirect()->route('admin.vehicleAttendances.index')
+        return redirect()->route('vehicleAttendances.index')
             ->with('success', 'Vehicle Attendance updated successfully');
     }
 
@@ -247,7 +254,7 @@ class VehiclesAttendanceController extends Controller
         $vehicleAttendance->is_active = 0;
         $vehicleAttendance->save();
 
-        return redirect()->route('admin.vehicleAttendances.index')->with('delete_msg', 'Vehicle Attendances deleted successfully.');
+        return redirect()->route('vehicleAttendances.index')->with('delete_msg', 'Vehicle Attendances deleted successfully.');
     }
 
     public function destroyMultiple(Request $request)

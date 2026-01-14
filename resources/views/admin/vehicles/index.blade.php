@@ -136,7 +136,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.vehicles.create') }}" class="btn btn-primary">
+                    <a href="{{ route('vehicles.create') }}" class="btn btn-primary">
                         <span>Add Vehicle <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -285,15 +285,13 @@
                                             </a>
 
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.vehicles.show', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('vehicles.show', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('admin.vehicles.edit', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('vehicles.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route('admin.vehicles.destroy', $value->id) }}"
+                                                <form action="{{ route('vehicles.destroy', $value->id) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')
@@ -551,7 +549,7 @@
                     // Example AJAX call:
 
                     $.ajax({
-                        url: "{{ route('admin.vehicles.destroyMultiple') }}",
+                        url: "{{ route('vehicles.destroyMultiple') }}",
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',

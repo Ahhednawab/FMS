@@ -1,14 +1,32 @@
 @charset "UTF-8";
+
+a{
+    text-decoration: none !important;
+}
+body {
+    margin: 0px !important;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size: .875rem;
+  font-weight: 400;
+  line-height: 1.5715;
+  color: #333;
+  text-align: left;
+}
+.month-year-only .ui-datepicker-calendar {
+    display: none;
+}
 .content-wrapper.flex-grow-1 {
   max-height: calc(100vh - 94px);
     overflow-y: auto;
     padding-right: 10px;
+    margin-top: 100px;
 
 }
 .sidebar.sidebar-dark.sidebar-main.sidebar-expand-lg {
-  height: calc(100vh - 93px);
+  height: 100vh;
     overflow-y: auto;
     padding-right: 10px;
+    padding-top: 94px;
 }
 
 :root {
@@ -63,334 +81,14 @@
 *,
 ::after,
 ::before {
-    box-sizing: border-box
-}
-
-html {
-    font-family: sans-serif;
-    line-height: 1.15;
-    -webkit-text-size-adjust: 100%;
-    -webkit-tap-highlight-color: transparent
-}
-
-article,
-aside,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-main,
-nav,
-section {
-    display: block
-}
-
-body {
-    margin: 0;
-    font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    font-size: .875rem;
-    font-weight: 400;
-    line-height: 1.5715;
-    color: #333;
-    text-align: left;
-    background-color: #f5f5f5
-}
-
-[tabindex="-1"]:focus:not(:focus-visible) {
-    outline: 0 !important
-}
-
-hr {
-    box-sizing: content-box;
-    height: 0;
-    overflow: visible
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    margin-top: 0;
-    margin-bottom: .625rem
-}
-
-p {
-    margin-top: 0;
-    margin-bottom: .625rem
-}
-
-abbr[data-original-title],
-abbr[title] {
-    text-decoration: underline;
-    -webkit-text-decoration: underline dotted;
-    text-decoration: underline dotted;
-    cursor: help;
-    border-bottom: 0;
-    -webkit-text-decoration-skip-ink: none;
-    text-decoration-skip-ink: none
-}
-
-address {
-    margin-bottom: 1rem;
-    font-style: normal;
-    line-height: inherit
-}
-
-dl,
-ol,
-ul {
-    margin-top: 0;
-    margin-bottom: 1rem
-}
-
-ol ol,
-ol ul,
-ul ol,
-ul ul {
-    margin-bottom: 0
-}
-
-dt {
-    font-weight: 500
-}
-
-dd {
-    margin-bottom: .5rem;
-    margin-left: 0
-}
-
-blockquote {
-    margin: 0 0 1rem
-}
-
-b,
-strong {
-    font-weight: bolder
-}
-
-small {
-    font-size: 80%
-}
-
-sub,
-sup {
-    position: relative;
-    font-size: 75%;
-    line-height: 0;
-    vertical-align: baseline
-}
-
-sub {
-    bottom: -.25em
-}
-
-sup {
-    top: -.5em
-}
-
-a {
-    color: #2196f3;
-    text-decoration: none;
-    background-color: transparent
-}
-
-a:hover {
-    color: #0a6ebd;
-    text-decoration: none
-}
-
-a:not([href]):not([class]) {
-    color: inherit;
-    text-decoration: none
-}
-
-a:not([href]):not([class]):hover {
-    color: inherit;
-    text-decoration: none
-}
-
-code,
-kbd,
-pre,
-samp {
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 1em
-}
-
-pre {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    overflow: auto;
-    -ms-overflow-style: scrollbar
-}
-
-figure {
-    margin: 0 0 1rem
-}
-
-img {
-    vertical-align: middle;
-    border-style: none
-}
-
-svg {
-    overflow: hidden;
-    vertical-align: middle
-}
-
-table {
-    border-collapse: collapse
-}
-
-caption {
-    padding-top: .75rem 1.25rem;
-    padding-bottom: .75rem 1.25rem;
-    color: #999;
-    text-align: left;
-    caption-side: bottom
-}
-
-th {
-    text-align: inherit;
-    text-align: -webkit-match-parent
-}
-
-label {
-    display: inline-block;
-    margin-bottom: .5rem
-}
-
-button {
-    border-radius: 0
-}
-
-button:focus:not(:focus-visible) {
-    outline: 0
-}
-
-button,
-input,
-optgroup,
-select,
-textarea {
-    margin: 0;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit
-}
-
-button,
-input {
-    overflow: visible
-}
-
-button,
-select {
-    text-transform: none
-}
-
-[role=button] {
-    cursor: pointer
-}
-
-select {
-    word-wrap: normal
-}
-
-[type=button],
-[type=reset],
-[type=submit],
-button {
-    -webkit-appearance: button
-}
-
-[type=button]:not(:disabled),
-[type=reset]:not(:disabled),
-[type=submit]:not(:disabled),
-button:not(:disabled) {
-    cursor: pointer
-}
-
-[type=button]::-moz-focus-inner,
-[type=reset]::-moz-focus-inner,
-[type=submit]::-moz-focus-inner,
-button::-moz-focus-inner {
-    padding: 0;
-    border-style: none
-}
-
-input[type=checkbox],
-input[type=radio] {
     box-sizing: border-box;
-    padding: 0
 }
 
-textarea {
-    overflow: auto;
-    resize: vertical
-}
-
-fieldset {
-    min-width: 0;
-    padding: 0;
-    margin: 0;
-    border: 0
-}
-
-legend {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    padding: 0;
-    margin-bottom: .5rem;
-    font-size: 1.5rem;
-    line-height: inherit;
-    color: inherit;
-    white-space: normal
-}
-
-progress {
-    vertical-align: baseline
-}
-
-[type=number]::-webkit-inner-spin-button,
-[type=number]::-webkit-outer-spin-button {
-    height: auto
-}
-
-[type=search] {
-    outline-offset: -2px;
-    -webkit-appearance: none
-}
-
-[type=search]::-webkit-search-decoration {
-    -webkit-appearance: none
-}
-
-::-webkit-file-upload-button {
-    font: inherit;
-    -webkit-appearance: button
-}
-
-output {
-    display: inline-block
-}
-
-summary {
-    display: list-item;
-    cursor: pointer
-}
-
-template {
-    display: none
-}
-
-[hidden] {
-    display: none !important
-}
+/* NOTE: Removed broad element-level resets (body, a, h1-h6, p, lists, form elements, etc.)
+   from this file to avoid overriding Bootstrap and third-party plugin defaults.
+   Kept only box-sizing above; Bootstrap's own CSS should provide the base styles.
+   If specific component styles from this file are required, consider scoping them
+   under a namespace instead of using element selectors. */
 
 .h1,
 .h2,
@@ -14960,17 +14658,7 @@ a.text-yellow-100:hover {
         size: a3
     }
 
-    body {
-        min-width: 992px !important
-    }
-
-    .container {
-        min-width: 992px !important
-    }
-
-    .navbar {
-        display: none
-    }
+    /* Removed forced min-width and hidden navbar rules that conflict with Bootstrap layouts. */
 
     .badge {
         border: 1px solid #000
@@ -29911,7 +29599,7 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     font-weight: 400
 }
 
-.ui-datepicker .ui-datepicker-next,
+/* .ui-datepicker .ui-datepicker-next,
 .ui-datepicker .ui-datepicker-prev {
     position: absolute;
     top: 50%;
@@ -29921,7 +29609,7 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     padding: .4375rem;
     cursor: pointer;
     border-radius: .25rem
-}
+} */
 
 .ui-datepicker .ui-datepicker-next:after,
 .ui-datepicker .ui-datepicker-prev:after {
@@ -29943,25 +29631,25 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
     left: 0
 }
 
-.ui-datepicker .ui-datepicker-prev:after {
+/* .ui-datepicker .ui-datepicker-prev:after {
     content: ""
 }
 
 [dir=rtl] .ui-datepicker .ui-datepicker-prev:after {
     content: ""
-}
+} */
 
 .ui-datepicker .ui-datepicker-next {
     right: 0
 }
-
+/* 
 .ui-datepicker .ui-datepicker-next:after {
     content: ""
 }
 
 [dir=rtl] .ui-datepicker .ui-datepicker-next:after {
     content: ""
-}
+} */
 
 .ui-datepicker .ui-datepicker-next-hover,
 .ui-datepicker .ui-datepicker-prev-hover {
@@ -38899,26 +38587,14 @@ iframe.wait-autoplay {
 
 @charset "UTF-8";
 
+/* Removed global flex and overflow on html/body to avoid breaking Bootstrap and plugins.
+   Keep minimal height to allow normal document flow. */
 html {
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-direction: column;
-    flex-direction: column;
-    -ms-flex: 1;
-    flex: 1;
     height: 100%;
-    overflow: hidden
 }
 
 body {
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-direction: column;
-    flex-direction: column;
-    -ms-flex: 1;
-    flex: 1;
-    height: 100%;
-    overflow: hidden
+    min-height: 100%;
 }
 
 .page-content {
@@ -39042,6 +38718,9 @@ body {
 .page-title h5,
 .page-title h6 {
     margin: 0
+}
+.content-wrapper {
+    margin-top: 6.5rem !important;
 }
 
 .page-header-content {
@@ -40483,3 +40162,32 @@ body {
 .page-header-light .icon-arrow-left52{
     display: none;
 }
+
+/* Force sticky navbar behavior to ensure `sticky-top` works despite other rules. */
+.navbar.sticky-top,
+.navbar.sticky-top.navbar-static {
+    position: fixed !important;
+    width: 100% !important;
+    top: 0 !important;
+    z-index: 1060 !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* If the navbar still behaves unexpectedly, check for ancestor elements with
+   `overflow` other than `visible` (e.g. `overflow: hidden` or `auto`) which
+   will constrain `position: sticky`. */
+
+/* Salary table input fields width fix */
+.table-responsive .salary-row td input.form-control,
+.table-responsive .salary-row td select.form-control {
+    min-width: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.table-responsive .salary-row td {
+    min-width: 120px;
+    padding: 6px 8px;
+}
+

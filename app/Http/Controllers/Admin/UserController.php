@@ -17,9 +17,18 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('users')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
+
         // $users = User::with(['designation'])->where('role','!=','admin')->where('is_active',1)->get();
         $users = User::with(['designation', 'role'])->where('designation_id', '!=', 0)->where('id', '!=', Auth::user()->id)->where('is_active', 1)->get();
         return view('admin.users.index', compact('users'));
@@ -94,7 +103,7 @@ class UserController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'users');
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     public function edit(User $user)
@@ -144,7 +153,7 @@ class UserController extends Controller
         $user->address          =   $request->address;
         $user->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -152,7 +161,7 @@ class UserController extends Controller
         $user->is_active = 0;
         $user->save();
 
-        return redirect()->route('admin.users.index')->with('delete_msg', 'User deleted successfully.');
+        return redirect()->route('users.index')->with('delete_msg', 'User deleted successfully.');
     }
 
     public function show(User $user)

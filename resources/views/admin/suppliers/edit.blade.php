@@ -5,7 +5,7 @@
         <h2>Edit Supplier</h2>
 
         @include('admin.suppliers.form', [
-            'route' => route($role_slug . '.suppliers.update', $supplier),
+            'route' => route('suppliers.update', $supplier),
             'method' => 'PUT',
             'supplier' => $supplier,
         ])

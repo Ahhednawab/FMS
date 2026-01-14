@@ -5,7 +5,7 @@
 
         <h2>Suppliers</h2>
 
-        <a href="{{ route($role_slug . '.suppliers.create') }}" class="btn btn-primary mb-3">Add Supplier</a>
+        <a href="{{ route('suppliers.create') }}" class="btn btn-primary mb-3">Add Supplier</a>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -28,11 +28,9 @@
                         <td>{{ $supplier->address }}</td>
                         <td>
 
-                            <a href="{{ route($role_slug . '.suppliers.edit', $supplier) }}"
-                                class="btn btn-warning btn-sm">Edit</a>
+                            <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-warning btn-sm">Edit</a>
 
-                            <form action="{{ route($role_slug . '.suppliers.destroy', $supplier) }}" method="POST"
-                                class="d-inline">
+                            <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button onclick="return confirm('Delete this supplier?')" class="btn btn-danger btn-sm">

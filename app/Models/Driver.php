@@ -11,8 +11,8 @@ class Driver extends Model
     use HasFactory;
 
     protected $fillable = [
-	    'serial_no',
-	    'full_name',
+        'serial_no',
+        'full_name',
         'father_name',
         'mother_name',
         'phone',
@@ -40,10 +40,18 @@ class Driver extends Model
         'license_category_id',
         'license_expiry_date',
         'license_file',
+        'uniform_issue_date',
+        'sandal_issue_date',
         'address',
-	];
+        'last_date',
+        'employee_code',      // new
+        'ke_card_serial',     // new
+        'location',           // new
+        'designation',        // new
+    ];
 
-	public function driverStatus()
+
+    public function driverStatus()
     {
         return $this->belongsTo(DriverStatus::class, 'driver_status_id');
     }
@@ -68,9 +76,21 @@ class Driver extends Model
         return $this->belongsTo(ShiftTimings::class, 'shift_timing_id');
     }
 
-    
-    
-	public static function GetSerialNumber()
+
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
+
+    public function advance()
+    {
+        return $this->hasOne(EmployeeAdvance::class)
+            ->where('is_closed', false)
+            ->latest('advance_date'); // get the latest open advance
+    }
+
+
+    public static function GetSerialNumber()
     {
         $serial_no = DB::table('drivers');
         $serial_no = $serial_no->select(DB::RAW("LPAD(IFNULL( MAX( id ) +1, 1 ),9,'0') AS id"));
@@ -79,4 +99,10 @@ class Driver extends Model
         return $serial_no;
     }
 
+    public function getAdvanceBalanceAttribute()
+    {
+        return $this->advance()
+            ->where('is_closed', false)
+            ->sum('remaining_amount');
+    }
 }

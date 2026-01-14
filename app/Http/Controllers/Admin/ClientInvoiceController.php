@@ -8,32 +8,41 @@ use Illuminate\Http\Request;
 
 class ClientInvoiceController extends Controller
 {
-    public function index(){
+
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('client_invoices')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
         $clientInvoices = '';
         return view('admin.clientInvoices.index', compact('clientInvoices'));
     }
 
-    public function create(){
+    public function create()
+    {
         $serial_no = '654412364';
-        return view('admin.clientInvoices.create',compact('serial_no'));
+        return view('admin.clientInvoices.create', compact('serial_no'));
     }
 
     public function store(Request $request)
     {
 
-
-        return redirect()->route('admin.clientInvoices.index')->with('success', 'Client Invoice Created Successfully.');
+        return redirect()->route('clientInvoices.index')->with('success', 'Client Invoice Created Successfully.');
     }
 
     public function show()
     {
-        $clientInvoices='';
+        $clientInvoices = '';
         return view('admin.clientInvoices.show', compact('clientInvoices'));
     }
 
     public function destroy()
     {
-        
-        return redirect()->route('admin.clientInvoices.index')->with('delete_msg', 'Client Invoice Deleted Successfully.');
+
+        return redirect()->route('clientInvoices.index')->with('delete_msg', 'Client Invoice Deleted Successfully.');
     }
 }

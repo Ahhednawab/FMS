@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.productList.create') }}" class="btn btn-primary">
+                    <a href="{{ route('productList.create') }}" class="btn btn-primary">
                         <span>Add Product <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -77,15 +77,13 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route($role_slug . '.productList.show', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('productList.show', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route($role_slug . '.productList.edit', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('productList.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route($role_slug . '.productList.destroy', $value->id) }}"
+                                                <form action="{{ route('productList.destroy', $value->id) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')

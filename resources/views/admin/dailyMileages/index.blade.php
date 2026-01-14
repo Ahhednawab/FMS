@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.dailyMileages.create') }}" class="btn btn-primary">
+                    <a href="{{ route('dailyMileages.create') }}" class="btn btn-primary">
                         <span>Add Daily Mileage <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -72,7 +72,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('admin.dailyMileages.index') }}" method="get">
+                <form action="{{ route('dailyMileages.index') }}" method="get">
                     <div class="row">
                         <!-- Vehicle No -->
                         <div class="col-md-3">
@@ -115,7 +115,7 @@
                         <div class="col-md-3 mt-4">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('admin.dailyMileages.index') }}" class="btn btn-primary">Reset</a>
+                                <a href="{{ route('dailyMileages.index') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
 
@@ -247,15 +247,15 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.dailyMileages.show', $value->id) }}"
+                                                <a href="{{ route('dailyMileages.show', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('admin.dailyMileages.edit', $value->id) }}"
+                                                <a href="{{ route('dailyMileages.edit', $value->id) }}"
                                                     class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route('admin.dailyMileages.destroy', $value->id) }}"
+                                                <form action="{{ route('dailyMileages.destroy', $value->id) }}"
                                                     method="POST">
                                                     @csrf
                                                     @method('DELETE')
@@ -452,7 +452,7 @@
             if (!ids.length) return alert('Select at least one driver');
 
             if (confirm('Delete selected drivers?')) {
-                $.post("{{ route('admin.dailyMileages.destroyMultiple') }}", {
+                $.post("{{ route('dailyMileages.destroyMultiple') }}", {
                     _token: '{{ csrf_token() }}',
                     ids: ids
                 }, res => res.success ? location.reload() : alert('Delete failed'));

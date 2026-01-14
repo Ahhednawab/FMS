@@ -8,8 +8,16 @@ use Illuminate\Http\Request;
 
 class AccidentReportController extends Controller
 {
-    public function index(){
-        $accidentReports = AccidentReport::where('is_active',1)->get();
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('accident_reports')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+    public function index()
+    {
+        $accidentReports = AccidentReport::where('is_active', 1)->get();
         $accident_types = array(
             '1' =>  'Accident 1',
             '2' =>  'Accident 2',
@@ -41,10 +49,11 @@ class AccidentReportController extends Controller
             '1' =>  'Status 1',
             '2' =>  'Status 2',
         );
-        return view('admin.accidentReports.index', compact('accidentReports','accident_types','users','injury_types','damage_types','status','primary_cause','investigation_status'));
+        return view('admin.accidentReports.index', compact('accidentReports', 'accident_types', 'users', 'injury_types', 'damage_types', 'status', 'primary_cause', 'investigation_status'));
     }
 
-    public function create(){
+    public function create()
+    {
         $accident_report_id = AccidentReport::GetAccidentReportId();
         $accident_types = array(
             '1' =>  'Accident 1',
@@ -77,7 +86,7 @@ class AccidentReportController extends Controller
             '1' =>  'Status 1',
             '2' =>  'Status 2',
         );
-        return view('admin.accidentReports.create',compact('accident_report_id','accident_types','users','injury_types','damage_types','status','primary_cause','investigation_status'));
+        return view('admin.accidentReports.create', compact('accident_report_id', 'accident_types', 'users', 'injury_types', 'damage_types', 'status', 'primary_cause', 'investigation_status'));
     }
 
     public function store(Request $request)
@@ -175,7 +184,7 @@ class AccidentReportController extends Controller
         $accidentReport->police_report_file = $policeReportFileFileName;
         $accidentReport->save();
 
-        return redirect()->route('admin.accidentReports.index')->with('success', 'Accident Report created successfully.');
+        return redirect()->route('accidentReports.index')->with('success', 'Accident Report created successfully.');
     }
 
     public function update(Request $request, AccidentReport $accidentReport)
@@ -269,7 +278,7 @@ class AccidentReportController extends Controller
         $accidentReport->police_report_file = $policeReportFileFileName;
         $accidentReport->save();
 
-        return redirect()->route('admin.accidentReports.index')->with('success', 'Accident Report updated successfully.');
+        return redirect()->route('accidentReports.index')->with('success', 'Accident Report updated successfully.');
     }
 
     public function show(AccidentReport $accidentReport)
@@ -305,8 +314,8 @@ class AccidentReportController extends Controller
             '1' =>  'Status 1',
             '2' =>  'Status 2',
         );
-        
-        return view('admin.accidentReports.show', compact('accidentReport','accident_types','users','injury_types','damage_types','status','primary_cause','investigation_status'));
+
+        return view('admin.accidentReports.show', compact('accidentReport', 'accident_types', 'users', 'injury_types', 'damage_types', 'status', 'primary_cause', 'investigation_status'));
     }
 
     public function edit(AccidentReport $accidentReport)
@@ -342,13 +351,13 @@ class AccidentReportController extends Controller
             '1' =>  'Status 1',
             '2' =>  'Status 2',
         );
-        return view('admin.accidentReports.edit',compact('accidentReport','accident_types','users','injury_types','damage_types','status','primary_cause','investigation_status'));
+        return view('admin.accidentReports.edit', compact('accidentReport', 'accident_types', 'users', 'injury_types', 'damage_types', 'status', 'primary_cause', 'investigation_status'));
     }
 
     public function destroy(AccidentReport $accidentReport)
     {
         $accidentReport->is_active = 0;
         $accidentReport->save();
-        return redirect()->route('admin.accidentReports.index')->with('delete_msg', 'Accident Report deleted successfully.');
+        return redirect()->route('accidentReports.index')->with('delete_msg', 'Accident Report deleted successfully.');
     }
 }

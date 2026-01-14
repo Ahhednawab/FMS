@@ -56,6 +56,8 @@ class Kernel extends HttpKernel
 
         // ✅ Your custom role middleware
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'permission' => \App\Http\Middleware\CheckPermission::class,
+
 
     ];
 }

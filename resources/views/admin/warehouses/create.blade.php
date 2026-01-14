@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route($role_slug . '.warehouses.index') }}" class="btn btn-primary">
+                    <a href="{{ route('warehouses.index') }}" class="btn btn-primary">
                         <span>View Warehouse <i class="icon-list ml-2"></i></span>
                     </a>
                 </div>
@@ -27,7 +27,7 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route($role_slug . '.warehouses.store') }}" method="POST">
+                        <form action="{{ route('warehouses.store') }}" method="POST">
                             @csrf
                             @if (isset($draftId))
                                 <input type="hidden" name="draft_id" value="{{ $draftId }}">
@@ -115,8 +115,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="icon-check"></i> Save
                                         </button>
-                                        <a href="{{ route($role_slug . '.warehouses.index') }}"
-                                            class="btn btn-warning">Cancel</a>
+                                        <a href="{{ route('warehouses.index') }}" class="btn btn-warning">Cancel</a>
                                     </div>
                                 </div>
                             </div>

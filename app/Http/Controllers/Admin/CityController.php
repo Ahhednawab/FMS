@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Models\City;
@@ -11,18 +12,25 @@ use Illuminate\Support\Facades\Auth;
 class CityController extends Controller
 {
     use DraftTrait;
+    public function __construct()
+    {
+
+        if (!auth()->user()->hasPermission('cities')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
     public function index()
     {
-        $cities = City::where('is_active',1)->get();
+        $cities = City::where('is_active', 1)->get();
         return view('admin.cities.index', compact('cities'));
     }
 
     public function create(Request $request)
     {
         $serial_no = City::GetSerialNumber();
-        
+
         $draftInfo = $this->getDraftDataForView($request, 'cities');
-        
+
         return view('admin.cities.create', compact('serial_no') + $draftInfo);
     }
 
@@ -55,7 +63,7 @@ class CityController extends Controller
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'cities');
 
-        return redirect()->route('admin.cities.index')->with('success', 'City created successfully.');
+        return redirect()->route('cities.index')->with('success', 'City created successfully.');
     }
 
     public function show(City $city)
@@ -87,14 +95,14 @@ class CityController extends Controller
         $city->name = $request->name;
         $city->save();
 
-        return redirect()->route('admin.cities.index')->with('success', 'City updated successfully.');
+        return redirect()->route('cities.index')->with('success', 'City updated successfully.');
     }
 
     public function destroy(City $city)
     {
         $city->is_active = 0;
         $city->save();
-        
-        return redirect()->route('admin.cities.index')->with('delete_msg', 'City deleted successfully.');
+
+        return redirect()->route('cities.index')->with('delete_msg', 'City deleted successfully.');
     }
 }

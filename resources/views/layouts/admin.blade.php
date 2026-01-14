@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Admin Panel')</title>
@@ -10,8 +11,9 @@
     <link href="{{ asset('assets/css/icons/icomoon/styles.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/all.min.css') }}" rel="stylesheet">
 
+
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png')}}" />
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}" />
 
     {{-- Core JS --}}
     <script src="{{ asset('assets/js/main/jquery.min.js') }}"></script>
@@ -26,6 +28,7 @@
     <script src="{{ asset('assets/js/demo_pages/dashboard.js') }}"></script>
     <script src="{{ asset('assets/js/draft.js') }}"></script>
 </head>
+
 <body>
 
     {{-- Header --}}
@@ -38,11 +41,22 @@
         {{-- @include('partials.sidebar') --}}
 
         {{-- Main Content --}}
-        <div class="content-wrapper flex-grow-1">
+        <div class="content-wrapper flex-grow-1 mx-3 mt-2">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @yield('content')
         </div>
     </div>
 
     @stack('scripts')
 </body>
+
 </html>

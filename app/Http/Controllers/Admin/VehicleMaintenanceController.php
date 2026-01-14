@@ -14,21 +14,23 @@ use Illuminate\Http\Request;
 
 class VehicleMaintenanceController extends Controller
 {
-    public function index(){
-        $vehicleMaintenances = VehicleMaintenance::with(['vehicle','fuelType','maintenanceCategory','serviceProvider','parts'])->where('is_active',1)->get();
-        
+    public function index()
+    {
+        $vehicleMaintenances = VehicleMaintenance::with(['vehicle', 'fuelType', 'maintenanceCategory', 'serviceProvider', 'parts'])->where('is_active', 1)->get();
+
         return view('admin.vehicleMaintenances.index', compact('vehicleMaintenances'));
     }
 
-    public function create(){
+    public function create()
+    {
         $maintenance_id = VehicleMaintenance::GetMaintenanceId();
         $vehicles = Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id');
         $fuel_types = FuelType::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $category = MaintenanceCategory::where('is_active', 1)->orderBy('category')->pluck('category', 'id');
         $service_provider = ServiceProvider::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $parts = Parts::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
-        
-        return view('admin.vehicleMaintenances.create',compact('maintenance_id','fuel_types','category','service_provider','parts','vehicles'));
+
+        return view('admin.vehicleMaintenances.create', compact('maintenance_id', 'fuel_types', 'category', 'service_provider', 'parts', 'vehicles'));
     }
 
     public function store(Request $request)
@@ -79,7 +81,7 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance->service_description    =   $request->service_description;
         $vehicleMaintenance->save();
 
-        return redirect()->route('admin.vehicleMaintenances.index')->with('success', 'Vehicle Maintenances created successfully.');
+        return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle Maintenances created successfully.');
     }
 
     public function edit(VehicleMaintenance $vehicleMaintenance)
@@ -90,7 +92,7 @@ class VehicleMaintenanceController extends Controller
         $service_provider = ServiceProvider::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $parts = Parts::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
 
-        return view('admin.vehicleMaintenances.edit', compact('vehicleMaintenance','fuel_types','category','service_provider','parts','vehicles'));
+        return view('admin.vehicleMaintenances.edit', compact('vehicleMaintenance', 'fuel_types', 'category', 'service_provider', 'parts', 'vehicles'));
     }
 
     public function update(Request $request, VehicleMaintenance $vehicleMaintenance)
@@ -139,7 +141,7 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance->service_description    =   $request->service_description;
         $vehicleMaintenance->save();
 
-        return redirect()->route('admin.vehicleMaintenances.index')->with('success', 'Vehicle Maintenances updated successfully.');
+        return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle Maintenances updated successfully.');
     }
 
     public function show(VehicleMaintenance $vehicleMaintenance)
@@ -151,6 +153,6 @@ class VehicleMaintenanceController extends Controller
     {
         $vehicleMaintenance->is_active = 0;
         $vehicleMaintenance->save();
-        return redirect()->route('admin.vehicleMaintenances.index')->with('delete_msg', 'Vehicle Maintenances deleted successfully.');
+        return redirect()->route('vehicleMaintenances.index')->with('delete_msg', 'Vehicle Maintenances deleted successfully.');
     }
 }

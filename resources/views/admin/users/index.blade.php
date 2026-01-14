@@ -12,7 +12,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+                    <a href="{{ route('users.create') }}" class="btn btn-primary">
                         <span>Add User <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -85,15 +85,13 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('admin.users.show', $value->id) }}" class="dropdown-item">
+                                                <a href="{{ route('users.show', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('admin.users.edit', $value->id) }}"
-                                                    class="dropdown-item">
+                                                <a href="{{ route('users.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
-                                                <form action="{{ route('admin.users.destroy', $value->id) }}"
-                                                    method="POST">
+                                                <form action="{{ route('users.destroy', $value->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="dropdown-item text-danger"
