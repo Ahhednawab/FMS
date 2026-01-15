@@ -100,6 +100,32 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-auto pr-0 d-flex align-items-center mb-2">
+                        <div class="form-check">
+
+                        </div>
+                        <div class="col-md-2">
+                            <strong>Driver</strong>
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <strong>CNIC No</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>Account No</strong>
+                        </div>
+                        <div class="col-md-1">
+                            <strong class="pl-1">Shift</strong>
+                        </div>
+                        <div class="col-md-1">
+                            <strong class="pl-2">Status</strong>
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong class="pl-2">Attendance</strong>
+                        </div>
+                    </div>
                     @foreach ($drivers as $i => $driver)
                         <div class="row align-items-center mb-3">
                             <!-- Checkbox -->
@@ -113,7 +139,6 @@
                             <!-- Driver Name -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <strong>Driver</strong>
                                     <input type="text" class="form-control" name="full_name[]"
                                         value="{{ $driver->full_name }}" readonly>
                                 </div>
@@ -121,7 +146,6 @@
                             <!-- CNIC -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <strong>CNIC No</strong>
                                     <input type="text" class="form-control" name="cnicno[]"
                                         value="{{ $driver->cnic_no }}" readonly>
                                 </div>
@@ -129,7 +153,6 @@
                             <!-- Account No -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <strong>Account No</strong>
                                     <input type="text" class="form-control" name="accountno[]"
                                         value="{{ $driver->account_no }}" readonly>
                                 </div>
@@ -137,7 +160,6 @@
                             <!-- Shift -->
                             <div class="col-md-1">
                                 <div class="form-group">
-                                    <strong>Shift</strong>
                                     <input type="text" class="form-control" name="shift[]"
                                         value="{{ $driver->shiftTiming ? $driver->shiftTiming->name . ' (' . \Carbon\Carbon::parse($driver->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($driver->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}"
                                         readonly>
@@ -146,7 +168,6 @@
                             <!-- Status -->
                             <div class="col-md-1">
                                 <div class="form-group">
-                                    <strong>Status</strong>
                                     <input type="text" class="form-control" name="driverStatus[]"
                                         value="{{ $driver->driverStatus->name ?? 'N/A' }}" readonly>
                                 </div>
@@ -163,7 +184,6 @@
                             <!-- Attendance -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <strong>Attendance</strong>
                                     <select class="custom-select @error('status.' . $i) is-invalid @enderror"
                                         name="status[]" data-driver-idx="{{ $i }}">
                                         <option value="">Select</option>

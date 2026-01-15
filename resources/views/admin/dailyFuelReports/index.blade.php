@@ -169,9 +169,9 @@
                             <th>Start KM</th>
                             <th>End KM</th>
                             <th>Mileage</th>
-                            <th>Fuel Taken</th>
-                            <th>Fuel Avg</th>
-                            <th>AKPL</th>
+                            <th>Fuel Taken (Ltr)</th>
+                            <th>Fuel Avg (KM/Ltr)</th>
+                            <th>AKPL (KM/Ltr)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -184,9 +184,9 @@
                                 <td>{{ $value->start_km }}</td>
                                 <td>{{ $value->end_km }}</td>
                                 <td>{{ $value->mileage }}</td>
-                                <td>{{ $value->fuel_taken }} Ltr</td>
-                                <td>{{ round($value->mileage / $value->fuel_taken, 2) }} KM/Ltr</td>
-                                <td>{{ $value->akpl }} KM/Ltr</td>
+                                <td>{{ $value->fuel_taken }} </td>
+                                <td>{{ round($value->mileage / $value->fuel_taken, 2) }}</td>
+                                <td>{{ $value->akpl }}</td>
                             </tr>
                         @endforeach
                     </tbody>
