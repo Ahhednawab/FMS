@@ -9,7 +9,9 @@
     {{-- Styles --}}
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet">
     <link href="{{ asset('assets/css/icons/icomoon/styles.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/css/all.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/all.min.css') }}?v={{ filemtime(public_path('assets/css/all.min.css')) }}">
+
 
 
     <!-- Favicon -->
