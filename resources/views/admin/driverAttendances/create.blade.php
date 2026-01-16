@@ -129,7 +129,7 @@
                     @foreach ($drivers as $i => $driver)
                         <div class="row align-items-center mb-3">
                             <!-- Checkbox -->
-                            <div class="col-auto pr-0 d-flex align-items-center">
+                            <div class="col-auto pr-0 d-flex align-items-center" style="margin-bottom: 29px;">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input driver-checkbox"
                                         data-driver-id="{{ $driver->id }}" style="margin-top: 0;">

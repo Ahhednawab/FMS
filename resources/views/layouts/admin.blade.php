@@ -37,7 +37,7 @@
     <div class="d-flex">
         {{-- Sidebar --}}
 
-        @include('partials.sidebar.' . auth()->user()->role->slug)
+        @include('partials.sidebar.admin')
         {{-- @include('partials.sidebar') --}}
 
         {{-- Main Content --}}

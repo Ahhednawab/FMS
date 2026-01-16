@@ -56,6 +56,7 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
 
@@ -100,7 +101,7 @@ Route::get('users/getmanagers', [UserController::class, 'getManagers'])
     ->name('users.getmanagers');
 
 Route::middleware(['auth'])->group(function () {
-
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Drafts Management
     Route::get('/drafts', [App\Http\Controllers\Admin\DraftController::class, 'index'])->name('drafts.index');
@@ -234,6 +235,9 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('invoices', InvoiceController::class);
+
+
+    Route::resource('roles', RoleController::class);
 });
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {

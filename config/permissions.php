@@ -51,9 +51,9 @@ return [
         'accident_reports' => 'accident reports',
     ],
     'Accounts' => [
-        'client_invoices' => 'client invoices',
-        'cash_payments' => 'cash payments',
-        'bank_payments' => 'bank payments',
+        'salaries' => 'salaries',
+        'advances' => 'advances',
+        'invoices' => 'invoices',
     ],
 
     'Vehicle Maintenance' => [

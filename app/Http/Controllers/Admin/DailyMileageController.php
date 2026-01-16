@@ -192,6 +192,7 @@ class DailyMileageController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'report_date' => 'required|date|before_or_equal:today',
             'vehicles'    => 'required|array',
@@ -201,6 +202,7 @@ class DailyMileageController extends Controller
             'report_date.before_or_equal' => 'Date cannot be in the future',
         ]);
 
+
         $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
         $vehicles   = $request->vehicles;
 
@@ -209,7 +211,6 @@ class DailyMileageController extends Controller
 
             $previousKm = $data['previous_km'] ?? 0;
             $currentKm  = $data['current_km'] ?? null;
-
             if ($currentKm !== null && $currentKm < $previousKm) {
                 return back()
                     ->withErrors(["vehicles.$vehicleId.current_km" =>
@@ -223,6 +224,7 @@ class DailyMileageController extends Controller
                     ->orderBy('report_date', 'desc')
                     ->first();
 
+
                 if ($last && $currentKm < $last->current_km) {
                     return back()
                         ->withErrors(["vehicles.$vehicleId.current_km" =>
@@ -235,10 +237,7 @@ class DailyMileageController extends Controller
         /* ================= DRAFT CHECK ================= */
         $isDraft = collect($vehicles)->contains(fn($v) => empty($v['current_km']));
 
-        /* ================= DRAFT CHECK ================= */
-        $isDraft = collect($vehicles)->contains(fn($v) => empty($v['current_km']));
-
-        if ($isDraft) {
+        if (true) {
 
             // Save / replace draft
             Draft::where('module', 'dailymileage')

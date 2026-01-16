@@ -4,6 +4,18 @@
 
 @section('content')
     <!-- Page header -->
+    @if ($message = Session::get('error'))
+        <div id="alert-message" class="alert alert-danger alert-dismissible alert-dismissible-2" role="alert">
+            {{ $message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                    <path class="heroicon-ui"
+                        d="M16.24 14.83a1 1 0 0 1-1.41 1.41L12 13.41l-2.83 2.83a1 1 0 0 1-1.41-1.41L10.59 12 7.76 9.17a1 1 0 0 1 1.41-1.41L12 10.59l2.83-2.83a1 1 0 0 1 1.41 1.41L13.41 12l2.83 2.83z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    @endif
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
             <div class="page-title d-flex">
@@ -12,7 +24,7 @@
             </div>
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center">
-                    <a href="{{ route('users.create') }}" class="btn btn-primary">
+                    <a href="{{ route('roles.create') }}" class="btn btn-primary">
                         <span>Add Role <i class="icon-plus3 ml-2"></i></span>
                     </a>
                 </div>
@@ -47,13 +59,6 @@
             </div>
         @endif
 
-
-        <div class="card">
-            <div class="card-body">
-
-            </div>
-        </div>
-
         <!-- Basic datatable -->
         <div class="card">
             <div class="card-body">
@@ -79,10 +84,10 @@
                                                 <i class="icon-menu9"></i>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a href="{{ route('users.show', $value->id) }}" class="dropdown-item">
+                                                <a href="{{ route('roles.show', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-eye"></i> View Details
                                                 </a>
-                                                <a href="{{ route('users.edit', $value->id) }}" class="dropdown-item">
+                                                <a href="{{ route('roles.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
                                                 <a href="{{ route('admin.role-permissions.edit', $value->id) }}"
@@ -90,7 +95,7 @@
                                                     <i class="icon-pencil7"></i> Manage Permissions
                                                 </a>
 
-                                                <form action="{{ route('users.destroy', $value->id) }}" method="POST">
+                                                <form action="{{ route('roles.destroy', $value->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="dropdown-item text-danger"

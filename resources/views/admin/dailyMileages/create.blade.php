@@ -36,7 +36,7 @@
                                     <option value="">ALL</option>
 
                                     @foreach ($stations as $key => $value)
-                                        <option value="{{ $key }}"
+                                        <option value="{{ $value }}"
                                             {{ in_array($key, (array) $selectedStation) ? 'selected' : '' }}>
                                             {{ $value }}
                                         </option>
@@ -58,9 +58,9 @@
                             </div>
                         </div>
 
-                        <div class="col-md-3 mt-4">
+                        <div class="col-md-3 mt-3">
                             <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Filter</button>
+                                {{-- <button type="submit" class="btn btn-primary">Filter</button> --}}
                                 <a href="{{ route('dailyMileages.create') }}" class="btn btn-primary">Reset</a>
                             </div>
                         </div>
@@ -88,6 +88,8 @@
 
                         <div class="row kilometer border-bottom py-2">
 
+                            <input type="hidden" class="station_key"
+                                value="{{ $value['station_id'] ?? $value['station'] }}">
                             {{-- Hidden Vehicle ID --}}
                             <input type="hidden" name="vehicles[{{ $vid }}][vehicle_id]"
                                 value="{{ $vid }}">
@@ -166,6 +168,11 @@
 
         $(document).ready(function() {
 
+            $('#station_id').select2({
+                placeholder: "Select Station",
+                allowClear: true
+            });
+
             // ================= Mileage Calculation =================
             function calculateMileage(row) {
                 let prevKm = parseInt(row.find('.previous_km').val(), 10) || 0;
@@ -192,19 +199,51 @@
                 allowClear: true
             });
 
-            $('#vehicle_no_filter').on('change', function() {
-                let selectedVehicle = $(this).val();
+            $('#vehicle_no_filter').select2({
+                theme: 'bootstrap4',
+                placeholder: "Select Vehicle No",
+                allowClear: true
+            });
+
+            $('#station_id, #vehicle_no_filter').on('change', applyFilters);
+
+            function applyFilters() {
+
+                let selectedStations = $('#station_id').val(); // array
+                let selectedVehicle = $('#vehicle_no_filter').val();
+
+                // if ALL stations selected OR none selected → treat as no filter
+                let allStationsSelected = !selectedStations ||
+                    selectedStations.length === 0 ||
+                    selectedStations.length === $('#station_id option').length - 1;
 
                 $('.kilometer').each(function() {
-                    let vehicleNo = $(this).find('input[readonly]').eq(1).val();
 
-                    if (!selectedVehicle || vehicleNo === selectedVehicle) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
+                    let row = $(this);
+
+                    let rowStation = row.find('.station_key').val();
+                    let rowVehicle = row.find('input[readonly]').eq(1).val();
+
+                    let stationMatch = allStationsSelected || selectedStations.includes(rowStation);
+                    let vehicleMatch = !selectedVehicle || rowVehicle === selectedVehicle;
+
+                    row.toggle(stationMatch && vehicleMatch);
                 });
-            });
+            }
+
+            // $('#vehicle_no_filter').on('change', function() {
+            //     let selectedVehicle = $(this).val();
+
+            //     $('.kilometer').each(function() {
+            //         let vehicleNo = $(this).find('input[readonly]').eq(1).val();
+
+            //         if (!selectedVehicle || vehicleNo === selectedVehicle) {
+            //             $(this).show();
+            //         } else {
+            //             $(this).hide();
+            //         }
+            //     });
+            // });
 
             // ================= Date Change AJAX =================
             $('#report_date').on('change', function() {
@@ -236,7 +275,7 @@
                         $('.kilometer').each(function() {
                             let row = $(this);
                             let vehicleId = row.find('input[name$="[vehicle_id]"]')
-                            .val();
+                                .val();
 
                             // Reset bootstrap classes
                             row.find('.current_km, .mileage')
@@ -269,6 +308,9 @@
                         // Unfilled vehicles on top
                         $container.append(unfilledRows);
                         $container.append(filledRows);
+
+                        applyFilters();
+
                     },
 
                     error: function() {

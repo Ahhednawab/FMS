@@ -50,15 +50,15 @@ class ModulePermissionSeeder extends Seeder
             'accident_details',
             'accident_reports',
 
-            'client_invoices',
-            'cash_payments',
-            'bank_payments',
-
             'vehicle_maintenances',
             'vehicle_maintenance_reports',
 
             'driver_attendances',
             'vehicle_attendances',
+
+            'salaries',
+            'advances',
+            'invoices',
         ];
 
         // Create permissions

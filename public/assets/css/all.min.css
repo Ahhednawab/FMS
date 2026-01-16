@@ -20682,7 +20682,12 @@ input[type=text].noui-height-helper:not(.noUi-target)[data-fouc] {
     vertical-align: middle;
     text-align: left
 }
-
+.select2-container--default .select2-selection--multiple .select2-selection__choice__display{
+    padding-left: 14px !important;
+}
+.select2-container .select2-selection--multiple .select2-selection__rendered{
+    display: block !important;
+}
 .select2-selection--single {
     cursor: pointer;
     outline: 0;
@@ -20831,7 +20836,7 @@ input[type=text].noui-height-helper:not(.noUi-target)[data-fouc] {
 
 .select2-selection--multiple .select2-selection__choice {
     background-color: #294653;
-    color: #fff;
+    /* color: #fff; */
     cursor: default;
     float: left;
     margin-right: .125rem;

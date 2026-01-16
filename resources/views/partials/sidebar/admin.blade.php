@@ -40,19 +40,20 @@
             <ul class="nav nav-sidebar" data-nav-type="accordion">
 
                 <li class="nav-item">
-                    <a href="{{ route('admin.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.index') ? 'active' : '' }}">
+                    <a href="{{ route('dashboard.index') }}"
+                        class="nav-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
                         <i class="icon-home4"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('admin.roles.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                        <i class="icon-home4"></i>
-                        <span>Roles and Permissions</span></a>
-                </li>
+                @if (auth()->user()->role()->first()->slug == 'admin')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.roles.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                            <i class="icon-home4"></i>
+                            <span>Roles and Permissions</span></a>
+                    </li>
+                @endif
                 @if (auth()->user()->hasPermission('drafts'))
                     <li class="nav-item">
                         <a href="{{ route('drafts.index') }}"
@@ -62,36 +63,40 @@
                         </a>
                     </li>
                 @endif
+                @if (auth()->user()->hasPermission('salaries') ||
+                        auth()->user()->hasPermission('advances') ||
+                        auth()->user()->hasPermission('invoices'))
 
-                <li
-                    class="nav-item nav-item-submenu
+                    <li
+                        class="nav-item nav-item-submenu
           {{ request()->routeIs('salaries.*') || request()->routeIs('advance.*') || request()->routeIs('invoices.*') ? 'nav-item-open' : '' }}">
 
-                    <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
+                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
 
-                    <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                        style="{{ request()->routeIs('salaries.*') || request()->routeIs('advance.*') || request()->routeIs('invoices.*') ? 'display:block;' : '' }}">
-                        @if (auth()->user()->hasPermission('driver_attendances'))
-                            <li class="nav-item"><a href="{{ route('salaries.index') }}"
-                                    class="nav-link {{ request()->routeIs('salaries.*') ? 'active' : '' }}">Salaries</a>
-                            </li>
-                        @endif
-                        @if (auth()->user()->hasPermission('driver_attendances'))
-                            <li class="nav-item">
-                                <a href="{{ route('advance.index') }}"
-                                    class="nav-link {{ request()->routeIs('advance.*') ? 'active' : '' }}">
-                                    Issued Advance
-                                </a>
-                            </li>
-                        @endif
+                        <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+                            style="{{ request()->routeIs('salaries.*') || request()->routeIs('advance.*') || request()->routeIs('invoices.*') ? 'display:block;' : '' }}">
+                            @if (auth()->user()->hasPermission('salaries'))
+                                <li class="nav-item"><a href="{{ route('salaries.index') }}"
+                                        class="nav-link {{ request()->routeIs('salaries.*') ? 'active' : '' }}">Salaries</a>
+                                </li>
+                            @endif
+                            @if (auth()->user()->hasPermission('advances'))
+                                <li class="nav-item">
+                                    <a href="{{ route('advance.index') }}"
+                                        class="nav-link {{ request()->routeIs('advance.*') ? 'active' : '' }}">
+                                        Issued Advance
+                                    </a>
+                                </li>
+                            @endif
 
-                        @if (auth()->user()->hasPermission('vehicle_attendances'))
-                            <li class="nav-item"><a href="{{ route('invoices.index') }}"
-                                    class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">Invoice</a>
-                            </li>
-                        @endif
-                    </ul>
-                </li>
+                            @if (auth()->user()->hasPermission('invoices'))
+                                <li class="nav-item"><a href="{{ route('invoices.index') }}"
+                                        class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">Invoice</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
 
 
                 @if (auth()->user()->hasPermission('users') ||
@@ -210,7 +215,8 @@
           {{ request()->routeIs('brands.*') || request()->routeIs('categories.*') || request()->routeIs('productList.*')
               ? 'nav-item-open'
               : '' }}">
-                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Product Management</span></a>
+                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Product
+                                Management</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                             style="{{ request()->routeIs('brands.*') || request()->routeIs('categories.*') ? 'display:block;' : '' }}">
@@ -435,7 +441,8 @@
                             request()->routeIs('bankPayments.*')
                                 ? 'nav-item-open'
                                 : '' }}">
-                            <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accounts</span></a>
+                            <a href="#" class="nav-link"><i class="icon-copy"></i>
+                                <span>Accounts</span></a>
 
                             <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                                 style="{{ request()->routeIs('clientInvoices.*') ||
@@ -516,6 +523,33 @@
                         </ul>
                     </li>
 
+                @endif
+
+
+                @if (auth()->user()->role()->first()->slug == 'maintainer')
+                    <li
+                        class="nav-item nav-item-submenu 
+                    {{ request()->routeIs('maintainer.issues') || request()->routeIs('maintainer.jobcart') ? 'nav-item-open' : '' }}">
+
+                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Maintenance</span></a>
+
+                        <ul class="nav nav-group-sub" data-submenu-title="Inventory"
+                            style="{{ request()->routeIs('maintainer.issues') ? 'display:block;' : '' }}">
+
+
+
+
+
+                            <li class="nav-item">
+                                <a href="{{ route('maintainer.jobcarts.index') }}"
+                                    class="nav-link {{ request()->routeIs('maintainer.jobcarts.index') ? 'active' : '' }}">
+                                    Maintenance Issues
+                                </a>
+                            </li>
+
+
+                        </ul>
+                    </li>
                 @endif
 
             </ul>
