@@ -274,7 +274,7 @@ class DailyMileageController extends Controller
                         'previous_km' => $previousKm,
                         'current_km'  => $currentKm,
                         'mileage'     => $mileage,
-                        'is_active'   => 0, // mark as draft (optional)
+                        'is_active'   => 1, // mark as draft (optional)
                     ]
                 );
             }
