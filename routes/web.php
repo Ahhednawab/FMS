@@ -6,16 +6,20 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AlertController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\JobCartController;
 use App\Http\Controllers\Admin\IbcController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\MileageAlertController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -56,7 +60,6 @@ use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
 use App\Http\Controllers\Admin\VehicleMaintenanceReportController;
-use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
 
@@ -102,6 +105,13 @@ Route::get('users/getmanagers', [UserController::class, 'getManagers'])
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/maintenance-alerts', [NotificationController::class, 'maintenanceAlerts']);
+    Route::get('/notifications/master-data-alerts', [NotificationController::class, 'masterDataAlerts']);
+    Route::post('/notifications/{id}/done', [NotificationController::class, 'markAsDone']);
+    Route::get('/notifications/driver-alerts', [NotificationController::class, 'driverAlerts']);
 
     // Drafts Management
     Route::get('/drafts', [App\Http\Controllers\Admin\DraftController::class, 'index'])->name('drafts.index');
@@ -238,6 +248,9 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('roles', RoleController::class);
+
+
+    Route::resource('alerts', AlertController::class);
 });
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {

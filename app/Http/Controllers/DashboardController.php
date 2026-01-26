@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
 use App\Models\Warehouse;
+use App\Models\Driver;
 use Illuminate\Http\Request;
 use App\Models\WarehouseAssignment;
 use App\Models\MasterWarehouseInventory;
@@ -12,26 +14,57 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (strtolower(auth()->user()->role->slug == "admin")) {
-            return view('dashboard');
+        $vehicleId = $request->get('vehicle_id');
+        $driverId = $request->get('driver_id'); // optional filter for drivers
+
+        // Load drivers for dropdown
+        $drivers = Driver::select('id', 'full_name', 'cnic_no')
+            ->orderBy('full_name')
+            ->get();
+        if (strtolower(auth()->user()->role->slug) == "admin") {
+
+            // Load vehicles for dropdown
+            $vehicles = Vehicle::select('id', 'vehicle_no')->orderBy('vehicle_no')->get();
+
+            return view('dashboard', compact('vehicles', 'drivers', 'vehicleId', 'driverId'));
         } else if (strtolower(auth()->user()->role->slug) == "master-warehouse") {
 
+            $vehicles = Vehicle::select('id', 'vehicle_no')->orderBy('vehicle_no')->get();
+
             $lowStockInventory = MasterWarehouseInventory::with('product')
+                ->when($vehicleId, function ($q) use ($vehicleId) {
+                    $q->where('vehicle_id', $vehicleId);
+                })
                 ->whereBetween('quantity', [1, 10])
                 ->orderBy('quantity', 'asc')
-                ->paginate(10);
-            return view('warehouse.dashboard', compact('lowStockInventory'));
-        } else if (strtolower(auth()->user()->role->slug == "sub-warehouse")) {
+                ->paginate(10)
+                ->withQueryString();
 
-            $subwarehouse = Warehouse::where('manager_id', auth()->user()->id)->get();
+            return view('warehouse.dashboard', compact(
+                'lowStockInventory',
+                'vehicles',
+                'drivers',
+                'vehicleId',
+                'driverId'
+            ));
+        } else if (strtolower(auth()->user()->role->slug) == "sub-warehouse") {
 
-            if (!empty($subwarehouse) && count($subwarehouse) > 0) {
+            $vehicles = Vehicle::select('id', 'vehicle_no')->orderBy('vehicle_no')->get();
+
+            $subwarehouse = Warehouse::where('manager_id', auth()->user()->id)->first();
+
+            $lowStockInventory = [];
+
+            if ($subwarehouse) {
                 $lowStockInventory = WarehouseAssignment::from('warehouse_assignments as wa')
                     ->join('master_warehouse_inventory as mwi', 'wa.master_inventory_id', '=', 'mwi.id')
                     ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
-                    ->where('wa.warehouse_id', $subwarehouse[0]->id)
+                    ->when($vehicleId, function ($q) use ($vehicleId) {
+                        $q->where('wa.vehicle_id', $vehicleId);
+                    })
+                    ->where('wa.warehouse_id', $subwarehouse->id)
                     ->whereBetween('wa.quantity', [1, 10])
                     ->select([
                         'pl.name',
@@ -40,18 +73,26 @@ class DashboardController extends Controller
                         'wa.price',
                         'wa.created_at',
                     ])
-                    ->orderBy('quantity', 'asc')
-                    ->paginate(10);
+                    ->orderBy('wa.quantity', 'asc')
+                    ->paginate(10)
+                    ->withQueryString();
             }
-            return view('subwarehouse.dashboard', compact('lowStockInventory'));
-        } else if (strtolower(auth()->user()->role->slug == "maintainer")) {
-            return view('admin.maintainer.index');
-        } else {
 
-            // here will come a general dashboard for other roles
-            dd(auth()->user()->role->slug);
+            return view('subwarehouse.dashboard', compact(
+                'lowStockInventory',
+                'vehicles',
+                'drivers',
+                'vehicleId',
+                'driverId'
+            ));
+        } else if (strtolower(auth()->user()->role->slug) == "maintainer") {
+
+            return view('admin.maintainer.index', compact('drivers'));
         }
+
+        abort(403);
     }
+
 
     /**
      * Show the form for creating a new resource.

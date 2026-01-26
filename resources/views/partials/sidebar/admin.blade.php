@@ -54,6 +54,14 @@
                             <span>Roles and Permissions</span></a>
                     </li>
                 @endif
+                @if (auth()->user()->hasPermission('alerts'))
+                    <li class="nav-item">
+                        <a href="{{ route('alerts.index') }}"
+                            class="nav-link {{ request()->routeIs('alerts.*') ? 'active' : '' }}">
+                            <i class="icon-home4"></i>
+                            <span>Alerts</span></a>
+                    </li>
+                @endif
                 @if (auth()->user()->hasPermission('drafts'))
                     <li class="nav-item">
                         <a href="{{ route('drafts.index') }}"

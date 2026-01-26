@@ -1,7 +1,9 @@
 @extends('layouts.admin')
 
 @section('title', 'Dashboard')
-
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
 @livewireStyles
 
 <style>
@@ -144,13 +146,410 @@
                     @endif
                 </div>
             @endif
+            <div class="row mt-4">
+                @if (auth()->user()->hasPermission('alerts'))
+
+                    <div class="col-6">
+                        <div class="page-header page-header-light">
+                            <div class="page-header-content">
+                                <h5>
+                                    <i class="icon-database mr-2"></i>
+                                    <span class="font-weight-semibold">Master Data Notifications</span>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="card" style="min-height:660px;">
+                            <div class="card-body d-flex flex-column">
+
+                                <!-- FILTERS -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Vehicle</label>
+                                        <select id="master_vehicle" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                            @foreach ($vehicles as $v)
+                                                <option value="{{ $v->id }}">{{ $v->vehicle_no }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Type</label>
+                                        <select id="master_title" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                                <!-- TABLE -->
+                                <div class="table-responsive flex-grow-1">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Message</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="master-table"></tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION (STUCK) -->
+                                <div class="mt-auto pt-3 border-top">
+                                    <div id="master-pagination" class="d-flex flex-wrap"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="page-header page-header-light">
+                            <div class="page-header-content">
+                                <h5>
+                                    <i class="icon-wrench mr-2"></i>
+                                    <span class="font-weight-semibold">Maintenance Alerts</span>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="card" style="min-height:660px;">
+                            <div class="card-body d-flex flex-column">
+
+                                <!-- FILTERS -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Vehicle</label>
+                                        <select id="maintenance_vehicle" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                            @foreach ($vehicles as $v)
+                                                <option value="{{ $v->id }}">{{ $v->vehicle_no }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Alert</label>
+                                        <select id="maintenance_alert" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+
+                                <!-- TABLE -->
+                                <div class="table-responsive flex-grow-1">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Alert</th>
+                                                <th>Message</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="maintenance-table"></tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION (STUCK) -->
+                                <div class="mt-auto pt-3 border-top">
+                                    <div id="maintenance-pagination" class="d-flex flex-wrap"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-6 mt-4">
+                        <div class="page-header page-header-light">
+                            <div class="page-header-content">
+                                <h5>
+                                    <i class="icon-user mr-2"></i>
+                                    <span class="font-weight-semibold">Driver Notifications</span>
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="card" style="min-height:660px;">
+                            <div class="card-body d-flex flex-column">
+
+                                <!-- FILTERS -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Driver</label>
+                                        <select id="driver_id" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                            @foreach ($drivers as $driver)
+                                                <option value="{{ $driver->id }}"
+                                                    {{ isset($driverId) && $driverId == $driver->id ? 'selected' : '' }}>
+                                                    {{ $driver->full_name }} ({{ $driver->cnic_no }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="font-size-sm">Title</label>
+                                        <select id="driver_title" class="form-control form-control-sm">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+
+
+                                </div>
+
+                                <!-- TABLE -->
+                                <div class="table-responsive flex-grow-1">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Message</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="driver-table"></tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <div class="mt-auto pt-3 border-top">
+                                    <div id="driver-pagination" class="d-flex flex-wrap"></div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+
+            </div>
         </div>
         <!-- /Main Content -->
+
+
+
     </div>
 
     @livewireScripts
 
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
+    <script>
+        function loadDrivers(page = 1) {
+            $.get("{{ route('notifications.index') }}", {
+                type: 'driver',
+                page,
+                driver_id: $('#driver_id').val(),
+                title: $('#driver_title').val()
+            }, res => {
+
+                let tbody = $('#driver-table').empty();
+
+                if (!res.data.data.length) {
+                    tbody.append(`
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No records found</td>
+                </tr>
+            `);
+                    return;
+                }
+
+                res.data.data.forEach(n => {
+                    tbody.append(`
+                <tr id="n-${n.id}">
+                    <td>${n.title}</td>
+                    <td>${n.message}</td>
+                    <td class="text-center">
+                        <button class="btn btn-success btn-sm"
+                            onclick="markDone(${n.id}, loadDrivers)">
+                            Mark as Done
+                        </button>
+                    </td>
+                </tr>
+            `);
+                });
+
+                renderPagination(res.data, '#driver-pagination', 'loadDrivers');
+            });
+        }
+
+        function loadDriverAlerts() {
+            $.get('/notifications/driver-alerts', res => {
+                let select = $('#driver_title').empty().append(`<option value="">All</option>`);
+                res.data.forEach(t => {
+                    select.append(`<option value="${t}">${t}</option>`);
+                });
+            });
+        }
+
+        function renderPagination(data, container, callback) {
+            let html = '';
+            let current = data.current_page;
+            let last = data.last_page;
+
+            if (current > 1) {
+                html += `<button class="btn btn-sm btn-light" onclick="${callback}(${current - 1})">« Prev</button>`;
+            }
+
+            let pages = [...new Set([
+                1, 2, current - 1, current, current + 1, last - 1, last
+            ])].filter(p => p > 0 && p <= last).sort((a, b) => a - b);
+
+            let prev = null;
+            pages.forEach(p => {
+                if (prev && p > prev + 1) html += `<span class="mx-1">…</span>`;
+                html += `<button class="btn btn-sm ${p === current ? 'btn-primary' : 'btn-light'}"
+            onclick="${callback}(${p})">${p}</button>`;
+                prev = p;
+            });
+
+            if (current < last) {
+                html += `<button class="btn btn-sm btn-light" onclick="${callback}(${current + 1})">Next »</button>`;
+            }
+
+            $(container).html(html);
+        }
+
+        // MASTER
+        function loadMaster(page = 1) {
+            $.get("{{ route('notifications.index') }}", {
+                type: 'master_data',
+                page,
+                vehicle_id: $('#master_vehicle').val(),
+                title: $('#master_title').val()
+            }, res => {
+
+                let tbody = $('#master-table').empty();
+
+                if (!res.data.data.length) {
+                    tbody.append(`
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        No records found
+                    </td>
+                </tr>
+            `);
+                    return;
+                }
+
+                res.data.data.forEach(n => {
+                    tbody.append(`
+                <tr id="n-${n.id}">
+                    <td>${n.title}</td>
+                    <td>${n.message}</td>
+                    <td class="text-center">
+                        <button
+                            class="btn btn-success btn-sm"
+                            onclick="markDone(${n.id}, loadMaster)">
+                            Mark as Done
+                        </button>
+                    </td>
+
+                </tr>
+            `);
+                });
+
+                renderPagination(res.data, '#master-pagination', 'loadMaster');
+            });
+        }
+
+
+        // MAINTENANCE
+        function loadMaintenance(page = 1) {
+            $.get("{{ route('notifications.index') }}", {
+                type: 'maintenance',
+                page,
+                vehicle_id: $('#maintenance_vehicle').val(),
+                title: $('#maintenance_alert').val()
+            }, res => {
+
+                let tbody = $('#maintenance-table').empty();
+
+                if (!res.data.data.length) {
+                    tbody.append(`
+                <tr>
+                    <td colspan="3" class="text-center text-muted">
+                        No alerts found
+                    </td>
+                </tr>
+            `);
+                    return;
+                }
+
+                res.data.data.forEach(n => {
+                    tbody.append(`
+                <tr id="n-${n.id}">
+                    <td>${n.title}</td>
+                    <td>${n.message}</td>
+                    <td class="text-center">
+                        <button
+                            class="btn btn-success btn-sm"
+                            onclick="markDone(${n.id}, loadMaintenance)">
+                            Mark as Done
+                        </button>
+                    </td>
+                </tr>
+            `);
+                });
+
+                renderPagination(res.data, '#maintenance-pagination', 'loadMaintenance');
+            });
+        }
+
+
+        // MARK DONE
+        function markDone(id, reloadFn) {
+            $.post(`/notifications/${id}/done`, {
+                _token: '{{ csrf_token() }}'
+            }, () => reloadFn());
+        }
+
+        // LOAD MAINTENANCE ALERTS
+        function loadMaintenanceAlerts() {
+            $.get('/notifications/maintenance-alerts', res => {
+                let select = $('#maintenance_alert').empty().append(`<option value="">All Alerts</option>`);
+                res.data.forEach(alert => {
+                    select.append(`<option value="${alert}">${alert}</option>`);
+                });
+            });
+        }
+
+        function loadMasterDataAlerts() {
+            $.get('/notifications/master-data-alerts', res => {
+                let select = $('#master_title').empty().append(`<option value="">All Alerts</option>`);
+                res.data.forEach(alert => {
+                    select.append(`<option value="${alert}">${alert}</option>`);
+                });
+            });
+        }
+
+        // EVENTS
+        $('#master_vehicle, #master_title').on('change', () => loadMaster(1));
+        $('#maintenance_vehicle, #maintenance_alert').on('change', () => loadMaintenance(1));
+        $('#driver_id, #driver_title').on('change', () => loadDrivers(1));
+
+        // INIT
+        $(document).ready(function() {
+            $('#master_vehicle, #master_title, #maintenance_vehicle, #maintenance_alert, #driver_id, #driver_title')
+                .select2({
+                    width: '100%',
+                    placeholder: 'Select an option',
+                    allowClear: true
+                });
+            loadMaster();
+            loadMaintenance();
+            loadMaintenanceAlerts();
+            loadMasterDataAlerts();
+            loadDrivers();
+            loadDriverAlerts();
+
+        });
+    </script>
+
 
     <script>
         let dataTablesInitialized = false;

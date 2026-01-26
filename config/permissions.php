@@ -8,6 +8,9 @@ return [
     'Draft' => [
         'drafts' => 'drafts',
     ],
+    'Alerts' => [
+        'alerts' => 'alerts',
+    ],
 
     'General' => [
         'users' => 'users',

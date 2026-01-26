@@ -18,6 +18,7 @@ class ModulePermissionSeeder extends Seeder
         $modules = [
             'dashboard',
             'drafts',
+            'alerts',
 
             'users',
             'roles',
