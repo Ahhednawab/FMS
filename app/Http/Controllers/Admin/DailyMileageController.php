@@ -360,58 +360,74 @@ class DailyMileageController extends Controller
 
     public function destroy(DailyMileageReport $dailyMileage)
     {
-        $dailyMileage->is_active = 0;
-        $dailyMileage->save();
-        return redirect()->route('dailyMileages.index')->with('delete_msg', 'Daily Mileage deleted successfully.');
+        $dailyMileage->delete();
+
+        return redirect()
+            ->route('dailyMileages.index')
+            ->with('delete_msg', 'Daily Mileage deleted successfully.');
     }
 
     public function destroyMultiple(Request $request)
     {
         $ids = $request->ids;
-        DailyMileageReport::whereIn('id', $ids)->update(['is_active' => 0]);
-        return response()->json(['success' => true]);
-    }
 
+        DailyMileageReport::whereIn('id', $ids)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Records deleted successfully.']);
+    }
 
 
     public function fetchDailyMilages(Request $request)
     {
         $request->validate([
-            'report_date' => 'required|date'
+            'report_date' => 'required|date',
         ]);
 
-        $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
+        $reportDate = Carbon::parse($request->report_date)->toDateString();
 
-        // 1️⃣ Get records for selected date
+        /**
+         * 1️⃣ Records for the selected date
+         *    (current day data)
+         */
         $records = DailyMileageReport::with('vehicle')
-            ->where('report_date', $reportDate)
+            ->whereDate('report_date', $reportDate)
             ->get()
             ->keyBy('vehicle_id');
 
-        // 2️⃣ Get last previous entry BEFORE selected date (per vehicle)
+        /**
+         * 2️⃣ Previous records
+         *    Get the LAST entry BEFORE selected date (per vehicle)
+         */
         $previousRecords = DailyMileageReport::with('vehicle')
-            ->where('report_date', '<', $reportDate)
-            ->whereIn('id', function ($query) use ($reportDate) {
-                $query->selectRaw('MAX(id)')
-                    ->from('daily_mileage_report')
-                    ->where('report_date', '<', $reportDate)
-                    ->groupBy('vehicle_id');
-            })
+            ->whereDate('report_date', '<', $reportDate)
+            ->orderBy('report_date', 'desc') // latest date first
+            ->orderBy('id', 'desc')          // tie-breaker
             ->get()
+            ->unique('vehicle_id')           // one record per vehicle
             ->keyBy('vehicle_id');
 
-        // 3️⃣ Merge results
+        /**
+         * 3️⃣ Merge current & previous data
+         */
         $finalData = [];
 
+        // Current date records
         foreach ($records as $vehicleId => $record) {
-            $finalData[$vehicleId] = $record;
+            $finalData[$vehicleId] = [
+                'vehicle_id'  => $vehicleId,
+                'previous_km' => null,
+                'current_km'  => $record->current_km,
+                'mileage'     => $record->mileage,
+                'vehicle'     => $record->vehicle,
+            ];
         }
 
+        // Previous date records (only if current date missing)
         foreach ($previousRecords as $vehicleId => $record) {
             if (!isset($finalData[$vehicleId])) {
                 $finalData[$vehicleId] = [
                     'vehicle_id'  => $vehicleId,
-                    'previous_km' => $record->current_km, // IMPORTANT
+                    'previous_km' => $record->current_km, // ← 20 Jan value
                     'current_km'  => null,
                     'mileage'     => null,
                     'vehicle'     => $record->vehicle,
@@ -422,7 +438,7 @@ class DailyMileageController extends Controller
         return response()->json([
             'success' => true,
             'data'    => array_values($finalData),
-            'message' => 'Data fetched successfully'
+            'message' => 'Data fetched successfully',
         ]);
     }
 }

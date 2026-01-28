@@ -30,7 +30,7 @@ class DraftController extends Controller
     public function edit(Draft $draft)
     {
         // Ensure user can only edit their own drafts
-        if ($draft->created_by !== Auth::id()) {
+        if ($draft->created_by != Auth::id()) {
             abort(403);
         }
 
