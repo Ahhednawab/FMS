@@ -35,6 +35,22 @@
                         </div>
 
                         <div class="col-md-3">
+
+                            <div class="form-group">
+                                    <label>Accident Date <span class="text-danger">*</span></label>
+                                    <input type="date"
+                                        name="accident_date"
+                                        class="form-control"
+                                        value="{{ old('accident_date') }}"
+                                        max="{{ date('Y-m-d') }}"
+                                        required>
+                                    @if ($errors->has('accident_date'))
+                                        <label class="text-danger">{{ $errors->first('accident_date') }}</label>
+                                    @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label>Vehicle No <span class="text-danger">*</span></label>
                                 <select class="custom-select" id="vehicle_no" name="vehicle_no" required>
@@ -48,6 +64,17 @@
                                 @if ($errors->has('vehicle_no'))
                                     <label class="text-danger">{{ $errors->first('vehicle_no') }}</label>
                                 @endif
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Loss No <span class="text-danger">*</span></label>
+                                <input type="text"
+                                    name="loss_no"
+                                    class="form-control"
+                                    value="{{ old('loss_no', $accidentDetail->loss_no ?? '') }}"
+                                    required>
                             </div>
                         </div>
 

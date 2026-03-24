@@ -209,112 +209,101 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <!-- CNIC No -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>CNIC No <span class="text-danger">*</span></strong>
-                                {{-- <input type="text" name="cnic_no" id="cnic_no" class="form-control" value="{{ old('cnic_no') }}"> --}}
-                                <input type="text" name="cnic_no" class="form-control" id="cnic_no"
-                                    value="{{ $draftData['cnic_no'] ?? old('cnic_no') }}">
-
-
-                                @if ($errors->has('cnic_no'))
-                                    <label class="text-danger">{{ $errors->first('cnic_no') }}</label>
-                                @endif
+                    <div>
+                        <h5>CNIC Details</h5>
+                        <div class="row">
+                            <!-- CNIC No -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>CNIC No <span class="text-danger">*</span></strong>
+                                    <input type="text" name="cnic_no" class="form-control" id="cnic_no"
+                                        value="{{ $draftData['cnic_no'] ?? old('cnic_no') }}">
+                                    @if ($errors->has('cnic_no'))
+                                        <label class="text-danger">{{ $errors->first('cnic_no') }}</label>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- CNIC Expiry Date -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>CNIC Expiry Date <span class="text-danger">*</span></strong>
-                                <input type="date" name="cnic_expiry_date" class="form-control"
-                                    value="{{ $draftData['cnic_expiry_date'] ?? old('cnic_expiry_date') }}">
-                                @if ($errors->has('cnic_expiry_date'))
-                                    <label class="text-danger">{{ $errors->first('cnic_expiry_date') }}</label>
-                                @endif
+                            <!-- CNIC Expiry Date -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>CNIC Expiry Date <span class="text-danger">*</span></strong>
+                                    <input type="date" name="cnic_expiry_date" class="form-control"
+                                        value="{{ $draftData['cnic_expiry_date'] ?? old('cnic_expiry_date') }}">
+                                    @if ($errors->has('cnic_expiry_date'))
+                                        <label class="text-danger">{{ $errors->first('cnic_expiry_date') }}</label>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- CNIC -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>CNIC <span class="text-danger">*</span></strong>
-                                <input type="file" class="form-control" name="cnic_file">
-                                @if ($errors->has('cnic_file'))
-                                    <label class="text-danger">{{ $errors->first('cnic_file') }}</label>
-                                @endif
-                                @if (isset($draftData['file_info']['cnic_file']))
-                                    <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['cnic_file']['path'])) }}"
-                                            target="_blank" class="text-success mr-2" title="View">
-                                            <i class="icon-file"></i>
-                                            {{ $draftData['file_info']['cnic_file']['original_name'] }}
-                                        </a>
-                                        <span
-                                            class="text-muted mr-2">({{ number_format(($draftData['file_info']['cnic_file']['size'] ?? 0) / 1024, 1) }}
-                                            KB)</span>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Remove"
-                                            onclick="removeDraftFile('cnic_file', this)">×</button>
-                                    </div>
-                                @endif
+                            <!-- CNIC File -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>CNIC <span class="text-danger">*</span></strong>
+                                    <input type="file" class="form-control" name="cnic_file">
+                                    @if ($errors->has('cnic_file'))
+                                        <label class="text-danger">{{ $errors->first('cnic_file') }}</label>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Empty column to complete row -->
+                            <div class="col-md-3"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>EOBI Details</h4>
+                        <div class="row">
+                            <!-- EOBI No -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>EOBI No</strong>
+                                    <input type="text" name="eobi_no" class="form-control"
+                                        value="{{ $draftData['eobi_no'] ?? old('eobi_no') }}">
+                                    @if ($errors->has('eobi_no'))
+                                        <label class="text-danger">{{ $errors->first('eobi_no') }}</label>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- EOBI Start Date -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>EOBI Start Date</strong>
+                                    <input type="date" name="eobi_start_date" class="form-control"
+                                        value="{{ $draftData['eobi_start_date'] ?? old('eobi_start_date') }}">
+                                    @if (isset($draftData['file_info']['eobi_card_file']))
+                                        <div class="mt-2 d-flex align-items-center">
+                                            <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['eobi_card_file']['path'])) }}"
+                                                target="_blank" class="text-success mr-2" title="View">
+                                                <i class="icon-file"></i>
+                                                {{ $draftData['file_info']['eobi_card_file']['original_name'] }}
+                                            </a>
+                                            <span
+                                                class="text-muted mr-2">({{ number_format(($draftData['file_info']['eobi_card_file']['size'] ?? 0) / 1024, 1) }}
+                                                KB)</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Remove"
+                                                onclick="removeDraftFile('eobi_card_file', this)">×</button>
+                                        </div>
+                                    @endif
+                                    @if ($errors->has('eobi_start_date'))
+                                        <label class="text-danger">{{ $errors->first('eobi_start_date') }}</label>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- EOBI Card -->
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <strong>EOBI Card</strong>
+                                    <input type="file" class="form-control" name="eobi_card_file">
+                                    @if ($errors->has('eobi_card_file'))
+                                        <label class="text-danger">{{ $errors->first('eobi_card_file') }}</label>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <!-- EOBI No -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>EOBI No</strong>
-                                <input type="text" name="eobi_no" class="form-control"
-                                    value="{{ $draftData['eobi_no'] ?? old('eobi_no') }}">
-                                @if ($errors->has('eobi_no'))
-                                    <label class="text-danger">{{ $errors->first('eobi_no') }}</label>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- EOBI Start Date -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>EOBI Start Date</strong>
-                                <input type="date" name="eobi_start_date" class="form-control"
-                                    value="{{ $draftData['eobi_start_date'] ?? old('eobi_start_date') }}">
-                                @if (isset($draftData['file_info']['eobi_card_file']))
-                                    <div class="mt-2 d-flex align-items-center">
-                                        <a href="{{ route('drafts.view', base64_encode($draftData['file_info']['eobi_card_file']['path'])) }}"
-                                            target="_blank" class="text-success mr-2" title="View">
-                                            <i class="icon-file"></i>
-                                            {{ $draftData['file_info']['eobi_card_file']['original_name'] }}
-                                        </a>
-                                        <span
-                                            class="text-muted mr-2">({{ number_format(($draftData['file_info']['eobi_card_file']['size'] ?? 0) / 1024, 1) }}
-                                            KB)</span>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Remove"
-                                            onclick="removeDraftFile('eobi_card_file', this)">×</button>
-                                    </div>
-                                @endif
-                                @if ($errors->has('eobi_start_date'))
-                                    <label class="text-danger">{{ $errors->first('eobi_start_date') }}</label>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- EOBI Card -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <strong>EOBI Card</strong>
-                                <input type="file" class="form-control" name="eobi_card_file">
-                                @if ($errors->has('eobi_card_file'))
-                                    <label class="text-danger">{{ $errors->first('eobi_card_file') }}</label>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="row">
                         <!-- Picture -->
                         <div class="col-md-3">
@@ -588,7 +577,7 @@
                         </div>
 
                         <!-- Address -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Address</strong>
                                 <input type="text" name="address" class="form-control"

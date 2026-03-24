@@ -43,7 +43,7 @@
                         <!-- Vehicle No -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Vehicle No</strong>
+                                <strong>Vehicle No<span style="color:red">*</span></strong>
                                 <input type="text"
                                     class="form-control
                 {{ $isDraftMode && empty($draftData['vehicle_no'] ?? '') ? 'is-invalid' : '' }}
@@ -63,7 +63,7 @@
                         <!-- Make (Manufacturer) -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Make (Manufacturer)</strong>
+                                <strong>Make (Manufacturer)<span style="color:red">*</span></strong>
                                 <input type="text"
                                     class="form-control
                 {{ $isDraftMode && empty($draftData['make'] ?? '') ? 'is-invalid' : '' }}
@@ -83,7 +83,7 @@
                         <!-- Model (Year) -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Model (Year)</strong>
+                                <strong>Model (Year)<span style="color:red">*</span></strong>
                                 <select name="model"
                                     class="custom-select
                 {{ request()->has('draft_id') && empty($draftData['model'] ?? '') ? 'is-invalid' : '' }}
@@ -116,7 +116,7 @@
                         <!-- Chasis No -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Chasis No</strong>
+                                <strong>Chasis No<span style="color:red">*</span></strong>
                                 <input type="text"
                                     class="form-control
                 {{ $isDraftMode && empty($draftData['chasis_no'] ?? '') ? 'is-invalid' : '' }}
@@ -136,7 +136,7 @@
                         <!-- Engine No -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Engine No</strong>
+                                <strong>Engine No<span style="color:red">*</span></strong>
                                 <input type="text"
                                     class="form-control
                 {{ $isDraftMode && empty($draftData['engine_no'] ?? '') ? 'is-invalid' : '' }}
@@ -156,7 +156,7 @@
                         <!-- Ownership -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Ownership</strong>
+                                <strong>Ownership<span style="color:red">*</span></strong>
                                 <input type="text" name="ownership"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['ownership'] ?? '') ? 'is-invalid' : '' }}
@@ -176,7 +176,7 @@
                         <!-- Pool Vehicle -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Pool Vehicle</strong>
+                                <strong>Pool Vehicle<span style="color:red">*</span></strong>
                                 @php
                                     $draftMissing = request()->has('draft_id') && !isset($draftData['pool_vehicle']);
                                 @endphp
@@ -272,10 +272,23 @@
                             </div>
                         </div>
 
+                        <div class="col-md-4 mb-3">
+                            <strong>Insurance Policy No<span style="color:red">*</span></strong>
+                            <input type="text" name="insurance_policy_no" class="form-control"
+                                value="{{ old('insurance_policy_no', $model->insurance_policy_no ?? '') }}">
+
+                            {{-- Laravel validation --}}
+                            @error('insurance_policy_no')
+                                <label class="text-danger">{{ $message }}</label>
+                            @enderror
+
+                        </div>
+
+
                         <!-- Shift Hours -->
                         <div class="col-md-2">
                             <div class="form-group">
-                                <strong>Shift Hours</strong>
+                                <strong>Shift Hours<span style="color:red">*</span></strong>
                                 <select name="shift_hour_id"
                                     class="custom-select
                 {{ request()->has('draft_id') && empty($draftData['shift_hour_id'] ?? '') ? 'is-invalid' : '' }}
@@ -303,10 +316,24 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <strong>Shift Timing</strong>
+                            <select name="shift_timing_id" class="form-control">
+                                <option value="">Select Shift Timing</option>
+                                @foreach ($shift_timings as $id => $name)
+                                    <option value="{{ $id }}"
+                                        {{ old('shift_timing_id') == $id ? 'selected' : '' }}>
+                                        {{ $name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+
                         <!-- Vehicle Type -->
                         <div class="col-md-2">
                             <div class="form-group">
-                                <strong>Vehicle Type</strong>
+                                <strong>Vehicle Type<span style="color:red">*</span></strong>
                                 <select name="vehicle_type_id"
                                     class="custom-select
                 {{ request()->has('draft_id') && empty($draftData['vehicle_type_id'] ?? '') ? 'is-invalid' : '' }}
@@ -338,7 +365,7 @@
                         <!-- Fabrication Vendor -->
                         <div class="col-md-2">
                             <div class="form-group">
-                                <strong>Fabrication Vendor</strong>
+                                <strong>Fabrication Vendor<span style="color:red">*</span></strong>
                                 <select name="fabrication_vendor_id"
                                     class="custom-select
                 {{ request()->has('draft_id') && empty($draftData['fabrication_vendor_id'] ?? '') ? 'is-invalid' : '' }}
@@ -371,7 +398,7 @@
                         <!-- Station -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong for="station_id">Station</strong>
+                                <strong for="station_id">Station<span style="color:red">*</span></strong>
                                 <select name="station_id" id="station_id"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['station_id'] ?? '') ? 'is-invalid' : '' }}
@@ -403,7 +430,7 @@
                         <!-- IBC Center -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong for="ibc_center_id">IBC Center</strong>
+                                <strong for="ibc_center_id">IBC Center<span style="color:red">*</span></strong>
                                 <select name="ibc_center_id" id="ibc_center_id"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['ibc_center_id'] ?? '') ? 'is-invalid' : '' }}
@@ -453,7 +480,7 @@
                         <!-- On Duty Status -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>On Duty Status</strong>
+                                <strong>On Duty Status<span style="color:red">*</span></strong>
                                 @php
                                     $draftMissing = request()->has('draft_id') && !isset($draftData['on_duty_status']);
                                 @endphp
@@ -560,7 +587,7 @@
                         <!-- Tracker Installation Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Tracker Installation Date </strong>
+                                <strong>Tracker Installation Date<span style="color:red">*</span> </strong>
                                 <input type="date" name="tracker_installation_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['tracker_installation_date'] ?? '') ? 'is-invalid' : '' }}
@@ -582,7 +609,7 @@
                         <!-- Inspection Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Inspection Date</strong>
+                                <strong>Inspection Date<span style="color:red">*</span></strong>
                                 <input type="date" name="inspection_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['inspection_date'] ?? '') ? 'is-invalid' : '' }}
@@ -605,7 +632,7 @@
                         <!-- Next Inspection Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Next Inspection Date</strong>
+                                <strong>Next Inspection Date<span style="color:red">*</span></strong>
                                 <input type="date" name="next_inspection_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? '') ? 'is-invalid' : '' }}
@@ -627,7 +654,7 @@
                         <!-- Induction Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Induction Date</strong>
+                                <strong>Induction Date<span style="color:red">*</span></strong>
                                 <input type="date" name="induction_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['induction_date'] ?? '') ? 'is-invalid' : '' }}
@@ -651,7 +678,7 @@
                         <!-- Fitness Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Fitness Date</strong>
+                                <strong>Fitness Date<span style="color:red">*</span></strong>
                                 <input type="date" name="fitness_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['fitness_date'] ?? '') ? 'is-invalid' : '' }}
@@ -673,7 +700,7 @@
                         <!-- Next Fitness Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Next fitness date</strong>
+                                <strong>Next fitness date<span style="color:red">*</span></strong>
                                 <input type="date" name="next_fitness_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? '') ? 'is-invalid' : '' }}
@@ -695,7 +722,7 @@
                         <!-- Fitness Attachment -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Fitness Attachment</strong>
+                                <strong>Fitness Attachment<span style="color:red">*</span></strong>
                                 <input type="file" class="form-control" name="fitness_file">
                                 @if ($errors->has('fitness_file'))
                                     <label class="text-danger">{{ $errors->first('fitness_file') }}</label>
@@ -720,7 +747,7 @@
                         <!-- Registration Attachment -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Registration Attachment</strong>
+                                <strong>Registration Attachment<span style="color:red">*</span></strong>
                                 <input type="file" class="form-control" name="registration_file">
                                 @if ($errors->has('registration_file'))
                                     <label class="text-danger">{{ $errors->first('registration_file') }}</label>
@@ -747,7 +774,7 @@
                         <!-- Insurance Company -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Insurance Company</strong>
+                                <strong>Insurance Company<span style="color:red">*</span></strong>
                                 <select
                                     class="custom-select
                 {{ request()->has('draft_id') && empty($draftData['insurance_company_id'] ?? '') ? 'is-invalid' : '' }}
@@ -778,7 +805,7 @@
                         <!-- Insurance Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Insurance Date</strong>
+                                <strong>Insurance Date<span style="color:red">*</span></strong>
                                 <input type="date" name="insurance_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['insurance_date'] ?? '') ? 'is-invalid' : '' }}
@@ -800,7 +827,7 @@
                         <!-- Insurance Expiry Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Insurance Expiry Date</strong>
+                                <strong>Insurance Expiry Date<span style="color:red">*</span></strong>
                                 <input type="date" name="insurance_expiry_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? '') ? 'is-invalid' : '' }}
@@ -821,7 +848,7 @@
                         <!-- Insurance Attachment -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Insurance Attachment</strong>
+                                <strong>Insurance Attachment<span style="color:red">*</span></strong>
                                 <input type="file" class="form-control" name="insurance_file">
                                 @if ($errors->has('insurance_file'))
                                     <label class="text-danger">{{ $errors->first('insurance_file') }}</label>
@@ -848,7 +875,7 @@
                         <!-- Route Permit Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Route Permit Date</strong>
+                                <strong>Route Permit Date<span style="color:red">*</span></strong>
                                 <input type="date" name="route_permit_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['route_permit_date'] ?? '') ? 'is-invalid' : '' }}
@@ -870,7 +897,7 @@
                         <!-- Route Permit Expiry Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Route Permit Expiry Date</strong>
+                                <strong>Route Permit Expiry Date<span style="color:red">*</span></strong>
                                 <input type="date" name="route_permit_expiry_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? '') ? 'is-invalid' : '' }}
@@ -892,7 +919,7 @@
                         <!-- Route Permit Attachment -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Route Permit Attachment</strong>
+                                <strong>Route Permit Attachment<span style="color:red">*</span></strong>
                                 <input type="file" class="form-control" name="route_permit_file">
                                 @if ($errors->has('route_permit_file'))
                                     <label class="text-danger">{{ $errors->first('route_permit_file') }}</label>
@@ -941,7 +968,7 @@
                         <!-- Next Tax Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Next Tax Date</strong>
+                                <strong>Next Tax Date<span style="color:red">*</span></strong>
                                 <input type="date" name="next_tax_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['next_tax_date'] ?? '') ? 'is-invalid' : '' }}
@@ -963,7 +990,7 @@
                         <!-- Tax Attachment -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Tax Attachment</strong>
+                                <strong>Tax Attachment<span style="color:red">*</span></strong>
                                 <input type="file" class="form-control" name="tax_file">
                                 @if ($errors->has('tax_file'))
                                     <label class="text-danger">{{ $errors->first('tax_file') }}</label>

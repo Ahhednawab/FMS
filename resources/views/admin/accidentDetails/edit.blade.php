@@ -40,6 +40,17 @@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
+                                        <label>Accident Date <span class="text-danger">*</span></label>
+                                        <input type="date"
+                                            name="accident_date"
+                                            class="form-control"
+                                            max="{{ date('Y-m-d') }}"
+                                            value="{{ old('accident_date', $accidentDetail->accident_date ? \Carbon\Carbon::parse($accidentDetail->accident_date)->format('Y-m-d') : '') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
                                         <label>Vehicle No <span class="text-danger">*</span></label>
                                         <select class="custom-select" id="vehicle_no" name="vehicle_no" required>
                                             <option value="">--Select Vehicle--</option>
@@ -53,6 +64,17 @@
                                         @if ($errors->has('vehicle_no'))
                                             <label class="text-danger">{{ $errors->first('vehicle_no') }}</label>
                                         @endif
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Loss No <span class="text-danger">*</span></label>
+                                        <input type="text"
+                                            name="loss_no"
+                                            class="form-control"
+                                            value="{{ old('loss_no', $accidentDetail->loss_no ?? '') }}"
+                                            required>
                                     </div>
                                 </div>
 

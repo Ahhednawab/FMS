@@ -148,6 +148,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('dailyMileageReports', DailyMileageReportController::class);
     Route::resource('dailyFuels', DailyFuelController::class);
     Route::resource('dailyFuelReports', DailyFuelReportController::class);
+Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class, 'fetchPreviousKmByDate'])
+    ->name('dailyFuels.fetchPreviousKmByDate');
+
 
     Route::resource('productList', ProductListController::class);
 
@@ -245,7 +248,8 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('invoices', InvoiceController::class);
-
+    Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDelete'])
+    ->name('invoices.bulkDelete');
 
     Route::resource('roles', RoleController::class);
 
@@ -255,7 +259,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(function () {
 
-    //General  
+    //General
     // Route::get('users/getmanagers', [UserController::class, 'getManagers'])
     //     ->name('users.getmanagers');
 

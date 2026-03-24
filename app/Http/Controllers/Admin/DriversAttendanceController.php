@@ -58,25 +58,30 @@ class DriversAttendanceController extends Controller
             ->whereNotIn('name', $excludeStatuses)
             ->orderBy('id')
             ->pluck('name', 'id');
-        $drivers = Driver::with(['driverStatus', 'shiftTiming']);
-        $drivers = $drivers->where('is_active', 1);
-        if (isset($request->driver_status_id)) {
-            $drivers = $drivers->where('driver_status_id', $request->driver_status_id);
-        }
-        if (isset($request->station_id)) {
-            $drivers = $drivers->whereHas('vehicle', function ($query) use ($request) {
-                // Match vehicle's station_id to the requested station_id
-                $query->where('station_id', $request->station_id); // Match vehicle's station_id
-            });
-        }
-        $drivers = $drivers->orderBy(
-            DriverStatus::select('name')
-                ->whereColumn('driver_status.id', 'drivers.driver_status_id') // 👈 table name fix
-                ->limit(1)
-        );
-        $drivers = $drivers->orderBy('full_name', 'ASC');
-        $drivers = $drivers->get();
+        $drivers = Driver::with(['driverStatus', 'shiftTiming'])
+            ->where('drivers.is_active', 1)
 
+            ->when($request->driver_status_id, function ($q) use ($request) {
+                $q->where('drivers.driver_status_id', $request->driver_status_id);
+            })
+
+            ->when($request->station_id, function ($q) use ($request) {
+                $q->whereHas('vehicle', function ($query) use ($request) {
+                    $query->where('station_id', $request->station_id);
+                });
+            })
+
+            ->leftJoin('driver_status', 'driver_status.id', '=', 'drivers.driver_status_id')
+
+            ->orderByRaw("
+                CASE
+                    WHEN driver_status.name = 'Left' THEN 1
+                    ELSE 0
+                END
+            ")
+            ->orderBy('drivers.full_name', 'ASC')
+            ->select('drivers.*')
+            ->get();
 
         $selected_driver_status_id = $request->driver_status_id ?? '';
 

@@ -37,6 +37,7 @@ class Invoice extends Model
         'tax_value',
         'withholding_on_sales_tax',
         'actual_payment',
+        'payment_received',
         'agreed_deduction',
         'cheque_value',
         'cheque_no',
@@ -54,6 +55,10 @@ class Invoice extends Model
         'submission_date' => 'date',
         'due_date' => 'date',
         'cheque_rec_date' => 'date',
+        'vehicle_qty'   => 'array',
+        'days'          => 'array',
+        'vehicle_rent'  => 'array',
+        'monthly_rent'  => 'array'
     ];
 
     public function creator()

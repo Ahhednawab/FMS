@@ -47,6 +47,8 @@ class DailyFuelController extends Controller
         ]);
         $dailyFuels = $dailyFuels->orderBy('id', 'DESC');
         $dailyFuels = $dailyFuels->get();
+        $totalFuelTaken = $dailyFuels->sum('fuel_taken');
+        $averageFuelAvg = $dailyFuels->avg('fuel_average');
 
         $vehicles = Vehicle::where('is_active', 1)->get();
 
@@ -66,11 +68,12 @@ class DailyFuelController extends Controller
                 'previous_km' => $previous_km
             ];
         }
-        return view('admin.dailyFuels.index', compact('dailyFuels', 'vehicles', 'vehicleData'));
+        return view('admin.dailyFuels.index', compact('dailyFuels', 'vehicles', 'vehicleData', 'totalFuelTaken', 'averageFuelAvg'));
     }
 
     public function create(Request $request)
     {
+        $selectedDate = $request->report_date ?? date('Y-m-d');
 
         $vehicles = Vehicle::with('station');
         $vehicles = $vehicles->where('is_active', 1);
@@ -84,11 +87,14 @@ class DailyFuelController extends Controller
         $vehicleData = array();
 
         foreach ($vehicles as $vehicle) {
-            $previousRecord = DailyFuelReport::where('vehicle_id', $vehicle->id)
+            $previousRecord = DailyMileageReport::where('vehicle_id', $vehicle->id)
+                ->whereDate('report_date', '<', $selectedDate)
                 ->where('is_active', 1)
-                ->orderBy('id', 'DESC')
-                ->select('*')
+                ->orderBy('report_date', 'desc')
+                ->orderBy('id', 'desc')
                 ->first();
+
+
 
             $previous_km = ($previousRecord) ? $previousRecord->current_km : $vehicle->kilometer;
 
@@ -110,7 +116,53 @@ class DailyFuelController extends Controller
 
         $selectedStation = $request->station_id ?? '';
 
-        return view('admin.dailyFuels.create', compact('vehicles', 'vehicleData', 'stations', 'selectedStation'));
+        return view('admin.dailyFuels.create', compact('vehicles', 'vehicleData', 'stations', 'selectedStation', 'selectedDate'));
+    }
+
+    public function fetchPreviousKmByDate(Request $request)
+    {
+        $reportDate = $request->report_date;
+
+        // Get all active vehicles, optionally filter by station if needed
+        $vehicles = Vehicle::where('is_active', 1)->get();
+
+        $data = [];
+
+        foreach ($vehicles as $vehicle) {
+            // Find the most recent fuel report before selected date
+            $previousFuelReport = DailyFuelReport::where('vehicle_id', $vehicle->id)
+                ->where('is_active', 1)
+                ->whereDate('report_date', '<', $reportDate)
+                ->orderBy('report_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            // Determine previous_km
+            if ($previousFuelReport && $previousFuelReport->current_km !== null) {
+                $previous_km = $previousFuelReport->current_km;
+            } else {
+                // Fallback: use initial vehicle kilometer
+                $previous_km = $vehicle->kilometer ?? 0;
+            }
+
+            // Check if a fuel report already exists for selected date
+            $existingFuelReport = DailyFuelReport::where('vehicle_id', $vehicle->id)
+                ->whereDate('report_date', $reportDate)
+                ->where('is_active', 1)
+                ->first();
+
+            $data[] = [
+                'vehicle_id'  => $vehicle->id,
+                'previous_km' => $previous_km,
+                'current_km'  => $existingFuelReport ? $existingFuelReport->current_km : '',
+                'fuel_taken'  => $existingFuelReport ? $existingFuelReport->fuel_taken : '',
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ]);
     }
 
     public function store(Request $request)
@@ -181,7 +233,7 @@ class DailyFuelController extends Controller
         $count = count($vehicleIds);
         for ($i = 0; $i < $count; $i++) {
             $vehicleId   = $vehicleIds[$i] ?? null;
-            $prevKm      = $previousKms[$i] ?? null;
+            // $prevKm      = $previousKms[$i] ?? null;
             $currKm      = $currentKms[$i] ?? null;
             $mileage     = $mileages[$i] ?? null;
             $fuelTaken   = $fuelTakens[$i] ?? null;
@@ -194,10 +246,35 @@ class DailyFuelController extends Controller
                 continue;
             }
 
+            // ✅ GET PREVIOUS KM BASED ON REPORT DATE
+            $lastReport = DailyFuelReport::where('vehicle_id', $vehicleId)
+                ->where('report_date', '<', $request->report_date)
+                ->where('is_active', 1)
+                ->orderBy('report_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $prevKmFromDB = $lastReport ? $lastReport->current_km : 0;
+
+
+            $exists = DailyFuelReport::where('vehicle_id', $vehicleId)
+                ->where('report_date', $request->report_date)
+                ->where('is_active', 1)
+                ->exists();
+
+            if ($exists) {
+                return redirect()->back()
+                    ->withErrors([
+                        "vehicle_id.$i" => "Fuel entry already exists for this vehicle on selected date."
+                    ])
+                    ->withInput();
+            }
+
+
             $dailyFuel = new DailyFuelReport();
             $dailyFuel->vehicle_id    = $vehicleId;
             $dailyFuel->report_date   = $request->report_date;
-            $dailyFuel->previous_km   = $prevKm;
+            $dailyFuel->previous_km   = $prevKmFromDB;
             $dailyFuel->current_km    = $currKm;
             $dailyFuel->mileage       = $mileage;
             $dailyFuel->fuel_taken    = $fuelTaken;

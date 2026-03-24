@@ -40,6 +40,19 @@
                     </div>
                 </div>
 
+                <div class="row mb-3">
+                    <div class="col-md-6"></div>
+                        <div class="col-md-6 text-right">
+                            <button id="exportExcel" class="btn btn-success btn-sm">
+                                Export Excel
+                            </button>
+                            <button id="exportPdf" class="btn btn-danger btn-sm">
+                                Export PDF
+                            </button>
+                        </div>
+                </div>
+
+
                 @if ($drivers->count())
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -52,6 +65,10 @@
                                 <th>Overtime</th>
                                 <th>Deduction</th>
                                 <th>Advance</th>
+                                <th>Total Days</th>
+<th>Present</th>
+<th>Absent</th>
+
                                 <th>Status</th>
                                 <th>Gross</th>
                                 <th>Remarks</th>
@@ -63,12 +80,12 @@
                                     // salaries relation was eager-loaded for the month; take first if exists
                                     $salary = optional($driver->salaries->first());
                                     $basic = $driver->salary; // driver's base salary column
-$extra = $salary->extra ?? 0;
-$overtime = $salary->overtime_amount ?? 0;
-$deduction = $salary->deduction_amount ?? 0;
-$advance = $salary->advance_deduction ?? 0;
-$gross = $basic + $extra + $overtime - $deduction - $advance;
-$rowStatus = $salary->status ?? 'pending';
+                                    $extra = $salary->extra ?? 0;
+                                    $overtime = $salary->overtime_amount ?? 0;
+                                    $deduction = $salary->deduction_amount ?? 0;
+                                    $advance = $salary->advance_deduction ?? 0;
+                                    $gross = $basic + $extra + $overtime - $deduction - $advance;
+                                    $rowStatus = $salary->status ?? 'pending';
                                 @endphp
                                 <tr>
                                     <td>{{ ($drivers->currentPage() - 1) * $drivers->perPage() + $loop->iteration }}</td>
@@ -79,6 +96,16 @@ $rowStatus = $salary->status ?? 'pending';
                                     <td>{{ number_format($overtime, 2) }}</td>
                                     <td>{{ number_format($deduction, 2) }}</td>
                                     <td>{{ number_format($advance, 2) }}</td>
+                                    <td>{{ $driver->total_days ?? 0 }}</td>
+
+                                    <td class="{{ ($driver->present_days ?? 0) > 0 ? 'text-success font-weight-bold' : '' }}">
+                                        {{ $driver->present_days ?? 0 }}
+                                    </td>
+
+                                    <td class="{{ ($driver->absent_days ?? 0) > 0 ? 'text-danger font-weight-bold' : '' }}">
+                                        {{ $driver->absent_days ?? 0 }}
+                                    </td>
+
                                     <td>
                                         <span class="badge badge-{{ $rowStatus === 'paid' ? 'success' : 'warning' }}">
                                             {{ ucfirst($rowStatus) }}
@@ -107,6 +134,10 @@ $rowStatus = $salary->status ?? 'pending';
 @endsection
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
     <script>
         $(document).ready(function() {
             $('#statusFilter, #perPageFilter').on('change', function() {
@@ -126,5 +157,34 @@ $rowStatus = $salary->status ?? 'pending';
                 window.location.href = url.toString();
             });
         });
+
+         // EXPORT TO EXCEL
+    document.getElementById('exportExcel').addEventListener('click', function () {
+        let table = document.querySelector('.table');
+        let workbook = XLSX.utils.table_to_book(table, { sheet: "Salary Details" });
+        XLSX.writeFile(workbook, 'salary_details.xlsx');
+    });
+
+    // EXPORT TO PDF
+    document.getElementById('exportPdf').addEventListener('click', function () {
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF('l', 'pt', 'a4');
+
+        doc.text("Salary Details - {{ \Carbon\Carbon::parse($salaryMonth)->format('F Y') }}", 40, 30);
+
+        doc.autoTable({
+            html: '.table',
+            startY: 50,
+            theme: 'grid',
+            styles: {
+                fontSize: 8
+            },
+            headStyles: {
+                fillColor: [40, 40, 40]
+            }
+        });
+
+        doc.save('salary_details.pdf');
+    });
     </script>
 @endpush

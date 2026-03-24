@@ -203,6 +203,20 @@
                                     </div>
                                 </div>
 
+                                <div class="form-group">
+                                    <strong>Shift Timing</strong>
+                                    <select name="shift_timing_id" class="form-control">
+                                        <option value="">Select Shift Timing</option>
+                                        @foreach ($shift_timings as $id => $name)
+                                            <option value="{{ $id }}"
+                                                {{ old('shift_timing_id', $vehicle->shift_timing_id) == $id ? 'selected' : '' }}>
+                                                {{ $name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+
                                 <!-- Vehicle Type -->
                                 <div class="col-md-2">
                                     <div class="form-group">

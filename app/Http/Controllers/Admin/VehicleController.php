@@ -13,6 +13,7 @@ use App\Models\IbcCenter;
 use App\Models\Vendor;
 use App\Models\ShiftHours;
 use App\Models\InsuranceCompany;
+use App\Models\ShiftTimings;
 use App\Traits\DraftTrait;
 use Illuminate\Support\Facades\File;
 
@@ -29,7 +30,7 @@ class VehicleController extends Controller
     }
     public function index()
     {
-        $vehicles = Vehicle::with(['vehicleType', 'station', 'ibcCenter', 'fabricationVendor', 'shiftHours'])
+        $vehicles = Vehicle::with(['vehicleType', 'station', 'ibcCenter', 'fabricationVendor', 'shiftHours','shiftTiming'])
             ->where('is_active', 1)
             ->orderby('id', 'DESC')
             ->get();
@@ -56,13 +57,14 @@ class VehicleController extends Controller
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
+        $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
 
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
-        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -115,6 +117,8 @@ class VehicleController extends Controller
             'induction_date'            =>  'required|date',
             'pso_card'                  =>  'required',
             'akpl'                      =>  'required',
+           ' insurance_policy_no'       =>  'nullable|string',
+           'shift_timing_id' => 'required|exists:shift_timing,id',
             'registration_file'         => ($draftAttached['registration_file'] ? 'nullable' : 'required') . '|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
             'fitness_date'              =>  'required|date',
             'next_fitness_date'         =>  'required|date|after:fitness_date',
@@ -211,6 +215,8 @@ class VehicleController extends Controller
         $vehicle->induction_date            =   $request->induction_date;
         $vehicle->pso_card                  =   $request->pso_card;
         $vehicle->akpl                      =   $request->akpl;
+        $vehicle->insurance_policy_no       =   $request->insurance_policy_no;
+        $vehicle->shift_timing_id = $request->shift_timing_id;
         $vehicle->fitness_date              =   $request->fitness_date;
         $vehicle->next_fitness_date         =   $request->next_fitness_date;
         $vehicle->insurance_policy_no       =   $request->insurance_policy_no;
@@ -346,12 +352,13 @@ class VehicleController extends Controller
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
+        $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
 
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours'));
+        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -383,6 +390,7 @@ class VehicleController extends Controller
                 'induction_date'            =>  'required|date',
                 'pso_card'                  =>  'required',
                 'akpl'                      =>  'required',
+                'shift_timing_id' => 'required|exists:shift_timing,id',
                 'registration_file'         =>  'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'fitness_date'              =>  'required|date',
                 'next_fitness_date'         =>  'required|date|after:fitness_date',
@@ -481,6 +489,7 @@ class VehicleController extends Controller
         $vehicle->route_permit_expiry_date  =   $request->route_permit_expiry_date;
         $vehicle->tax_date                  =   $request->tax_date;
         $vehicle->next_tax_date             =   $request->next_tax_date;
+        $vehicle->shift_timing_id = $request->shift_timing_id;
 
         $registrationFileName = null;
         if ($request->hasFile('registration_file')) {
@@ -528,16 +537,27 @@ class VehicleController extends Controller
 
     public function show(Vehicle $vehicle)
     {
-        $register_on_portal = array(
-            '1' =>  'Registered',
-            '2' =>  'Not Registered',
-        );
-        $status = array(
-            '1' =>  'Yes',
-            '2' =>  'No',
-        );
+        $vehicle->load([
+            'shiftTiming',
+            'vehicleType',
+            'fabricationVendor',
+            'station',
+            'ibcCenter',
+        ]);
+
+        $register_on_portal = [
+            '1' => 'Registered',
+            '2' => 'Not Registered',
+        ];
+
+        $status = [
+            '1' => 'Yes',
+            '2' => 'No',
+        ];
+
         return view('admin.vehicles.show', compact('vehicle', 'register_on_portal', 'status'));
     }
+
 
     public function destroy(Vehicle $vehicle)
     {

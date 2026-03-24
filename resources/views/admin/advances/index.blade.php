@@ -56,6 +56,8 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Driver</th>
+                                    <th>Father Name</th>
+                                    <th>Location</th>
                                     <th>Advance Date</th>
                                     <th>Amount</th>
                                     <th>Per Month Deduction</th>
@@ -69,6 +71,8 @@
                                     <tr>
                                         <td>{{ $advances->firstItem() + $loop->index }}</td>
                                         <td>{{ $advance->driver->full_name ?? 'N/A' }}</td>
+                                        <td>{{ $advance->driver->father_name ?? 'N/A' }}</td>
+                                        <td>{{ $advance->driver->location ?? 'N/A' }}</td>
                                         <td>
                                             {{ \Carbon\Carbon::parse($advance->advance_date)->format('d M, Y') }}
                                         </td>

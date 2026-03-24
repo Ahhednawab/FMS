@@ -113,7 +113,7 @@
                         auth()->user()->hasPermission('ibc_centers'))
 
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
           {{ request()->routeIs('users.*') ||
           request()->routeIs('cities.*') ||
           request()->routeIs('stations.*') ||
@@ -171,7 +171,7 @@
                         auth()->user()->hasPermission('vendors') ||
                         auth()->user()->hasPermission('insurance_companies'))
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
           {{ request()->routeIs('vehicles.*') || request()->routeIs('drivers.*') || request()->routeIs('vendors.*')
               ? 'nav-item-open'
               : '' }}">
@@ -219,7 +219,7 @@
                 @endif
                 @if (auth()->user()->hasPermission('brands') || auth()->user()->hasPermission('categories'))
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
           {{ request()->routeIs('brands.*') || request()->routeIs('categories.*') || request()->routeIs('productList.*')
               ? 'nav-item-open'
               : '' }}">
@@ -247,7 +247,7 @@
                         auth()->user()->hasPermission('daily_fuels') ||
                         auth()->user()->hasPermission('daily_fuel_reports'))
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
           {{ request()->routeIs('dailyMileages.*') ||
           request()->routeIs('dailyMileageReports.*') ||
           request()->routeIs('dailyFuels.*') ||
@@ -296,7 +296,7 @@
                         auth()->user()->hasPermission('suppliers') ||
                         auth()->user()->hasPermission('issues'))
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
     {{ request()->routeIs('products.*') ||
     request()->routeIs('inventoryWarehouses.*') ||
     request()->routeIs('master_warehouse_inventory.*') ||
@@ -381,16 +381,16 @@
 
                 @endif
 
-                {{-- <li class="nav-item nav-item-submenu 
-          {{ request()->routeIs('admin.products.*') 
+                {{-- <li class="nav-item nav-item-submenu
+          {{ request()->routeIs('admin.products.*')
           || request()->routeIs('admin.inventoryWarehouses.*')
             ? 'nav-item-open' : '' }}">
 
           <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Inventory Management</span></a>
 
-          <ul class="nav nav-group-sub" data-submenu-title="Layouts" 
-            style="{{ request()->routeIs('admin.products.*') 
-            || request()->routeIs('admin.inventoryWarehouses.*') 
+          <ul class="nav nav-group-sub" data-submenu-title="Layouts"
+            style="{{ request()->routeIs('admin.products.*')
+            || request()->routeIs('admin.inventoryWarehouses.*')
               ? 'display:block;' : '' }}">
 
             <li class="nav-item"><a href="{{ route('admin.products.index')}}" class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Product Inventory</a></li>
@@ -413,7 +413,7 @@
 
                 @if (auth()->user()->hasPermission('accident_details') || auth()->user()->hasPermission('accident_reports'))
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
     {{ request()->routeIs('accidentDetails.*') || request()->routeIs('accidentReports.*') ? 'nav-item-open' : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accidents</span></a>
 
@@ -512,7 +512,7 @@
               ? 'nav-item-open'
               : '' }}">
 
-                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Attendece</span></a>
+                        <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Attendence</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                             style="{{ request()->routeIs('driverAttendances.*') || request()->routeIs('vehicleAttendances.*')
@@ -536,7 +536,7 @@
 
                 @if (auth()->user()->role()->first()->slug == 'maintainer')
                     <li
-                        class="nav-item nav-item-submenu 
+                        class="nav-item nav-item-submenu
                     {{ request()->routeIs('maintainer.issues') || request()->routeIs('maintainer.jobcart') ? 'nav-item-open' : '' }}">
 
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Maintenance</span></a>

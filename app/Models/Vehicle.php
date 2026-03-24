@@ -47,6 +47,8 @@ class Vehicle extends Model
         'tax_date',
         'next_tax_date',
         'tax_file',
+        'shift_timing_id',
+
     ];
 
     public function vehicleType()
@@ -91,4 +93,10 @@ class Vehicle extends Model
 
         return $serial_no;
     }
+
+    public function shiftTiming()
+    {
+        return $this->belongsTo(ShiftTimings::class, 'shift_timing_id');
+    }
+
 }

@@ -157,7 +157,29 @@
                     </div>
                 </div>
 
+                                <div class="row mb-2 justify-content-end">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card text-center border">
+                            <div class="card-body p-2">
+                                <small class="" style="font-size: 16px; color:black;">Total Fuel</small>
+                                <div class="font-weight-bold">
+                                    {{ number_format($totalFuelTaken, 2) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card text-center border">
+                            <div class="card-body p-2">
+                                <small class="" style="font-size: 16px; color:black;">Avg Fuel</small>
+                                <div class="font-weight-bold">
+                                    {{ number_format($averageFuelAvg, 2) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <table class="table datatable-colvis-basic dataTable">
                     <thead>
@@ -172,10 +194,20 @@
                             <th>Fuel Taken (Ltr)</th>
                             <th>Fuel Avg (KM/Ltr)</th>
                             <th>AKPL (KM/Ltr)</th>
+                            <th>Diff (KM/Ltr)</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($dailyFuelReports as $key => $value)
+                            @php
+        $fuelAvg = $value->fuel_average !== null ? (float) $value->fuel_average : null;
+        $akpl    = $value->akpl !== null ? (float) $value->akpl : null;
+
+        $diff = ($fuelAvg !== null && $akpl !== null)
+            ? round($fuelAvg - $akpl, 2)
+            : null;
+    @endphp
                             <tr>
                                 <td>{{ $value->vehicle_no }}</td>
                                 <td>{{ $value->station }}</td>
@@ -187,6 +219,13 @@
                                 <td>{{ $value->fuel_taken }} </td>
                                 <td>{{ round($value->mileage / $value->fuel_taken, 2) }}</td>
                                 <td>{{ $value->akpl }}</td>
+                                <td>
+                                    <span class="
+                                        {{ $diff < 0 ? 'text-danger font-weight-bold' : ($diff > 0 ? 'text-success font-weight-bold' : 'text-muted') }}
+                                    ">
+                                        {{ $diff }}
+                                    </span>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

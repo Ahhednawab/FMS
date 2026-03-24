@@ -54,9 +54,14 @@ class DailyFuelReportController extends Controller
             $query->whereDate('d.report_date', '<=', $request->to_date);
         }
 
+        $summaryQuery = clone $query;
+
+        $totalFuelTaken = (clone $summaryQuery)->sum('d.fuel_taken');
+        $averageFuelAvg = (clone $summaryQuery)->avg('d.fuel_average');
+
         $dailyFuelReports = $query->groupby('d.vehicle_id', 'v.vehicle_no')->orderby('v.vehicle_no', 'ASC')->get();
         $vehicles = Vehicle::where('is_active', 1)->get();
 
-        return view('admin.dailyFuelReports.index', compact('dailyFuelReports', 'vehicles'));
+        return view('admin.dailyFuelReports.index', compact('dailyFuelReports', 'vehicles','totalFuelTaken', 'averageFuelAvg'));
     }
 }

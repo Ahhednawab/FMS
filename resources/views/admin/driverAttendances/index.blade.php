@@ -152,18 +152,18 @@
                                     </label>
                                 </td>
                                 <td>{{ $value->driver->full_name }}</td>
-                                <td class="text-center">{{ $value->driver->driverStatus->name }}</td>
+                                <td class="text-center">{{  $value->driver->driverStatus?->name ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     @php($st = $value->driver->shiftTiming)
                                     @if ($st)
-                                        {{ $st->name }} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }}
+                                        {{ $st?->name ?? 'N/A' }} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }}
                                         - {{ \Carbon\Carbon::parse($st->end_time)->format('h:i A') }})
                                     @else
                                         N/A
                                     @endif
                                 </td>
                                 <td class="text-center">{{ \Carbon\Carbon::parse($value->date)->format('d-M-Y') }}</td>
-                                <td class="text-center">{{ $value->attendanceStatus->name }}</td>
+                                <td class="text-center">{{ $value->attendanceStatus?->name ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">

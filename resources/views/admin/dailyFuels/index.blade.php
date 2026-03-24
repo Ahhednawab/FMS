@@ -55,14 +55,21 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Vehicle No</strong></label>
-                                <select class="custom-select select2 vehicle" name="vehicle_id" id="vehicle_no">
-                                    <option value="">--Select--</option>
-                                    @foreach ($vehicles as $value)
-                                        <option value="{{ $value->id }}"
-                                            {{ request('vehicle_id') == $value->id ? 'selected' : '' }}>
-                                            {{ $value->vehicle_no }}</option>
-                                    @endforeach
-                                </select>
+         <select
+    class="form-control vehicle"
+    name="vehicle_id[]"
+    id="vehicle_no"
+    multiple
+>
+    @foreach ($vehicles as $value)
+        <option value="{{ $value->id }}"
+            {{ collect(request('vehicle_id'))->contains($value->id) ? 'selected' : '' }}>
+            {{ $value->vehicle_no }}
+        </option>
+    @endforeach
+</select>
+
+
                             </div>
                         </div>
 
@@ -137,6 +144,7 @@
                             <div class="dropdown-menu dropdown-menu-right" id="column-visibility">
                                 <h6 class="dropdown-header">Show/Hide Columns</h6>
                                 <div class="dropdown-divider"></div>
+
                                 <div class="px-3">
                                     <div class="custom-control custom-checkbox mb-2">
                                         <input type="checkbox" class="custom-control-input column-toggle" id="col1"
@@ -191,6 +199,29 @@
                                 </div>
                             </div>
 
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2 justify-content-end">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card text-center border">
+                            <div class="card-body p-2">
+                                <small class="" style="font-size: 16px; color:black;">Total Fuel</small>
+                                <div class="font-weight-bold">
+                                    {{ number_format($totalFuelTaken, 2) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card text-center border">
+                            <div class="card-body p-2">
+                                <small class="" style="font-size: 16px; color:black;">Avg Fuel</small>
+                                <div class="font-weight-bold">
+                                    {{ number_format($averageFuelAvg, 2) }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -276,6 +307,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+
 
     <script>
         // $(document).ready(function () {
@@ -291,6 +325,7 @@
         $(document).ready(function() {
             // Initialize DataTable
             var table = $('.datatable-colvis-basic').DataTable({
+                order: [[2, 'asc']],
                 dom: "lrtip",
                 pageLength: 10,
                 language: {
@@ -406,8 +441,6 @@
                 $('.column-toggle[data-column="' + this.index() + '"]').prop('checked', this.visible());
             });
         });
-
-
 
         setTimeout(function() {
             let alertBox = document.getElementById('alert-message');

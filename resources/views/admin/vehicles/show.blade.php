@@ -119,6 +119,14 @@
                             </div>
                         </div>
 
+                        <!-- Shift Hours -->
+                        <div class="col-md-2 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Shift Timings</h5>
+                                <p>{{ $vehicle->shiftTiming ? $vehicle->shiftTiming->name : 'N/A' }}</p>
+                            </div>
+                        </div>
+
                         <!-- Vehicle Type -->
                         <div class="col-md-2 text-center">
                             <div class="card">

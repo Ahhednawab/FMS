@@ -35,11 +35,27 @@
                         </div>
                     </div>
 
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Accident Date:</label>
+                            <p class="form-control-plaintext">
+                                {{ $accidentDetail->accident_date ? \Carbon\Carbon::parse($accidentDetail->accident_date)->format('d-m-Y') : 'N/A' }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Vehicle No -->
                     <div class="col-md-6 mb-3">
                         <div class="form-group">
                             <label class="font-weight-bold">Vehicle No:</label>
-                            <p class="form-control-plaintext">{{ $accidentDetail->vehicle_no }}</p>
+                            <p class="form-control-plaintext">{{ $accidentDetail->vehicle_no ?? 'N/A'}}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Loss No:</label>
+                            <p class="form-control-plaintext">{{ $accidentDetail->loss_no }}</p>
                         </div>
                     </div>
                 </div>

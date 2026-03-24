@@ -113,7 +113,7 @@
                             <strong>CNIC No</strong>
                         </div>
                         <div class="col-md-2">
-                            <strong>Account No</strong>
+                            <strong>Father Name</strong>
                         </div>
                         <div class="col-md-1">
                             <strong class="pl-1">Shift</strong>
@@ -150,11 +150,11 @@
                                         value="{{ $driver->cnic_no }}" readonly>
                                 </div>
                             </div>
-                            <!-- Account No -->
+                            <!-- Father Name -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="accountno[]"
-                                        value="{{ $driver->account_no }}" readonly>
+                                    <input type="text" class="form-control" name="fathername[]"
+                                        value="{{ $driver->father_name }}" readonly>
                                 </div>
                             </div>
                             <!-- Shift -->

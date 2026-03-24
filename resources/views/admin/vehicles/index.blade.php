@@ -224,6 +224,7 @@
                             <th>Ownership </th>
                             <th>AKPL</th>
                             <th>Shift</th>
+                            <th>Shift Timing</th>
                             <th>Vehicle Type</th>
                             <th>Fabricator</th>
                             <th>Station</th>
@@ -261,6 +262,9 @@
                                     @else
                                         N/A
                                     @endif
+                                </td>
+                                <td>
+                                    {{ $value->shiftTiming?->name ?? 'N/A' }}
                                 </td>
                                 <td>{{ $value->vehicleType->name }}</td>
 

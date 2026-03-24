@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AccidentDetail;
 use App\Models\AccidentDetailFile;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AccidentDetailsExport;
+
 
 class AccidentDetailController extends Controller
 {
@@ -17,36 +21,53 @@ class AccidentDetailController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
     }
+
     public function index(Request $request)
     {
-        $status = $request->query('payment_status', 'all');
-        $search = $request->query('search', '');
-        $per_page = (int)$request->query('per_page', 10);
+        $status   = $request->query('payment_status', 'all');
+        $search   = $request->query('search', '');
+        $per_page = (int) $request->query('per_page', 10);
 
-        $payment_statuses = array(
-            'pending' => 'Pending',
+        $payment_statuses = [
+            'pending'  => 'Pending',
             'received' => 'Received',
-        );
+        ];
 
         $query = AccidentDetail::query();
 
-        // Filter by payment status
-        if ($status !== 'all' && array_key_exists($status, $payment_statuses)) {
+        if ($status !== 'all') {
             $query->where('payment_status', $status);
         }
 
-        // Search across multiple fields
+        // 🔍 Unified search
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('accident_id', 'like', "%{$search}%")
-                    ->orWhere('vehicle_no', 'like', "%{$search}%")
-                    ->orWhere('workshop', 'like', "%{$search}%");
+                ->orWhere('vehicle_no', 'like', "%{$search}%")
+                ->orWhere('workshop', 'like', "%{$search}%");
             });
         }
 
-        $accidentDetails = $query->paginate($per_page);
+        $accidentDetails = $query
+            ->orderBy('id', 'desc')
+            ->paginate($per_page);
 
-        return view('admin.accidentDetails.index', compact('accidentDetails', 'payment_statuses', 'status'));
+        // ✅ AJAX response: return only table HTML
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.accidentDetails.index', compact(
+                    'accidentDetails',
+                    'payment_statuses',
+                    'status'
+                ))->renderSections()['table']
+            ]);
+        }
+
+        return view('admin.accidentDetails.index', compact(
+            'accidentDetails',
+            'payment_statuses',
+            'status'
+        ));
     }
 
     public function create()
@@ -67,6 +88,8 @@ class AccidentDetailController extends Controller
             $request->all(),
             [
                 'vehicle_no' => 'required',
+                'accident_date' => 'required|date',
+                'loss_no' => 'required|string|max:255',
                 'workshop' => 'required',
                 'third_party' => 'required',
                 'claim_amount' => 'required|integer',
@@ -97,8 +120,10 @@ class AccidentDetailController extends Controller
 
         $accidentDetail = new AccidentDetail();
         $accidentDetail->accident_id = $request->accident_id;
+        $accidentDetail->accident_date = $request->accident_date;
         $accidentDetail->vehicle_no = $request->vehicle_no;
         $accidentDetail->insurance = $request->insurance;
+        $accidentDetail->loss_no = $request->loss_no;
         $accidentDetail->ownership = $request->ownership;
         $accidentDetail->driver_name = $request->driver_name;
         $accidentDetail->license_no = $request->license_no;
@@ -157,6 +182,8 @@ class AccidentDetailController extends Controller
             $request->all(),
             [
                 'vehicle_no' => 'required',
+                'accident_date' => 'required|date',
+                'loss_no' => 'required|string|max:255',
                 'workshop' => 'required',
                 'third_party' => 'required',
                 'claim_amount' => 'required|integer',
@@ -186,7 +213,9 @@ class AccidentDetailController extends Controller
         }
 
         $accidentDetail->vehicle_no = $request->vehicle_no;
+        $accidentDetail->accident_date = $request->accident_date;
         $accidentDetail->insurance = $request->insurance;
+        $accidentDetail->loss_no = $request->loss_no;
         $accidentDetail->ownership = $request->ownership;
         $accidentDetail->driver_name = $request->driver_name;
         $accidentDetail->license_no = $request->license_no;
@@ -284,4 +313,36 @@ class AccidentDetailController extends Controller
 
         return response()->json(['success' => true, 'message' => 'File deleted successfully']);
     }
+
+    public function exportPdf(Request $request)
+    {
+        $query = AccidentDetail::query();
+
+        if ($request->payment_status && $request->payment_status !== 'all') {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('accident_id', 'like', "%{$request->search}%")
+                ->orWhere('vehicle_no', 'like', "%{$request->search}%")
+                ->orWhere('workshop', 'like', "%{$request->search}%");
+            });
+        }
+
+        $accidentDetails = $query->orderBy('id', 'desc')->get();
+
+        $pdf = Pdf::loadView('admin.accidentDetails.export-pdf', compact('accidentDetails'));
+
+        return $pdf->download('accident-details.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        return Excel::download(
+            new AccidentDetailsExport($request),
+            'accident-details.xlsx'
+        );
+    }
+
 }

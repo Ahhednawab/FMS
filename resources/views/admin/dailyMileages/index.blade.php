@@ -20,7 +20,17 @@
         </div>
     </div>
     <!-- /page header -->
+    <style>
+        .custom-checkbox input {
+            position: absolute;
+            z-index: 2;
+            cursor: pointer;
+        }
 
+        .checkmark {
+            z-index: 1;
+        }
+    </style>
     <!-- Content area -->
     <div class="content">
         @if ($message = Session::get('success'))
@@ -47,8 +57,8 @@
             </div>
         @endif
 
-        <!-- Bulk Actions -->
-        <div class="bulk-actions card mb-3" id="bulkActions">
+        {{-- <!-- Bulk Actions -->
+        <div class="bulk-actions card mb-3 d-none" id="bulkActions">
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="mr-3">
@@ -68,55 +78,41 @@
                         Selection</button>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('dailyMileages.index') }}" method="get">
+                <form action="{{ route('dailyMileages.index') }}" method="GET">
                     <div class="row">
-                        <!-- Vehicle No -->
+                        <!-- Vehicle -->
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label"><strong>Vehicle No</strong></label>
-                                <select class="custom-select select2 vehicle" name="vehicle_id" id="vehicle_no">
-                                    <option value="">--Select--</option>
-                                    @foreach ($vehicles as $value)
-                                        <option value="{{ $value->id }}"
-                                            {{ request('vehicle_id') == $value->id ? 'selected' : '' }}>
-                                            {{ $value->vehicle_no }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <label><strong>Vehicle No</strong></label>
+                            <select name="vehicle_id[]" class="form-control select2" multiple>
+                                @foreach ($vehicles as $v)
+                                    <option value="{{ $v->id }}"
+                                        {{ collect(request('vehicle_id'))->contains($v->id) ? 'selected' : '' }}>
+                                        {{ $v->vehicle_no }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        @php
-                            use Carbon\Carbon;
-
-                            $defaultFromDate = request('from_date') ?? Carbon::now()->startOfMonth()->toDateString();
-                            $defaultToDate = request('to_date') ?? Carbon::now()->today()->toDateString();
-                        @endphp
-
-                        <!--From Date -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label><strong>From</strong></label>
-                                <input type="date" class="form-control" name="from_date" value="{{ $defaultFromDate }}"
-                                    max="{{ date('Y-m-d') }}">
-                            </div>
+                        <!-- From -->
+                        <div class="col-md-2">
+                            <label><strong>From</strong></label>
+                            <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
                         </div>
-                        <!--To Date -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label><strong>To</strong></label>
-                                <input type="date" class="form-control" name="to_date" value="{{ $defaultToDate }}"
-                                    max="{{ date('Y-m-d') }}">
-                            </div>
+
+                        <!-- To -->
+                        <div class="col-md-2">
+                            <label><strong>To</strong></label>
+                            <input type="date" name="to_date" class="form-control" value="{{ request('from_date') }}">
                         </div>
-                        <div class="col-md-3 mt-4">
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('dailyMileages.index') }}" class="btn btn-primary">Reset</a>
-                            </div>
+
+                        <!-- Buttons -->
+                        <div class="col-md-2 mt-4">
+                            <button class="btn btn-primary">Filter</button>
+                            <a href="{{ route('dailyMileages.index') }}" class="btn btn-secondary">Reset</a>
                         </div>
 
                     </div>
@@ -136,75 +132,94 @@
                                     <i class="icon-search4"></i>
                                 </span>
                             </div>
-                            <input type="text" id="customSearch" class="form-control border-left-0"
-                                placeholder="Search...">
+                            <input type="text" id="tableSearch" class="form-control border-left-0"
+                                placeholder="Search in table...">
+
+
                         </div>
                     </div>
-                    <div>
-                        <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+                    <div class="d-flex align-items-center flex-wrap">
+
+                        <!-- Delete -->
+                        <button class="btn btn-danger mr-2" id="deleteSelectedBtn">
+                            <i class="icon-trash"></i> Delete
+                        </button>
+
+                        <!-- Excel -->
+                        <button class="btn btn-light mr-2" id="excelBtn" title="Export to Excel">
                             <i class="icon-file-excel"></i> Excel
                         </button>
-                        <button class="btn btn-light" id="printBtn" title="Print">
+
+                        <!-- Print -->
+                        <button class="btn btn-light mr-2" id="printBtn" title="Print">
                             <i class="icon-printer"></i> Print
                         </button>
 
-                        <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
+                        <!-- PDF -->
+                        <button class="btn btn-light mr-2" id="pdfBtn" title="Export PDF">
                             <i class="icon-file-pdf"></i> PDF
                         </button>
-                        <div class="btn-group ml-2">
-                            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="icon-grid7"></i> Columns Visibility<span class="caret"></span>
+
+                        <!-- Columns Visibility -->
+                        <div class="btn-group mr-3">
+                            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown">
+                                <i class="icon-grid7"></i> Columns Visibility
                             </button>
+
                             <div class="dropdown-menu dropdown-menu-right" id="column-visibility">
                                 <h6 class="dropdown-header">Show/Hide Columns</h6>
                                 <div class="dropdown-divider"></div>
+
                                 <div class="px-3">
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col1"
-                                            data-column="0" checked>
-                                        <label class="custom-control-label" for="col1">Vehicle</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col2"
-                                            data-column="1" checked>
-                                        <label class="custom-control-label" for="col2">Station</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col3"
-                                            data-column="2" checked>
-                                        <label class="custom-control-label" for="col3">Report Date</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col4"
-                                            data-column="3" checked>
-                                        <label class="custom-control-label" for="col4">Previous Kms</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col5"
-                                            data-column="4" checked>
-                                        <label class="custom-control-label" for="col5">Current Kms</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox mb-2">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col6"
-                                            data-column="5" checked>
-                                        <label class="custom-control-label" for="col6">Mileage</label>
-                                    </div>
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input column-toggle" id="col7"
-                                            data-column="6" checked>
-                                        <label class="custom-control-label" for="col7">Actions</label>
-                                    </div>
+                                    @foreach ([
+                                                    0 => 'Vehicle',
+                                                    1 => 'Station',
+                                                    2 => 'Report Date',
+                                                    3 => 'Previous Kms',
+                                                    4 => 'Current Kms',
+                                                    5 => 'Mileage',
+                                                    6 => 'Actions',
+                                                ] as $i => $label)
+                                        <div class="custom-control custom-checkbox mb-2">
+                                            <input type="checkbox" class="custom-control-input column-toggle"
+                                                id="col{{ $i }}" data-column="{{ $i }}" checked>
+                                            <label class="custom-control-label" for="col{{ $i }}">
+                                                {{ $label }}
+                                            </label>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-
-
-
-
-
-
                         </div>
+
+                        <!-- Show Per Page (SEPARATE FORM) -->
+                        <form action="{{ route('dailyMileages.index') }}" method="GET"
+                            class="d-flex align-items-center">
+
+                            {{-- Preserve filters --}}
+                            @foreach (request()->except('per_page', 'page') as $key => $value)
+                                @if (is_array($value))
+                                    @foreach ($value as $v)
+                                        <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                    @endforeach
+                                @else
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @endif
+                            @endforeach
+
+                            <label class="mb-0 mr-2"><strong>Show</strong></label>
+                            <select name="per_page" class="form-control form-control-sm" onchange="this.form.submit()">
+                                @foreach ([10, 25, 50, 100] as $size)
+                                    <option value="{{ $size }}"
+                                        {{ request('per_page', 10) == $size ? 'selected' : '' }}>
+                                        {{ $size }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+
                     </div>
+
                 </div>
 
                 <table id="dailyMileages" class="table datatable-colvis-basic dataTable">
@@ -272,6 +287,27 @@
                         @endforeach
                     </tbody>
                 </table>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+
+                    <!-- Count info -->
+                    <div class="text-muted">
+                        Showing
+                        <strong>{{ $dailyMileages->firstItem() }}</strong>
+                        to
+                        <strong>{{ $dailyMileages->lastItem() }}</strong>
+                        of
+                        <strong>{{ $dailyMileages->total() }}</strong>
+                        entries
+                    </div>
+
+                    <!-- Pagination links -->
+                    <div>
+                        {{ $dailyMileages->links() }}
+                    </div>
+
+                </div>
+
+
             </div>
         </div>
         <!-- /basic datatable -->
@@ -313,7 +349,10 @@
             // Initialize DataTable
             var table = $('.datatable-colvis-basic').DataTable({
                 dom: "lrtip",
-                pageLength: 10,
+                paging: false,
+                searching: true,
+                ordering: false,
+                info: false,
                 language: {
                     search: "",
                     searchPlaceholder: "Search...",
@@ -384,6 +423,18 @@
                 ]
             });
 
+            $('#tableSearch').on('keyup', function() {
+                table.search(this.value).draw();
+            });
+
+            $(document).ready(function() {
+                $('.select2').select2({
+                    placeholder: 'Select vehicle(s)',
+                    closeOnSelect: false, // multiple selection UX
+                    width: '100%'
+                });
+            });
+
             // Print button
             $('#printBtn').on('click', function() {
                 table.button('.buttons-print').trigger();
@@ -399,10 +450,6 @@
                 table.button('.buttons-excel').trigger();
             });
 
-            // Custom search input
-            $('#customSearch').on('keyup', function() {
-                table.search(this.value).draw(); // ✅ This works
-            });
             // Initialize select2
             $('.vehicle').select2({
                 placeholder: "--Select--",
@@ -427,53 +474,104 @@
            CHECKBOX SELECTION LOGIC
         ============================ */
 
-        $('#selectAll').on('change', function() {
-            const checked = this.checked;
-            $('.select-checkbox').prop('checked', checked);
-            updateBulkActions();
+        $(document).on('change', '#selectAll', function() {
+            const isChecked = this.checked;
+            $('.select-checkbox').prop('checked', isChecked).trigger('change');
         });
 
-        $(document).on('change', '.select-checkbox', function() {
-            $('#selectAll').prop(
-                'checked',
-                $('.select-checkbox').length === $('.select-checkbox:checked').length
-            );
-            updateBulkActions();
+        $(document).on('click', '#clearSelection', function() {
+            $('.select-checkbox, #selectAll').prop('checked', false).trigger('change');
         });
 
-        $('#clearSelection').on('click', function() {
-            $('.select-checkbox, #selectAll').prop('checked', false);
-            updateBulkActions();
-        });
-
-        $('#deleteSelected').on('click', function(e) {
+        $(document).on('click', '#deleteSelected', function(e) {
             e.preventDefault();
-            const ids = getSelectedIds();
-            if (!ids.length) return alert('Select at least one driver');
 
-            if (confirm('Delete selected drivers?')) {
-                $.post("{{ route('dailyMileages.destroyMultiple') }}", {
-                    _token: '{{ csrf_token() }}',
-                    ids: ids
-                }, res => res.success ? location.reload() : alert('Delete failed'));
+            const ids = getSelectedIds();
+
+            if (ids.length === 0) {
+                alert('Please select at least one daily mileage record to delete.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete ' + ids.length + ' selected daily mileage record(s)?')) {
+                // Create a form for submission
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ route('dailyMileages.destroyMultiple') }}";
+                form.style.display = 'none';
+
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+
+                // Add each ID
+                ids.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids[]'; // Important: Use array notation []
+                    input.value = id;
+                    form.appendChild(input);
+                });
+
+                // Submit the form
+                document.body.appendChild(form);
+                form.submit();
             }
         });
 
         function getSelectedIds() {
-            return $('.select-checkbox:checked').map(function() {
-                return this.value;
-            }).get();
+            const ids = [];
+            $('.select-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+            return ids;
         }
 
-        function updateBulkActions() {
-            const count = $('.select-checkbox:checked').length;
-            $('#selectedCount').text(count);
-            $('#bulkActions').toggleClass('show', count > 0);
-        }
+        $('#deleteSelectedBtn').on('click', function() {
+
+            let ids = [];
+
+            $('.select-checkbox:checked').each(function() {
+                ids.push($(this).val());
+            });
+
+            if (ids.length === 0) {
+                alert('Please select at least one record.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete selected records?')) {
+                return;
+            }
+
+            let form = $('<form>', {
+                method: 'POST',
+                action: "{{ route('dailyMileages.destroyMultiple') }}"
+            });
+
+            form.append('@csrf');
+
+            ids.forEach(function(id) {
+                form.append(
+                    $('<input>', {
+                        type: 'hidden',
+                        name: 'ids[]',
+                        value: id
+                    })
+                );
+            });
+
+            $('body').append(form);
+            form.submit();
+        });
+
 
         /* ============================
-           AUTO HIDE ALERT
-        ============================ */
+                   AUTO HIDE ALERT
+                ============================ */
 
 
 

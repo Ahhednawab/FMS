@@ -66,31 +66,68 @@
 
                 {{-- VEHICLE DETAILS --}}
                 <h6 class="font-weight-bold mb-3">Vehicle Details</h6>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label>Vehicle Qty</label>
-                        <input type="number" name="vehicle_qty" class="form-control"
-                            value="{{ old('vehicle_qty', $invoice->vehicle_qty) }}">
-                    </div>
 
-                    <div class="col-md-3 mb-3">
-                        <label>Days</label>
-                        <input type="number" name="days" class="form-control"
-                            value="{{ old('days', $invoice->days) }}">
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label>Vehicle Rent</label>
-                        <input type="number" step="0.01" name="vehicle_rent" class="form-control"
-                            value="{{ old('vehicle_rent', $invoice->vehicle_rent) }}">
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label>Monthly Rent</label>
-                        <input type="number" step="0.01" name="monthly_rent" class="form-control"
-                            value="{{ old('monthly_rent', $invoice->monthly_rent) }}">
-                    </div>
+                {{-- LABEL ROW --}}
+                <div class="row font-weight-bold mb-2">
+                    <div class="col-md-2">Vehicle Qty</div>
+                    <div class="col-md-2">Days</div>
+                    <div class="col-md-3">Vehicle Rent</div>
+                    <div class="col-md-3">Monthly Rent</div>
+                    <div class="col-md-2 text-center">Action</div>
                 </div>
+
+                <div id="vehicle-wrapper">
+                    @php
+                        // 🔒 Always normalize to arrays
+                        $vehicleQty = (array) ($invoice->vehicle_qty ?? []);
+                        $days = (array) ($invoice->days ?? []);
+                        $vehicleRent = (array) ($invoice->vehicle_rent ?? []);
+                        $monthlyRent = (array) ($invoice->monthly_rent ?? []);
+
+                        // If empty, add one row
+                        if (count($vehicleQty) === 0) {
+                            $vehicleQty = [''];
+                            $days = [''];
+                            $vehicleRent = [''];
+                            $monthlyRent = [''];
+                        }
+                    @endphp
+
+                    @foreach ($vehicleQty as $i => $qty)
+                        <div class="row vehicle-row mb-2">
+                            <div class="col-md-2">
+                                <input type="number" name="vehicles[{{ $i }}][vehicle_qty]" class="form-control"
+                                    value="{{ old("vehicles.$i.vehicle_qty", $qty) }}">
+                            </div>
+
+                            <div class="col-md-2">
+                                <input type="number" name="vehicles[{{ $i }}][days]" class="form-control"
+                                    value="{{ old("vehicles.$i.days", $days[$i] ?? '') }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <input type="number" step="0.01" name="vehicles[{{ $i }}][vehicle_rent]"
+                                    class="form-control"
+                                    value="{{ old("vehicles.$i.vehicle_rent", $vehicleRent[$i] ?? '') }}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <input type="number" step="0.01" name="vehicles[{{ $i }}][monthly_rent]"
+                                    class="form-control"
+                                    value="{{ old("vehicles.$i.monthly_rent", $monthlyRent[$i] ?? '') }}">
+                            </div>
+
+                            <div class="col-md-2 text-center">
+                                @if ($i === 0)
+                                    <button type="button" class="btn btn-success add-row">+</button>
+                                @else
+                                    <button type="button" class="btn btn-danger remove-row">−</button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
 
                 {{-- CHARGES --}}
                 <h6 class="font-weight-bold mb-3">Charges</h6>
@@ -158,35 +195,44 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label>Cheque Value</label>
+                        <label>Amount Receivable</label>
                         <input type="number" step="0.01" name="cheque_value" class="form-control"
                             value="{{ old('cheque_value', $invoice->cheque_value) }}">
                     </div>
 
                     <div class="col-md-3 mb-3">
+                        <label>Payment Received</label>
+                        <input type="number" step="0.01"
+                            name="payment_received"
+                            class="form-control"
+                            value="{{ old('payment_received', $invoice->payment_received) }}">
+                    </div>
+
+
+                    {{-- <div class="col-md-3 mb-3">
                         <label>Cheque No</label>
                         <input type="text" name="cheque_no" class="form-control"
                             value="{{ old('cheque_no', $invoice->cheque_no) }}">
-                    </div>
+                    </div> --}}
                 </div>
 
                 {{-- PAYMENT TIMELINE --}}
                 <h6 class="font-weight-bold mb-3">Payment Timeline</h6>
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label>Cheque Received Date</label>
+                        <label>Amount Received Date</label>
                         <input type="date" name="cheque_rec_date" class="form-control"
                             value="{{ old('cheque_rec_date', optional($invoice->cheque_rec_date)->format('Y-m-d')) }}">
                     </div>
 
-                    <div class="col-md-3 mb-3">
+                    {{-- <div class="col-md-3 mb-3">
                         <label>Payment Timeline Days</label>
                         <input type="number" name="payment_time_line_days" class="form-control"
                             value="{{ old('payment_time_line_days', $invoice->payment_time_line_days) }}">
-                    </div>
+                    </div> --}}
 
                     <div class="col-md-3 mb-3">
-                        <label>Payment Difference (Days)</label>
+                        <label>Payment Difference</label>
                         <input type="number" name="payment_difference_in_days" class="form-control"
                             value="{{ old('payment_difference_in_days', $invoice->payment_difference_in_days) }}">
                     </div>
@@ -211,4 +257,63 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('click', function(e) {
+
+                /* =======================
+                   ADD ROW
+                ======================= */
+                if (e.target.classList.contains('add-row')) {
+
+                    let wrapper = document.getElementById('vehicle-wrapper');
+                    let rows = wrapper.querySelectorAll('.vehicle-row');
+                    let index = rows.length;
+
+                    let newRow = `
+        <div class="row vehicle-row mb-2">
+            <div class="col-md-2">
+                <input type="number"
+                       name="vehicles[${index}][vehicle_qty]"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-2">
+                <input type="number"
+                       name="vehicles[${index}][days]"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <input type="number"
+                       step="0.01"
+                       name="vehicles[${index}][vehicle_rent]"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-3">
+                <input type="number"
+                       step="0.01"
+                       name="vehicles[${index}][monthly_rent]"
+                       class="form-control">
+            </div>
+
+            <div class="col-md-2 text-center">
+                <button type="button" class="btn btn-danger remove-row">−</button>
+            </div>
+        </div>`;
+
+                    wrapper.insertAdjacentHTML('beforeend', newRow);
+                }
+
+                /* =======================
+                   REMOVE ROW
+                ======================= */
+                if (e.target.classList.contains('remove-row')) {
+                    e.target.closest('.vehicle-row').remove();
+                }
+            });
+        </script>
+    @endpush
 @endsection

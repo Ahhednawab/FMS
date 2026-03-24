@@ -105,4 +105,9 @@ class Driver extends Model
             ->where('is_closed', false)
             ->sum('remaining_amount');
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(DriversAttendance::class, 'driver_id');
+    }
 }

@@ -68,6 +68,7 @@ class DriverController extends Controller
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::select('id', 'name', 'start_time', 'end_time')
+            ->whereNotIn('id', [1, 2])
             ->where('is_active', 1)
             ->orderBy('start_time')
             ->get()

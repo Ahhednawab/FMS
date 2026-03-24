@@ -9,6 +9,8 @@ class AccidentDetail extends Model
 {
     protected $fillable = [
         'accident_id',
+        'accident_date',
+        'loss_no',
         'vehicle_no',
         'insurance',
         'ownership',

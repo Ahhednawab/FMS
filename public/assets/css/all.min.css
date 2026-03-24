@@ -20835,7 +20835,7 @@ input[type=text].noui-height-helper:not(.noUi-target)[data-fouc] {
 }
 
 .select2-selection--multiple .select2-selection__choice {
-    background-color: #294653;
+    background-color: #808080;
     /* color: #fff; */
     cursor: default;
     float: left;
@@ -29647,7 +29647,7 @@ body.swal2-toast-column .swal2-toast .swal2-loading {
 .ui-datepicker .ui-datepicker-next {
     right: 0
 }
-/* 
+/*
 .ui-datepicker .ui-datepicker-next:after {
     content: ""
 }
@@ -35575,13 +35575,26 @@ iframe.wait-autoplay {
     transform: translate(-50%, -50%)
 }
 
+/* default (unchecked) */
 .dataTable tbody .select-checkbox:before {
-    content: '';
     background-color: #fff;
     border: 2px solid #ddd;
-    border-radius: .1875rem;
-    transition: border-color ease-in-out .15s, background-color ease-in-out .15s
 }
+
+.dataTable tbody .select-checkbox:after {
+    opacity: 0;
+}
+
+/* checked state */
+.dataTable tbody .select-checkbox:checked:before {
+    background-color: #2196f3;
+    border-color: #2196f3;
+}
+
+.dataTable tbody .select-checkbox:checked:after {
+    opacity: 1;
+}
+
 
 @media (prefers-reduced-motion:reduce) {
     .dataTable tbody .select-checkbox:before {
@@ -35602,18 +35615,6 @@ iframe.wait-autoplay {
     }
 }
 
-.dataTable tbody .selected .select-checkbox:after,
-.dataTable tbody .selected .select-checkbox:before {
-    border-color: #2196f3
-}
-
-.dataTable tbody .selected .select-checkbox:before {
-    background-color: #2196f3
-}
-
-.dataTable tbody .selected .select-checkbox:after {
-    opacity: 1
-}
 
 .dt-buttons-full .dt-buttons {
     float: none;

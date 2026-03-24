@@ -4,213 +4,220 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use App\Models\Driver;
-use App\Models\MileageAlert;
 use App\Models\Notification;
-use App\Models\DailyFuelReport;
 use Illuminate\Console\Command;
 use App\Models\AlertVehicleStatus;
 use App\Models\DailyMileageReport;
-use App\Models\Vehicle; // Make sure you have this model
+use App\Models\Vehicle;
 
 class DailyNotification extends Command
 {
     protected $signature = 'notification:daily';
-    protected $description = 'Insert daily vehicle notifications for maintenance events';
+    protected $description = 'Insert daily vehicle notifications for master data, maintenance and driver alerts';
 
     public function handle(): void
     {
         $today = Carbon::today();
 
-        // ----------------------
-        // Insurance Expired
-        // ----------------------
-        $insuranceVehicles = Vehicle::whereNotNull('insurance_expiry_date')->get();
+        /* ======================================================
+            MASTER DATA – VEHICLE
+        ====================================================== */
 
-        foreach ($insuranceVehicles as $vehicle) {
-            $expiry = Carbon::parse($vehicle->insurance_expiry_date);
-            $reminderDate = $expiry->copy()->subDays(15);
+        $vehicles = Vehicle::all();
 
-            if ($reminderDate->isSameDay($today)) {
-                Notification::create([
-                    'title' => 'Insurance Expiry Reminder',
-                    'message' => "Insurance for vehicle {$vehicle->vehicle_no} will expire on {$expiry->toDateString()}.",
-                    'type' => Notification::TYPE_MASTER_DATA,
-                    'ref_id' => $vehicle->id,
-                ]);
+        foreach ($vehicles as $vehicle) {
+
+            // Insurance – 1 year → 15 days before
+            if ($vehicle->insurance_expiry_date) {
+                $expiry = Carbon::parse($vehicle->insurance_expiry_date);
+                if ($expiry->copy()->subDays(15)->isSameDay($today)) {
+                    $this->createNotification(
+                        'Insurance Expiry Reminder',
+                        "Insurance for vehicle {$vehicle->vehicle_no} will expire on {$expiry->toDateString()}",
+                        Notification::TYPE_MASTER_DATA,
+                        $vehicle->id
+                    );
+                }
+            }
+
+            // Inspection – 8 months → on expiry
+            if ($vehicle->inspection_date) {
+                $expiry = Carbon::parse($vehicle->inspection_date)->addMonths(8);
+                if ($expiry->isSameDay($today)) {
+                    $this->createNotification(
+                        'Inspection Due',
+                        "Inspection for vehicle {$vehicle->vehicle_no} is due today",
+                        Notification::TYPE_MASTER_DATA,
+                        $vehicle->id
+                    );
+                }
+            }
+
+            // Tax – 1 year → 1 month before
+            if ($vehicle->next_tax_date) {
+                $expiry = Carbon::parse($vehicle->next_tax_date);
+                if ($expiry->copy()->subMonth()->isSameDay($today)) {
+                    $this->createNotification(
+                        'Tax Reminder',
+                        "Tax for vehicle {$vehicle->vehicle_no} is due on {$expiry->toDateString()}",
+                        Notification::TYPE_MASTER_DATA,
+                        $vehicle->id
+                    );
+                }
+            }
+
+            // Route Permit – 3 years → 1 month before
+            if ($vehicle->route_permit_expiry_date) {
+                $expiry = Carbon::parse($vehicle->route_permit_expiry_date);
+                if ($expiry->copy()->subMonth()->isSameDay($today)) {
+                    $this->createNotification(
+                        'Route Permit Reminder',
+                        "Route permit for vehicle {$vehicle->vehicle_no} expires on {$expiry->toDateString()}",
+                        Notification::TYPE_MASTER_DATA,
+                        $vehicle->id
+                    );
+                }
+            }
+
+            // Fitness – 6 months (new) / 1 year (old) → 1 month before
+            if ($vehicle->fitness_date) {
+                $months = $vehicle->is_new_vehicle ? 6 : 12;
+                $expiry = Carbon::parse($vehicle->fitness_date)->addMonths($months);
+
+                if ($expiry->copy()->subMonth()->isSameDay($today)) {
+                    $this->createNotification(
+                        'Fitness Reminder',
+                        "Fitness for vehicle {$vehicle->vehicle_no} expires on {$expiry->toDateString()}",
+                        Notification::TYPE_MASTER_DATA,
+                        $vehicle->id
+                    );
+                }
             }
         }
 
-        // ----------------------
-        // Inspection Due
-        // ----------------------
-        $inspectionVehicles = Vehicle::whereNotNull('next_inspection_date')->get();
+        /* ======================================================
+            MAINTENANCE – KM BASED
+        ====================================================== */
 
-        foreach ($inspectionVehicles as $vehicle) {
-            $expiry = Carbon::parse($vehicle->next_inspection_date);
-            $reminderDate = $expiry->copy()->subDays(15);
-
-            if ($reminderDate->isSameDay($today)) {
-                Notification::create([
-                    'title' => 'Inspection Reminder',
-                    'message' => "Inspection for vehicle {$vehicle->vehicle_no} is due on {$expiry->toDateString()}.",
-                    'type' => Notification::TYPE_MASTER_DATA,
-                    'ref_id' => $vehicle->id,
-                ]);
-            }
-        }
-
-        // ----------------------
-        // Taxation Due
-        // ----------------------
-        $taxVehicles = Vehicle::whereNotNull('next_tax_date')->get();
-
-        foreach ($taxVehicles as $vehicle) {
-            $expiry = Carbon::parse($vehicle->next_tax_date);
-            $reminderDate = $expiry->copy()->subMonth();
-
-            if ($reminderDate->isSameDay($today)) {
-                Notification::create([
-                    'title' => 'Tax Reminder',
-                    'message' => "Tax for vehicle {$vehicle->vehicle_no} is due on {$expiry->toDateString()}.",
-                    'type' => Notification::TYPE_MASTER_DATA,
-                    'ref_id' => $vehicle->id,
-                ]);
-            }
-        }
-
-        // ----------------------
-        // Route Permit Expired
-        // ----------------------
-        $routePermitVehicles = Vehicle::whereNotNull('route_permit_expiry_date')->get();
-
-        foreach ($routePermitVehicles as $vehicle) {
-            $expiry = Carbon::parse($vehicle->route_permit_expiry_date);
-            $reminderDate = $expiry->copy()->subMonth();
-
-            if ($reminderDate->isSameDay($today)) {
-                Notification::create([
-                    'title' => 'Route Permit Reminder',
-                    'message' => "Route permit for vehicle {$vehicle->vehicle_no} will expire on {$expiry->toDateString()}.",
-                    'type' => Notification::TYPE_MASTER_DATA,
-                    'ref_id' => $vehicle->id,
-                ]);
-            }
-        }
-
-        // ----------------------
-        // Fitness Due
-        // ----------------------
-        $fitnessVehicles = Vehicle::whereNotNull('next_fitness_date')->get();
-
-        foreach ($fitnessVehicles as $vehicle) {
-            $expiry = Carbon::parse($vehicle->next_fitness_date);
-            $reminderDate = $expiry->copy()->subMonth();
-
-            if ($reminderDate->isSameDay($today)) {
-                Notification::create([
-                    'title' => 'Fitness Reminder',
-                    'message' => "Fitness for vehicle {$vehicle->vehicle_no} is due on {$expiry->toDateString()}.",
-                    'type' => Notification::TYPE_MASTER_DATA,
-                    'ref_id' => $vehicle->id,
-                ]);
-            }
-        }
-
-
-
-        // ----------------------
-        // Mileage-based Alerts
-        // ----------------------
         $alertStatuses = AlertVehicleStatus::with(['alert', 'vehicle'])->get();
 
         foreach ($alertStatuses as $status) {
 
-            $currentMileage = DailyMileageReport::where('vehicle_id', $status->vehicle_id)
+            $currentKm = DailyMileageReport::where('vehicle_id', $status->vehicle_id)
                 ->orderByDesc('report_date')
                 ->value('current_km');
 
-            if (!$currentMileage || $status->last_mileage === null) {
-                $status->update(['last_mileage' => $currentMileage]);
+            if (!$currentKm || $status->last_mileage === null) {
+                $status->update(['last_mileage' => $currentKm]);
                 continue;
             }
 
-            $difference = $currentMileage - $status->last_mileage;
+            $threshold = $status->alert->threshold;
 
-            if ($difference >= $status->alert->threshold) {
+            // 200 km before for King Pin, otherwise 500 km
+            $warningKm = $threshold == 1500 ? 200 : 500;
 
-                Notification::create([
-                    'title' => $status->alert->title,
-                    'message' => "The {$status->alert->title} alert has triggered for vehicle {$status->vehicle->vehicle_no}. Current mileage: {$currentMileage} km.",
-                    'type' => Notification::TYPE_MAINTENANCE,
-                    'ref_id' => $status->vehicle_id,
-                ]);
+            if (($currentKm - $status->last_mileage) >= ($threshold - $warningKm)) {
 
-                // Update last mileage
-                $status->update([
-                    'last_mileage' => $currentMileage,
-                ]);
+                $this->createNotification(
+                    $status->alert->title,
+                    "{$status->alert->title} due soon for vehicle {$status->vehicle->vehicle_no}. Current KM: {$currentKm}",
+                    Notification::TYPE_MAINTENANCE,
+                    $status->vehicle_id
+                );
+
+                $status->update(['last_mileage' => $currentKm]);
             }
         }
 
+        /* ======================================================
+            DRIVER ALERTS
+        ====================================================== */
 
-        // ----------------------
-        // Driver-related Alerts
-        // ----------------------
         $drivers = Driver::all();
 
         foreach ($drivers as $driver) {
 
-            // CNIC Expired
+            // CNIC expired
             if ($driver->cnic_expiry_date && Carbon::parse($driver->cnic_expiry_date)->lt($today)) {
-                Notification::create([
-                    'title' => 'CNIC Expired',
-                    'message' => "CNIC for driver {$driver->full_name} expired on {$driver->cnic_expiry_date}.",
-                    'type' => Notification::TYPE_DRIVER,
-                    'ref_id' => $driver->id,
-                ]);
+                $this->createNotification(
+                    'CNIC Expired',
+                    "CNIC for driver {$driver->full_name} has expired",
+                    Notification::TYPE_DRIVER,
+                    $driver->id
+                );
             }
 
-            // License Expired
+            // License expired
             if ($driver->license_expiry_date && Carbon::parse($driver->license_expiry_date)->lt($today)) {
-                Notification::create([
-                    'title' => 'License Expired',
-                    'message' => "Driving license for driver {$driver->full_name} expired on {$driver->license_expiry_date}.",
-                    'type' => Notification::TYPE_DRIVER,
-                    'ref_id' => $driver->id,
-                ]);
+                $this->createNotification(
+                    'License Expired',
+                    "License for driver {$driver->full_name} has expired",
+                    Notification::TYPE_DRIVER,
+                    $driver->id
+                );
             }
 
-            // Uniform Expiry Reminder (15 days before, but show actual expiry date)
+            // Uniform (1 year, alert 15 days before)
             if ($driver->uniform_issue_date) {
-                $uniformExpiryDate = Carbon::parse($driver->uniform_issue_date);
-                $uniformReminderDate = $uniformExpiryDate->subDays(15);
 
-                if ($uniformReminderDate->isSameDay($today)) {
-                    Notification::create([
-                        'title' => 'Uniform Expiry Reminder',
-                        'message' => "Uniform for driver {$driver->full_name} will expire on {$uniformExpiryDate->toDateString()}.",
-                        'type' => Notification::TYPE_DRIVER,
-                        'ref_id' => $driver->id,
-                    ]);
+                $expiryDate = Carbon::parse($driver->uniform_issue_date)->addYear();
+                $alertDate = $expiryDate->copy()->subDays(15);
+
+                if ($today->between($alertDate, $expiryDate)) {
+                    Notification::firstOrCreate(
+                        [
+                            'type' => Notification::TYPE_DRIVER,
+                            'ref_id' => $driver->id,
+                            'title' => 'Uniform Expiry Reminder',
+                        ],
+                        [
+                            'message' => "Uniform for driver {$driver->full_name} will expire on {$expiryDate->toDateString()}."
+                        ]
+                    );
                 }
             }
 
-            // Sandal Expiry Reminder (15 days before, but show actual expiry date)
+            // Sandals (6 months, alert 15 days before)
             if ($driver->sandal_issue_date) {
-                $sandalExpiryDate = Carbon::parse($driver->sandal_issue_date);
-                $sandalReminderDate = $sandalExpiryDate->subDays(15);
 
-                if ($sandalReminderDate->isSameDay($today)) {
-                    Notification::create([
-                        'title' => 'Sandal Expiry Reminder',
-                        'message' => "Sandal for driver {$driver->full_name} will expire on {$sandalExpiryDate->toDateString()}.",
-                        'type' => Notification::TYPE_DRIVER,
-                        'ref_id' => $driver->id,
-                    ]);
+                $expiryDate = Carbon::parse($driver->sandal_issue_date)->addMonths(6);
+                $alertDate = $expiryDate->copy()->subDays(15);
+
+                if ($today->between($alertDate, $expiryDate)) {
+                    Notification::firstOrCreate(
+                        [
+                            'type' => Notification::TYPE_DRIVER,
+                            'ref_id' => $driver->id,
+                            'title' => 'Sandal Expiry Reminder',
+                        ],
+                        [
+                            'message' => "Sandals for driver {$driver->full_name} will expire on {$expiryDate->toDateString()}."
+                        ]
+                    );
                 }
             }
+
         }
 
-        $this->info('Daily vehicle notifications inserted successfully.');
+        $this->info('Daily notifications processed successfully.');
+    }
+
+    /* ======================================================
+        HELPER – PREVENT DUPLICATES
+    ====================================================== */
+    private function createNotification($title, $message, $type, $refId)
+    {
+        Notification::firstOrCreate(
+            [
+                'title' => $title,
+                'type' => $type,
+                'ref_id' => $refId,
+                'is_read' => false,
+            ],
+            [
+                'message' => $message,
+            ]
+        );
     }
 }

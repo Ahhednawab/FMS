@@ -52,31 +52,41 @@
                     <td>{{ optional($invoice->due_date)->format('d M Y') }}</td>
                 </tr>
                 <tr>
-                    <th>Cheque Received Date</th>
+                    <th>Amount Received Date</th>
                     <td>{{ optional($invoice->cheque_rec_date)->format('d M Y') }}</td>
                 </tr>
             </table>
 
             {{-- VEHICLE DETAILS --}}
             <h6 class="font-weight-bold mt-4 mb-3">Vehicle Details</h6>
+
             <table class="table table-sm table-bordered">
-                <tr>
-                    <th width="25%">Vehicle Quantity</th>
-                    <td>{{ $invoice->vehicle_qty }}</td>
-                </tr>
-                <tr>
-                    <th>Days</th>
-                    <td>{{ $invoice->days }}</td>
-                </tr>
-                <tr>
-                    <th>Vehicle Rent</th>
-                    <td>{{ number_format($invoice->vehicle_rent, 2) }}</td>
-                </tr>
-                <tr>
-                    <th>Monthly Rent</th>
-                    <td>{{ number_format($invoice->monthly_rent, 2) }}</td>
-                </tr>
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Vehicle Qty</th>
+                        <th>Days</th>
+                        <th>Vehicle Rent</th>
+                        <th>Monthly Rent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $vehicles = is_array($invoice->vehicle_qty) ? $invoice->vehicle_qty : [$invoice->vehicle_qty];
+                    @endphp
+
+                    @foreach ($vehicles as $i => $qty)
+                        <tr>
+                            <td>{{ $i + 1 }}</td>
+                            <td>{{ $qty }}</td>
+                            <td>{{ $invoice->days[$i] ?? '-' }}</td>
+                            <td>{{ number_format($invoice->vehicle_rent[$i] ?? 0, 2) }}</td>
+                            <td>{{ number_format($invoice->monthly_rent[$i] ?? 0, 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
             </table>
+
 
             {{-- CHARGES --}}
             <h6 class="font-weight-bold mt-4 mb-3">Charges</h6>
@@ -128,28 +138,34 @@
                     <td>{{ number_format($invoice->agreed_deduction, 2) }}</td>
                 </tr>
                 <tr>
-                    <th>Cheque Value</th>
+                    <th>Amount Receivable</th>
                     <td class="font-weight-bold">{{ number_format($invoice->cheque_value, 2) }}</td>
                 </tr>
-                <tr>
+                {{-- <tr>
                     <th>Cheque No</th>
                     <td>{{ $invoice->cheque_no }}</td>
-                </tr>
+                </tr> --}}
                 <tr>
                     <th>Difference</th>
                     <td>{{ number_format($invoice->diff, 2) }}</td>
                 </tr>
+
+                <tr>
+                    <th>Payment Received</th>
+                    <td>{{ number_format($invoice->payment_received ?? 0, 2) }}</td>
+                </tr>
+
             </table>
 
             {{-- PAYMENT TIMELINE --}}
             <h6 class="font-weight-bold mt-4 mb-3">Payment Timeline</h6>
             <table class="table table-sm table-bordered">
-                <tr>
+                {{-- <tr>
                     <th width="25%">Payment Timeline Days</th>
                     <td>{{ $invoice->payment_time_line_days }}</td>
-                </tr>
+                </tr> --}}
                 <tr>
-                    <th>Payment Difference (Days)</th>
+                    <th>Payment Difference</th>
                     <td>{{ $invoice->payment_difference_in_days }}</td>
                 </tr>
             </table>

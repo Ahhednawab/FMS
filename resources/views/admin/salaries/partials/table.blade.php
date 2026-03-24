@@ -11,8 +11,8 @@
                     <th>CNIC</th>
                     <th>Induction Date</th>
                     <th>Left Date</th>
-                    <th>Employee Code</th>
-                    <th>KE Card Serial</th>
+                    {{-- <th>Employee Code</th> --}}
+                    {{-- <th>KE Card Serial</th> --}}
                     <th>Location</th>
                     <th>Designation</th>
                     <th>Basic</th>
@@ -47,8 +47,8 @@
                         <td>{{ $driver->cnic_no }}</td>
                         <td>{{ $driver->employment_date }}</td>
                         <td>{{ $driver->last_date ?? '-' }}</td>
-                        <td>{{ $driver->employee_code ?? '-' }}</td>
-                        <td>{{ $driver->ke_card_serial ?? '-' }}</td>
+                        {{-- <td>{{ $driver->employee_code ?? '-' }}</td>
+                        <td>{{ $driver->ke_card_serial ?? '-' }}</td> --}}
                         <td>{{ $driver->location ?? '-' }}</td>
                         <td>{{ $driver->designation ?? '-' }}</td>
 

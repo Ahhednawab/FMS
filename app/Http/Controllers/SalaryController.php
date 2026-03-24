@@ -165,35 +165,102 @@ class SalaryController extends Controller
     /**
      * Show salaries of a month
      */
-    public function show(Request $request, $month)
-    {
-        $salaryMonth = \Carbon\Carbon::parse($month)->startOfMonth()->toDateString();
-        $status = $request->get('status');
-        $perPage = $request->get('per_page', 10);
+    // public function show(Request $request, $month)
+    // {
+    //     $salaryMonth = \Carbon\Carbon::parse($month)->startOfMonth()->toDateString();
+    //     $status = $request->get('status');
+    //     $perPage = $request->get('per_page', 10);
 
-        // Get drivers with salary for the month (or null)
-        $driversQuery = \App\Models\Driver::with(['salaries' => function ($q) use ($salaryMonth) {
-            $q->where('salary_month', $salaryMonth);
-        }]);
+    //     // Get drivers with salary for the month (or null)
+    //     $driversQuery = \App\Models\Driver::with(['salaries' => function ($q) use ($salaryMonth) {
+    //         $q->where('salary_month', $salaryMonth);
+    //     }]);
 
-        // If filtering by status
-        if ($status === 'paid') {
-            $driversQuery->whereHas('salaries', function ($q) use ($salaryMonth) {
-                $q->where('salary_month', $salaryMonth)
-                    ->where('status', 'paid');
-            });
-        } elseif ($status === 'pending') {
-            // include drivers with no salary or salary pending
-            $driversQuery->whereDoesntHave('salaries', function ($q) use ($salaryMonth) {
-                $q->where('salary_month', $salaryMonth)
-                    ->where('status', 'paid'); // exclude paid
-            });
-        }
+    //     // If filtering by status
+    //     if ($status === 'paid') {
+    //         $driversQuery->whereHas('salaries', function ($q) use ($salaryMonth) {
+    //             $q->where('salary_month', $salaryMonth)
+    //                 ->where('status', 'paid');
+    //         });
+    //     } elseif ($status === 'pending') {
+    //         // include drivers with no salary or salary pending
+    //         $driversQuery->whereDoesntHave('salaries', function ($q) use ($salaryMonth) {
+    //             $q->where('salary_month', $salaryMonth)
+    //                 ->where('status', 'paid'); // exclude paid
+    //         });
+    //     }
 
-        $drivers = $driversQuery->paginate($perPage)->withQueryString();
+    //     $drivers = $driversQuery->paginate($perPage)->withQueryString();
 
-        return view('admin.salaries.show', compact('drivers', 'salaryMonth', 'status', 'perPage'));
+    //     return view('admin.salaries.show', compact('drivers', 'salaryMonth', 'status', 'perPage'));
+    // }
+
+public function show(Request $request, $month)
+{
+    $salaryMonth = Carbon::parse($month)->startOfMonth();
+    $status  = $request->get('status');
+    $perPage = $request->get('per_page', 10);
+
+    $startDate = $salaryMonth->copy()->startOfMonth()->toDateString();
+    $endDate   = $salaryMonth->copy()->endOfMonth()->toDateString();
+
+    $driversQuery = Driver::query()
+        ->with([
+            'salaries' => function ($q) use ($salaryMonth) {
+                $q->where('salary_month', $salaryMonth->toDateString());
+            }
+        ])
+        ->select('drivers.*')
+
+        // ✅ TOTAL DAYS (distinct dates in selected month)
+        ->selectSub(function ($q) use ($startDate, $endDate) {
+            $q->from('drivers_attendances')
+              ->selectRaw('COUNT(DISTINCT date)')
+              ->whereColumn('drivers_attendances.driver_id', 'drivers.id')
+              ->whereBetween('date', [$startDate, $endDate]);
+        }, 'total_days')
+
+        // ✅ PRESENT DAYS (status = 1)
+        ->selectSub(function ($q) use ($startDate, $endDate) {
+            $q->from('drivers_attendances')
+              ->selectRaw('COUNT(DISTINCT date)')
+              ->whereColumn('drivers_attendances.driver_id', 'drivers.id')
+              ->whereBetween('date', [$startDate, $endDate])
+              ->where('status', 1);
+        }, 'present_days')
+
+        // ✅ ABSENT DAYS (status = 2)
+        ->selectSub(function ($q) use ($startDate, $endDate) {
+            $q->from('drivers_attendances')
+              ->selectRaw('COUNT(DISTINCT date)')
+              ->whereColumn('drivers_attendances.driver_id', 'drivers.id')
+              ->whereBetween('date', [$startDate, $endDate])
+              ->where('status', 2);
+        }, 'absent_days');
+
+    // Salary status filter
+    if ($status === 'paid') {
+        $driversQuery->whereHas('salaries', function ($q) use ($salaryMonth) {
+            $q->where('salary_month', $salaryMonth->toDateString())
+              ->where('status', 'paid');
+        });
+    } elseif ($status === 'pending') {
+        $driversQuery->whereDoesntHave('salaries', function ($q) use ($salaryMonth) {
+            $q->where('salary_month', $salaryMonth->toDateString())
+              ->where('status', 'paid');
+        });
     }
+
+    $drivers = $driversQuery
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view(
+        'admin.salaries.show',
+        compact('drivers', 'salaryMonth', 'status', 'perPage')
+    );
+}
+
 
 
     /**

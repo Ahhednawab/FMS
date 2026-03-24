@@ -54,28 +54,37 @@
                 </div>
 
                 {{-- VEHICLE DETAILS --}}
+                {{-- VEHICLE DETAILS --}}
                 <h6 class="font-weight-bold mb-3">Vehicle Details</h6>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label>Vehicle Qty</label>
-                        <input type="number" name="vehicle_qty" class="form-control">
+
+                <div id="vehicle-wrapper">
+
+                    <div class="row vehicle-row mb-2" data-index="0">
+                        <div class="col-md-2">
+                            <input type="number" name="vehicles[0][vehicle_qty]" class="form-control" placeholder="Qty">
+                        </div>
+
+                        <div class="col-md-2">
+                            <input type="number" name="vehicles[0][days]" class="form-control" placeholder="Days">
+                        </div>
+
+                        <div class="col-md-3">
+                            <input type="number" step="0.01" name="vehicles[0][vehicle_rent]" class="form-control"
+                                placeholder="Vehicle Rent">
+                        </div>
+
+                        <div class="col-md-3">
+                            <input type="number" step="0.01" name="vehicles[0][monthly_rent]" class="form-control"
+                                placeholder="Monthly Rent">
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-success add-row">+</button>
+                        </div>
                     </div>
 
-                    <div class="col-md-3 mb-3">
-                        <label>Days</label>
-                        <input type="number" name="days" class="form-control">
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label>Vehicle Rent</label>
-                        <input type="number" step="0.01" name="vehicle_rent" class="form-control">
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label>Monthly Rent</label>
-                        <input type="number" step="0.01" name="monthly_rent" class="form-control">
-                    </div>
                 </div>
+
 
                 {{-- CHARGES --}}
                 <h6 class="font-weight-bold mb-3">Charges</h6>
@@ -134,31 +143,37 @@
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label>Cheque Value</label>
+                        <label>Amount Receivable</label>
                         <input type="number" step="0.01" name="cheque_value" class="form-control">
                     </div>
 
                     <div class="col-md-3 mb-3">
+                        <label>Payment Received</label>
+                        <input type="number" step="0.01" name="payment_received" class="form-control">
+                    </div>
+
+
+                    {{-- <div class="col-md-3 mb-3">
                         <label>Cheque No</label>
                         <input type="text" name="cheque_no" class="form-control">
-                    </div>
+                    </div> --}}
                 </div>
 
                 {{-- PAYMENT TIMELINE --}}
                 <h6 class="font-weight-bold mb-3">Payment Timeline</h6>
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label>Cheque Received Date</label>
+                        <label>Amount Received Date</label>
                         <input type="date" name="cheque_rec_date" class="form-control">
                     </div>
 
-                    <div class="col-md-3 mb-3">
+                    {{-- <div class="col-md-3 mb-3">
                         <label>Payment Timeline Days</label>
                         <input type="number" name="payment_time_line_days" class="form-control">
-                    </div>
+                    </div> --}}
 
                     <div class="col-md-3 mb-3">
-                        <label>Payment Difference (Days)</label>
+                        <label>Payment Difference</label>
                         <input type="number" name="payment_difference_in_days" class="form-control">
                     </div>
 
@@ -177,4 +192,36 @@
             </form>
         </div>
     </div>
+
+    <script>
+        let rowIndex = 1;
+
+        document.addEventListener('click', function(e) {
+
+            // ADD ROW
+            if (e.target.classList.contains('add-row')) {
+                const wrapper = document.getElementById('vehicle-wrapper');
+                const newRow = document.querySelector('.vehicle-row').cloneNode(true);
+
+                newRow.setAttribute('data-index', rowIndex);
+
+                newRow.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                    input.name = input.name.replace(/\[\d+\]/, `[${rowIndex}]`);
+                });
+
+                newRow.querySelector('.add-row').outerHTML =
+                    '<button type="button" class="btn btn-danger remove-row">−</button>';
+
+                wrapper.appendChild(newRow);
+                rowIndex++;
+            }
+
+            // REMOVE ROW
+            if (e.target.classList.contains('remove-row')) {
+                e.target.closest('.vehicle-row').remove();
+            }
+
+        });
+    </script>
 @endsection
