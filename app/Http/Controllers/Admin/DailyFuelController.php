@@ -99,10 +99,10 @@ class DailyFuelController extends Controller
             $previous_km = ($previousRecord) ? $previousRecord->current_km : $vehicle->kilometer;
 
             $vehicleData[] = array(
-                'vehicle_id'    =>  $vehicle->id,
-                'station'       =>  $vehicle->station->area,
-                'vehicle_no'    =>  $vehicle->vehicle_no,
-                'previous_km'   =>  $previous_km
+                'vehicle_id' => $vehicle->id,
+                'station' => $vehicle->station->area,
+                'vehicle_no' => $vehicle->vehicle_no,
+                'previous_km' => $previous_km
             );
         }
 
@@ -152,16 +152,16 @@ class DailyFuelController extends Controller
                 ->first();
 
             $data[] = [
-                'vehicle_id'  => $vehicle->id,
+                'vehicle_id' => $vehicle->id,
                 'previous_km' => $previous_km,
-                'current_km'  => $existingFuelReport ? $existingFuelReport->current_km : '',
-                'fuel_taken'  => $existingFuelReport ? $existingFuelReport->fuel_taken : '',
+                'current_km' => $existingFuelReport ? $existingFuelReport->current_km : '',
+                'fuel_taken' => $existingFuelReport ? $existingFuelReport->fuel_taken : '',
             ];
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 
@@ -170,19 +170,19 @@ class DailyFuelController extends Controller
         $validator = \Validator::make(
             $request->all(),
             [
-                'report_date'           => 'required|date|before_or_equal:today',
-                'current_km'            => 'array',
-                'fuel_taken'            => 'array',
-                'current_km.*'          => 'nullable|numeric|min:0',
-                'fuel_taken.*'          => 'nullable|numeric|min:0',
+                'report_date' => 'required|date|before_or_equal:today',
+                'current_km' => 'array',
+                'fuel_taken' => 'array',
+                'current_km.*' => 'nullable|numeric|min:0',
+                'fuel_taken.*' => 'nullable|numeric|min:0',
             ],
             [
-                'report_date.required'          => 'Report date is required.',
-                'report_date.before_or_equal'   => 'Report date cannot be in the future.',
-                'current_km.*.numeric'          => 'Current KMs must be a number.',
-                'fuel_taken.*.numeric'          => 'Fuel Taken must be a number.',
-                'current_km.*.min'              => 'Current KMs cannot be negative.',
-                'fuel_taken.*.min'              => 'Fuel Taken cannot be negative.',
+                'report_date.required' => 'Report date is required.',
+                'report_date.before_or_equal' => 'Report date cannot be in the future.',
+                'current_km.*.numeric' => 'Current KMs must be a number.',
+                'fuel_taken.*.numeric' => 'Fuel Taken must be a number.',
+                'current_km.*.min' => 'Current KMs cannot be negative.',
+                'fuel_taken.*.min' => 'Fuel Taken cannot be negative.',
             ]
         );
 
@@ -203,7 +203,7 @@ class DailyFuelController extends Controller
                 // current_km must not exceed previous_km
                 if ($hasCurr && $prev !== null && $prev !== '') {
                     if (is_numeric($curr) && is_numeric($prev)) {
-                        if ((float)$curr < (float)$prev) {
+                        if ((float) $curr < (float) $prev) {
                             $validator->errors()->add("current_km.$i", 'Current KMs cannot be greater than Previous KMs.');
                         }
                     }
@@ -223,20 +223,20 @@ class DailyFuelController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $vehicleIds   = $request->input('vehicle_id', []);
-        $previousKms  = $request->input('previous_km', []);
-        $currentKms   = $request->input('current_km', []);
-        $mileages     = $request->input('mileage', []);
-        $fuelTakens   = $request->input('fuel_taken', []);
+        $vehicleIds = $request->input('vehicle_id', []);
+        $previousKms = $request->input('previous_km', []);
+        $currentKms = $request->input('current_km', []);
+        $mileages = $request->input('mileage', []);
+        $fuelTakens = $request->input('fuel_taken', []);
         $fuelAverages = $request->input('fuel_average', []);
 
         $count = count($vehicleIds);
         for ($i = 0; $i < $count; $i++) {
-            $vehicleId   = $vehicleIds[$i] ?? null;
+            $vehicleId = $vehicleIds[$i] ?? null;
             // $prevKm      = $previousKms[$i] ?? null;
-            $currKm      = $currentKms[$i] ?? null;
-            $mileage     = $mileages[$i] ?? null;
-            $fuelTaken   = $fuelTakens[$i] ?? null;
+            $currKm = $currentKms[$i] ?? null;
+            $mileage = $mileages[$i] ?? null;
+            $fuelTaken = $fuelTakens[$i] ?? null;
             $fuelAverage = $fuelAverages[$i] ?? null;
 
             $currEmpty = is_null($currKm) || $currKm === '';
@@ -272,19 +272,19 @@ class DailyFuelController extends Controller
 
 
             $dailyFuel = new DailyFuelReport();
-            $dailyFuel->vehicle_id    = $vehicleId;
-            $dailyFuel->report_date   = $request->report_date;
-            $dailyFuel->previous_km   = $prevKmFromDB;
-            $dailyFuel->current_km    = $currKm;
-            $dailyFuel->mileage       = $mileage;
-            $dailyFuel->fuel_taken    = $fuelTaken;
-            $dailyFuel->fuel_average  = $fuelAverage;
-            $dailyFuel->is_active     = 1;
+            $dailyFuel->vehicle_id = $vehicleId;
+            $dailyFuel->report_date = $request->report_date;
+            $dailyFuel->previous_km = $prevKmFromDB;
+            $dailyFuel->current_km = $currKm;
+            $dailyFuel->mileage = $mileage;
+            $dailyFuel->fuel_taken = $fuelTaken;
+            $dailyFuel->fuel_average = $fuelAverage;
+            $dailyFuel->is_active = 1;
             $dailyFuel->save();
         }
-foreach ($vehicleIds as $vehicleId) {
-    $this->recalculateVehicleReports($vehicleId);
-}
+        foreach ($vehicleIds as $vehicleId) {
+            $this->recalculateVehicleReports($vehicleId);
+        }
         return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
     }
 
@@ -298,17 +298,17 @@ foreach ($vehicleIds as $vehicleId) {
         $validator = \Validator::make(
             $request->all(),
             [
-                'report_date'   =>  'required|date|before_or_equal:today',
-                'current_km'    =>  'required|numeric|min:0',
-                'fuel_taken'    =>  'required|numeric|min:0',
+                'report_date' => 'required|date|before_or_equal:today',
+                'current_km' => 'required|numeric|min:0',
+                'fuel_taken' => 'required|numeric|min:0',
             ],
             [
-                'report_date.required'          =>  'Report date is required.',
-                'report_date.before_or_equal'   =>  'Report date cannot be in the future.',
-                'current_km.required'           =>  'Current Km is required.',
-                'current_km.numeric'            =>  'Current Km must be a number.',
-                'fuel_taken.required'           =>  'Fuel Taken is required.',
-                'fuel_taken.numeric'            =>  'Fuel Taken must be a number.',
+                'report_date.required' => 'Report date is required.',
+                'report_date.before_or_equal' => 'Report date cannot be in the future.',
+                'current_km.required' => 'Current Km is required.',
+                'current_km.numeric' => 'Current Km must be a number.',
+                'fuel_taken.required' => 'Fuel Taken is required.',
+                'fuel_taken.numeric' => 'Fuel Taken must be a number.',
             ]
         );
 
@@ -317,7 +317,7 @@ foreach ($vehicleIds as $vehicleId) {
             $curr = $request->current_km;
             if ($curr !== null && $curr !== '' && $prev !== null && $prev !== '') {
                 if (is_numeric($curr) && is_numeric($prev)) {
-                    if ((float)$curr < (float)$prev) {
+                    if ((float) $curr < (float) $prev) {
                         $validator->errors()->add('current_km', 'Current KMs cannot be less than Previous KMs.');
                     }
                 }
@@ -328,13 +328,13 @@ foreach ($vehicleIds as $vehicleId) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
-    $vehicleId = $dailyFuel->vehicle_id;
+        $vehicleId = $dailyFuel->vehicle_id;
 
-        $dailyFuel->report_date     =   $request->report_date;
-        $dailyFuel->current_km      =   $request->current_km;
-        $dailyFuel->mileage         =   $request->mileage;
-        $dailyFuel->fuel_taken      =   $request->fuel_taken;
-        $dailyFuel->fuel_average    =   $request->fuel_average;
+        $dailyFuel->report_date = $request->report_date;
+        $dailyFuel->current_km = $request->current_km;
+        $dailyFuel->mileage = $request->mileage;
+        $dailyFuel->fuel_taken = $request->fuel_taken;
+        $dailyFuel->fuel_average = $request->fuel_average;
         $this->recalculateVehicleReports($vehicleId);
         $dailyFuel->save();
 
@@ -348,7 +348,7 @@ foreach ($vehicleIds as $vehicleId) {
 
     public function destroy(DailyFuelReport $dailyFuel)
     {
-            $vehicleId = $dailyFuel->vehicle_id;
+        $vehicleId = $dailyFuel->vehicle_id;
 
         $dailyFuel->delete();
         $this->recalculateVehicleReports($vehicleId);
@@ -358,28 +358,28 @@ foreach ($vehicleIds as $vehicleId) {
     }
 
     private function recalculateVehicleReports($vehicleId)
-{
-    $records = DailyFuelReport::where('vehicle_id', $vehicleId)
-        ->where('is_active', 1)
-        ->orderBy('report_date')
-        ->orderBy('id')
-        ->get();
+    {
+        $records = DailyFuelReport::where('vehicle_id', $vehicleId)
+            ->where('is_active', 1)
+            ->orderBy('report_date')
+            ->orderBy('id')
+            ->get();
 
-    $previousKm = 0;
+        $previousKm = 0;
 
-    foreach ($records as $record) {
-        $record->previous_km = $previousKm;
+        foreach ($records as $record) {
+            $record->previous_km = $previousKm;
 
-        $mileage = $record->current_km - $previousKm;
-        $record->mileage = $mileage;
+            $mileage = $record->current_km - $previousKm;
+            $record->mileage = $mileage;
 
-        $record->fuel_average = ($record->fuel_taken > 0)
-            ? round($mileage / $record->fuel_taken, 1)
-            : 0;
+            $record->fuel_average = ($record->fuel_taken > 0)
+                ? round($mileage / $record->fuel_taken, 1)
+                : 0;
 
-        $record->save();
+            $record->save();
 
-        $previousKm = $record->current_km;
+            $previousKm = $record->current_km;
+        }
     }
-}
 }
