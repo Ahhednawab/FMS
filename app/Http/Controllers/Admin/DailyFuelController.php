@@ -87,7 +87,7 @@ class DailyFuelController extends Controller
         $vehicleData = array();
 
         foreach ($vehicles as $vehicle) {
-            $previousRecord = DailyMileageReport::where('vehicle_id', $vehicle->id)
+            $previousRecord = DailyFuelReport::where('vehicle_id', $vehicle->id)
                 ->whereDate('report_date', '<', $selectedDate)
                 ->where('is_active', 1)
                 ->orderBy('report_date', 'desc')
@@ -282,7 +282,9 @@ class DailyFuelController extends Controller
             $dailyFuel->is_active     = 1;
             $dailyFuel->save();
         }
-
+foreach ($vehicleIds as $vehicleId) {
+    $this->recalculateVehicleReports($vehicleId);
+}
         return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
     }
 
@@ -326,12 +328,14 @@ class DailyFuelController extends Controller
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
+    $vehicleId = $dailyFuel->vehicle_id;
 
         $dailyFuel->report_date     =   $request->report_date;
         $dailyFuel->current_km      =   $request->current_km;
         $dailyFuel->mileage         =   $request->mileage;
         $dailyFuel->fuel_taken      =   $request->fuel_taken;
         $dailyFuel->fuel_average    =   $request->fuel_average;
+        $this->recalculateVehicleReports($vehicleId);
         $dailyFuel->save();
 
         return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel updated successfully.');
@@ -344,10 +348,38 @@ class DailyFuelController extends Controller
 
     public function destroy(DailyFuelReport $dailyFuel)
     {
-        $dailyFuel->delete();
+            $vehicleId = $dailyFuel->vehicle_id;
 
+        $dailyFuel->delete();
+        $this->recalculateVehicleReports($vehicleId);
         return redirect()
             ->route('dailyFuels.index')
             ->with('delete_msg', 'Daily Fuel deleted successfully.');
     }
+
+    private function recalculateVehicleReports($vehicleId)
+{
+    $records = DailyFuelReport::where('vehicle_id', $vehicleId)
+        ->where('is_active', 1)
+        ->orderBy('report_date')
+        ->orderBy('id')
+        ->get();
+
+    $previousKm = 0;
+
+    foreach ($records as $record) {
+        $record->previous_km = $previousKm;
+
+        $mileage = $record->current_km - $previousKm;
+        $record->mileage = $mileage;
+
+        $record->fuel_average = ($record->fuel_taken > 0)
+            ? round($mileage / $record->fuel_taken, 1)
+            : 0;
+
+        $record->save();
+
+        $previousKm = $record->current_km;
+    }
+}
 }
