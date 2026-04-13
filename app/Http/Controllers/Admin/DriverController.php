@@ -94,6 +94,7 @@ class DriverController extends Controller
 
     public function store(Request $request)
     {
+        
         // Handle draft saving
         if ($this->handleDraftSave($request, 'drivers')) {
             return redirect()->back()->with('success', 'Draft saved successfully!');
@@ -135,7 +136,8 @@ class DriverController extends Controller
                 'driver_status_id' =>  'nullable',
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
-                'vehicle_id' =>  'nullable|unique:drivers,vehicle_id',
+                // 'vehicle_id' =>  'nullable|unique:drivers,vehicle_id',
+                'vehicle_id' =>  'nullable',
                 'shift_timing_id' =>  'nullable|exists:shift_timing,id',
                 'cnic_no' =>  'required|unique:drivers,cnic_no|string|size:15',
                 'cnic_expiry_date' =>  'required|date',

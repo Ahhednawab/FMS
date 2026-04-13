@@ -295,7 +295,7 @@ class DailyMileageController extends Controller
             );
         }
 
-        return back()->with('success', 'Draft saved and partial mileage recorded.');
+        return redirect()->route('admin.dailyMileages.index')->with('success', 'Draft saved and partial mileage recorded.');
     }
 
 

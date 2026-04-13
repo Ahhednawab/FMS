@@ -69,6 +69,7 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
+        
         // Handle draft saving
         if ($this->handleDraftSave($request, 'vehicles')) {
             return redirect()->back()->with('success', 'Draft saved successfully!');
