@@ -16,8 +16,61 @@ class DailyFuelReportController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
     }
+    // public function index(Request $request)
+    // {
+        
+    //     $query = DB::table('daily_fuel_reports as d')
+    //         ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
+    //         ->join('stations as s', 's.id', '=', 'v.station_id')
+    //         ->select(
+    //             'd.vehicle_id',
+    //             'v.vehicle_no',
+    //             's.area as station',
+    //             'v.akpl',
+    //             DB::raw('MIN(d.report_date) as start_date'),
+    //             DB::raw('MIN(d.previous_km) as start_km'),
+    //             DB::raw('MAX(d.report_date) as end_date'),
+    //             DB::raw('MAX(d.current_km) as end_km'),
+    //             DB::raw('SUM(d.mileage) as mileage'),
+    //             DB::raw('ROUND(SUM(d.fuel_taken),2) as fuel_taken'),
+    //             DB::raw('ROUND(AVG(d.fuel_average),2) as fuel_average')
+    //         )
+    //         ->where('d.is_active', 1)
+    //         ->where('v.is_active', 1)
+    //         ->groupBy('d.vehicle_id', 'v.vehicle_no', 's.area', 'v.akpl')
+    //         ->orderBy('v.vehicle_no', 'asc');
+
+    //     // ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
+    //     // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
+
+    //     if ($request->filled('vehicle_id')) {
+    //         $query->where('v.vehicle_no', $request->vehicle_id);
+    //     }
+
+    //     if ($request->filled('from_date')) {
+    //         $query->whereDate('d.report_date', '>=', $request->from_date);
+    //     }
+
+    //     if ($request->filled('to_date')) {
+    //         $query->whereDate('d.report_date', '<=', $request->to_date);
+    //         }
+
+    //     $summaryQuery = clone $query;
+
+    //     $totalFuelTaken = (clone $summaryQuery)->sum('d.fuel_taken');
+    //     $averageFuelAvg = (clone $summaryQuery)->avg('d.fuel_average');
+
+    //     $dailyFuelReports = $query->groupby('d.vehicle_id', 'v.vehicle_no')->orderby('v.vehicle_no', 'ASC')->get();
+    //     $vehicles = Vehicle::where('is_active', 1)->get();
+
+    //     return view('admin.dailyFuelReports.index', compact('dailyFuelReports', 'vehicles','totalFuelTaken', 'averageFuelAvg'));
+    // }
+
     public function index(Request $request)
     {
+        // =========================
+        // MAIN REPORT QUERY (GROUPED)
+        // =========================
         $query = DB::table('daily_fuel_reports as d')
             ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
             ->join('stations as s', 's.id', '=', 'v.station_id')
@@ -39,9 +92,9 @@ class DailyFuelReportController extends Controller
             ->groupBy('d.vehicle_id', 'v.vehicle_no', 's.area', 'v.akpl')
             ->orderBy('v.vehicle_no', 'asc');
 
-        // ->whereRaw('MONTH(d.report_date) = MONTH(CURRENT_DATE())')
-        // ->whereRaw('YEAR(d.report_date) = YEAR(CURRENT_DATE())');
-
+        // =========================
+        // FILTERS
+        // =========================
         if ($request->filled('vehicle_id')) {
             $query->where('v.vehicle_no', $request->vehicle_id);
         }
@@ -54,14 +107,44 @@ class DailyFuelReportController extends Controller
             $query->whereDate('d.report_date', '<=', $request->to_date);
         }
 
-        $summaryQuery = clone $query;
+        // =====================================================
+        // FIX ✅ SUMMARY QUERY (NO GROUP BY, RAW TABLE BASED)
+        // =====================================================
+        $summaryQuery = DB::table('daily_fuel_reports as d')
+            ->join('vehicles as v', 'd.vehicle_id', '=', 'v.id')
+            ->where('d.is_active', 1)
+            ->where('v.is_active', 1);
 
+        // apply SAME filters
+        if ($request->filled('vehicle_id')) {
+            $summaryQuery->where('v.vehicle_no', $request->vehicle_id);
+        }
+
+        if ($request->filled('from_date')) {
+            $summaryQuery->whereDate('d.report_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $summaryQuery->whereDate('d.report_date', '<=', $request->to_date);
+        }
+
+        // =========================
+        // CORRECT TOTALS
+        // =========================
         $totalFuelTaken = (clone $summaryQuery)->sum('d.fuel_taken');
         $averageFuelAvg = (clone $summaryQuery)->avg('d.fuel_average');
 
-        $dailyFuelReports = $query->groupby('d.vehicle_id', 'v.vehicle_no')->orderby('v.vehicle_no', 'ASC')->get();
+        // =========================
+        // RESULT DATA
+        // =========================
+        $dailyFuelReports = $query->get();
         $vehicles = Vehicle::where('is_active', 1)->get();
 
-        return view('admin.dailyFuelReports.index', compact('dailyFuelReports', 'vehicles','totalFuelTaken', 'averageFuelAvg'));
+        return view('admin.dailyFuelReports.index', compact(
+            'dailyFuelReports',
+            'vehicles',
+            'totalFuelTaken',
+            'averageFuelAvg'
+        ));
     }
 }

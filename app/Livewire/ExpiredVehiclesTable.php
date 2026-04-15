@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ExpiredVehiclesExport;
+use Illuminate\Support\Facades\Log;
 
 class ExpiredVehiclesTable extends Component
 {
@@ -25,6 +26,79 @@ class ExpiredVehiclesTable extends Component
         'route_permit_expiry_date' => "Route Permit Expiry",
         'next_tax_date'            => "Next Tax Expiry",
     ];
+
+    private function getAlertThresholdDate($type)
+    {
+        return match ($type) {
+
+            'insurance' => \Carbon\Carbon::now()->addYear()->subDays(15),
+            'inspection' => \Carbon\Carbon::now()->addMonths(8),
+            'tax' => \Carbon\Carbon::now()->addYear()->subMonth(),
+            'route_permit' => \Carbon\Carbon::now()->addYears(3)->subMonth(),
+            'fitness_new' => \Carbon\Carbon::now()->addMonths(6)->subMonth(),
+            'fitness_old' => \Carbon\Carbon::now()->addYear()->subMonth(),
+            'uniform' => \Carbon\Carbon::now()->addYear()->subDays(15),
+            'sandals' => \Carbon\Carbon::now()->addMonths(6)->subDays(15),
+
+            default => \Carbon\Carbon::now()->addYear(),
+        };
+    }
+
+    private function getMaintenanceAlerts($vehicle)
+    {
+        $alerts = [];
+        $today = now();
+
+        // assume current km field exists
+        $currentKm = $vehicle->current_km ?? 0;
+
+        /**
+         * CHANGE: Maintenance Mileage Rules
+         */
+
+        if ($vehicle->engine_oil_km && ($currentKm >= $vehicle->engine_oil_km - 500)) {
+            $alerts[] = "Engine Oil Change Due (500 KM left)";
+        }
+
+        if ($vehicle->oil_filter_km && ($currentKm >= $vehicle->oil_filter_km - 500)) {
+            $alerts[] = "Oil Filter Change Due";
+        }
+
+        if ($vehicle->air_filter_km && ($currentKm >= $vehicle->air_filter_km - 500)) {
+            $alerts[] = "Air Filter Change Due";
+        }
+
+        if ($vehicle->transmission_oil_km && ($currentKm >= $vehicle->transmission_oil_km - 500)) {
+            $alerts[] = "Transmission Oil Due";
+        }
+
+        if ($vehicle->differential_oil_km && ($currentKm >= $vehicle->differential_oil_km - 500)) {
+            $alerts[] = "Differential Oil Due";
+        }
+
+        if ($vehicle->wheel_greasing_km && ($currentKm >= $vehicle->wheel_greasing_km - 500)) {
+            $alerts[] = "Wheel Bearing Greasing Due";
+        }
+
+        if ($vehicle->fuel_filter_km && ($currentKm >= $vehicle->fuel_filter_km - 500)) {
+            $alerts[] = "Fuel Filter Due";
+        }
+
+        if ($vehicle->power_steering_km && ($currentKm >= $vehicle->power_steering_km - 500)) {
+            $alerts[] = "Power Steering Oil Due";
+        }
+
+        if ($vehicle->brake_oil_km && ($currentKm >= $vehicle->brake_oil_km - 500)) {
+            $alerts[] = "Brake Oil Due";
+        }
+
+        // KING PIN (special rule)
+        if ($vehicle->king_pin_km && ($currentKm >= $vehicle->king_pin_km - 200)) {
+            $alerts[] = "King Pin Greasing Due (200 KM left)";
+        }
+
+        return $alerts;
+    }
 
 
     public function export()
@@ -131,59 +205,119 @@ class ExpiredVehiclesTable extends Component
         return $query->paginate(10);  // Apply pagination directly
     }
 
+
     /**
      * Helper used by Blade to show a human readable reason label(s) for a vehicle.
      * Now returns an array with 'reason' and 'date' keys.
      */
+    // public function getVehicleReasonLabel($v)
+    // {
+    //     $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+
+    //     // If a specific reason filter is active → return ONLY that reason
+    //     if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
+    //         $field = $this->reason;
+    //         $date  = $v->$field;
+
+    //         if (!empty($date) && Carbon::parse($date)->lte($nextMonthEnd)) {
+    //             return [
+    //                 'reason' => $this->reasonList[$field],
+    //                 'date' => Carbon::parse($date)->format('d-M-Y')
+    //             ];
+    //         }
+
+    //         return ['reason' => '-', 'date' => '-'];  // if for some reason doesn't match
+    //     }
+
+    //     // Otherwise → return ALL expired reasons
+    //     $reasons = [];
+    //     $dates = [];
+
+    //     if (!empty($v->next_inspection_date) && Carbon::parse($v->next_inspection_date)->lte($nextMonthEnd)) {
+    //         $reasons[] = "Next Inspection";
+    //         $dates[] = Carbon::parse($v->next_inspection_date)->format('d-M-Y');
+    //     }
+    //     if (!empty($v->next_fitness_date) && Carbon::parse($v->next_fitness_date)->lte($nextMonthEnd)) {
+    //         $reasons[] = "Next Fitness";
+    //         $dates[] = Carbon::parse($v->next_fitness_date)->format('d-M-Y');
+    //     }
+    //     if (!empty($v->insurance_expiry_date) && Carbon::parse($v->insurance_expiry_date)->lte($nextMonthEnd)) {
+    //         $reasons[] = "Insurance";
+    //         $dates[] = Carbon::parse($v->insurance_expiry_date)->format('d-M-Y');
+    //     }
+    //     if (!empty($v->route_permit_expiry_date) && Carbon::parse($v->route_permit_expiry_date)->lte($nextMonthEnd)) {
+    //         $reasons[] = "Route Permit";
+    //         $dates[] = Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y');
+    //     }
+    //     if (!empty($v->next_tax_date) && Carbon::parse($v->next_tax_date)->lte($nextMonthEnd)) {
+    //         $reasons[] = "Next Tax";
+    //         $dates[] = Carbon::parse($v->next_tax_date)->format('d-M-Y');
+    //     }
+
+    //     return [
+    //         'reason' => count($reasons) ? implode(', ', $reasons) : '-',
+    //         'date' => count($dates) ? implode(', ', $dates) : '-'
+    //     ];
+    // }
     public function getVehicleReasonLabel($v)
     {
-        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
-
-        // If a specific reason filter is active → return ONLY that reason
-        if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-            $field = $this->reason;
-            $date  = $v->$field;
-
-            if (!empty($date) && Carbon::parse($date)->lte($nextMonthEnd)) {
-                return [
-                    'reason' => $this->reasonList[$field],
-                    'date' => Carbon::parse($date)->format('d-M-Y')
-                ];
-            }
-
-            return ['reason' => '-', 'date' => '-'];  // if for some reason doesn't match
-        }
-
-        // Otherwise → return ALL expired reasons
-        $reasons = [];
+        $alerts = [];
         $dates = [];
+        $today = \Carbon\Carbon::today();
 
-        if (!empty($v->next_inspection_date) && Carbon::parse($v->next_inspection_date)->lte($nextMonthEnd)) {
-            $reasons[] = "Next Inspection";
-            $dates[] = Carbon::parse($v->next_inspection_date)->format('d-M-Y');
-        }
-        if (!empty($v->next_fitness_date) && Carbon::parse($v->next_fitness_date)->lte($nextMonthEnd)) {
-            $reasons[] = "Next Fitness";
-            $dates[] = Carbon::parse($v->next_fitness_date)->format('d-M-Y');
-        }
-        if (!empty($v->insurance_expiry_date) && Carbon::parse($v->insurance_expiry_date)->lte($nextMonthEnd)) {
-            $reasons[] = "Insurance";
-            $dates[] = Carbon::parse($v->insurance_expiry_date)->format('d-M-Y');
-        }
-        if (!empty($v->route_permit_expiry_date) && Carbon::parse($v->route_permit_expiry_date)->lte($nextMonthEnd)) {
-            $reasons[] = "Route Permit";
-            $dates[] = Carbon::parse($v->route_permit_expiry_date)->format('d-M-Y');
-        }
-        if (!empty($v->next_tax_date) && Carbon::parse($v->next_tax_date)->lte($nextMonthEnd)) {
-            $reasons[] = "Next Tax";
-            $dates[] = Carbon::parse($v->next_tax_date)->format('d-M-Y');
+        // =========================
+        // 🧾 MASTER DATA ALERTS
+        // =========================
+
+        if ($v->insurance_expiry_date &&
+            $today->gte(\Carbon\Carbon::parse($v->insurance_expiry_date)->subDays(15))) {
+            $alerts[] = "Insurance Expiring Soon";
+            $dates[] = $v->insurance_expiry_date;
         }
 
+        if ($v->next_tax_date &&
+            $today->gte(\Carbon\Carbon::parse($v->next_tax_date)->subMonth())) {
+            $alerts[] = "Tax Expiring Soon";
+            $dates[] = $v->next_tax_date;
+        }
+
+        if ($v->route_permit_expiry_date &&
+            $today->gte(\Carbon\Carbon::parse($v->route_permit_expiry_date)->subMonth())) {
+            $alerts[] = "Route Permit Expiring Soon";
+            $dates[] = $v->route_permit_expiry_date;
+        }
+
+        if ($v->next_fitness_date &&
+            $today->gte(\Carbon\Carbon::parse($v->next_fitness_date)->subMonth())) {
+            $alerts[] = "Fitness Due";
+            $dates[] = $v->next_fitness_date;
+        }
+
+        if ($v->next_inspection_date &&
+            $today->gte(\Carbon\Carbon::parse($v->next_inspection_date))) {
+            $alerts[] = "Inspection Due";
+            $dates[] = $v->next_inspection_date;
+        }
+
+        // =========================
+        // 🔧 MAINTENANCE ALERTS
+        // =========================
+        $maintenanceAlerts = $this->getMaintenanceAlerts($v);
+
+        foreach ($maintenanceAlerts as $alert) {
+            $alerts[] = $alert;
+        }
+
+        // =========================
+        // FINAL RETURN
+        // =========================
         return [
-            'reason' => count($reasons) ? implode(', ', $reasons) : '-',
-            'date' => count($dates) ? implode(', ', $dates) : '-'
+            'reason' => !empty($alerts) ? implode(', ', $alerts) : '-',
+            'date'   => !empty($dates) ? implode(', ', $dates) : '-'
         ];
     }
+
+    
 
 
     /**

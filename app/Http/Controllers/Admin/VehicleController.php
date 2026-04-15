@@ -16,6 +16,7 @@ use App\Models\InsuranceCompany;
 use App\Models\ShiftTimings;
 use App\Traits\DraftTrait;
 use Illuminate\Support\Facades\File;
+use Carbon\Carbon;
 
 
 class VehicleController extends Controller
@@ -272,6 +273,29 @@ class VehicleController extends Controller
         $vehicle->insurance_file    =   $insuranceFileName;
         $vehicle->route_permit_file =   $routePermitFileName;
         $vehicle->tax_file          =   $taxFileName;
+
+        // ================================
+        // AUTO EXPIRY CALCULATION LOGIC
+        // ================================
+
+        // Insurance → 1 Year
+        $vehicle->insurance_expiry_date = Carbon::parse($request->insurance_date)->addYear();
+
+        // Inspection → 8 Months
+        $vehicle->next_inspection_date = Carbon::parse($request->inspection_date)->addMonths(8);
+
+        // Tax → 1 Year
+        $vehicle->next_tax_date = Carbon::parse($request->tax_date)->addYear();
+
+        // Route Permit → 3 Years
+        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYears(3);
+
+        // Fitness → conditional (new/old vehicle)
+        if ($request->is_new_vehicle == 1) {
+            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addMonths(6);
+        } else {
+            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addYear();
+        }
         $vehicle->save();
 
         // If this submission came from a draft and some files were not re-uploaded,

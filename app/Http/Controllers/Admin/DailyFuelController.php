@@ -285,7 +285,7 @@ class DailyFuelController extends Controller
         foreach ($vehicleIds as $vehicleId) {
             $this->recalculateVehicleReports($vehicleId);
         }
-        return redirect()->route('dailyFuels.create')->with('success', 'Daily Fuel created successfully.');
+        return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
     }
 
     public function edit(DailyFuelReport $dailyFuel)
