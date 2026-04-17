@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class Vehicle extends Model
 {
+    use HasFactory;
+
     protected $table = 'vehicles';
 
     protected $fillable = [
@@ -48,7 +50,9 @@ class Vehicle extends Model
         'next_tax_date',
         'tax_file',
         'shift_timing_id',
-
+        'primary_driver_id',
+        'current_driver_id',
+        'is_new_vehicle',
     ];
 
     public function vehicleType()
@@ -69,6 +73,22 @@ class Vehicle extends Model
     public function drivers()
     {
         return $this->hasMany(Driver::class);
+    }
+
+    public function primaryDriver()
+    {
+        return $this->belongsTo(Driver::class, 'primary_driver_id');
+    }
+
+    public function currentDriver()
+    {
+        return $this->belongsTo(Driver::class, 'current_driver_id');
+    }
+
+    public function poolDrivers()
+    {
+        return $this->belongsToMany(Driver::class, 'vehicle_pool_drivers')
+            ->withTimestamps();
     }
 
     public function fabricationVendor()
@@ -97,6 +117,11 @@ class Vehicle extends Model
     public function shiftTiming()
     {
         return $this->belongsTo(ShiftTimings::class, 'shift_timing_id');
+    }
+
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(VehicleMaintenanceSchedule::class);
     }
 
 }

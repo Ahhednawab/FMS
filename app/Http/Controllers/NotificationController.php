@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Alert;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 
@@ -49,7 +48,11 @@ class NotificationController extends Controller
      */
     public function maintenanceAlerts()
     {
-        $alerts = Alert::orderBy('title')
+        $alerts = Notification::where('type', Notification::TYPE_MAINTENANCE)
+            ->where('is_read', false)
+            ->select('title')
+            ->distinct()
+            ->orderBy('title')
             ->pluck('title');
 
         return response()->json([

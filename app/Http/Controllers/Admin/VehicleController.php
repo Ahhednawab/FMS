@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\Draft;
 use App\Models\VehicleType;
@@ -14,6 +15,8 @@ use App\Models\Vendor;
 use App\Models\ShiftHours;
 use App\Models\InsuranceCompany;
 use App\Models\ShiftTimings;
+use App\Services\VehicleDriverAssignmentService;
+use App\Services\VehicleMaintenanceScheduleService;
 use App\Traits\DraftTrait;
 use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
@@ -22,16 +25,29 @@ use Carbon\Carbon;
 class VehicleController extends Controller
 {
     use DraftTrait;
-    public function __construct()
-    {
 
+    public function __construct(
+        private VehicleDriverAssignmentService $vehicleDriverAssignmentService,
+        private VehicleMaintenanceScheduleService $vehicleMaintenanceScheduleService
+    )
+    {
         if (!auth()->user()->hasPermission('vehicles')) {
             abort(403, 'You do not have permission to access this page.');
         }
     }
     public function index()
     {
-        $vehicles = Vehicle::with(['vehicleType', 'station', 'ibcCenter', 'fabricationVendor', 'shiftHours','shiftTiming'])
+        $vehicles = Vehicle::with([
+                'vehicleType',
+                'station',
+                'ibcCenter',
+                'fabricationVendor',
+                'shiftHours',
+                'shiftTiming',
+                'primaryDriver',
+                'currentDriver',
+                'poolDrivers',
+            ])
             ->where('is_active', 1)
             ->orderby('id', 'DESC')
             ->get();
@@ -59,13 +75,14 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
+        $drivers = $this->getAssignableDrivers();
 
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
-        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings', 'drivers') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -104,6 +121,9 @@ class VehicleController extends Controller
             'engine_no'                 =>  'required',
             'ownership'                 =>  'required',
             'pool_vehicle'              =>   'required|in:1,0',
+            'primary_driver_id'         =>  'required|exists:drivers,id',
+            'pool_driver_ids'           =>  'nullable|array',
+            'pool_driver_ids.*'         =>  'exists:drivers,id|different:primary_driver_id',
             'shift_hour_id'             =>  'required',
             'vehicle_type_id'           =>  'required',
             'cone'                      =>  'nullable|numeric|min:0',
@@ -114,6 +134,7 @@ class VehicleController extends Controller
             'seat_cover'                =>  'nullable',
             'fire_extenguisher'         =>  'nullable',
             'tracker_installation_date' =>  'required|date',
+            'is_new_vehicle'            =>  'required|boolean',
             'inspection_date'           =>  'required|date',
             'next_inspection_date'      =>  'required|date|after:inspection_date',
             'induction_date'            =>  'required|date',
@@ -151,6 +172,7 @@ class VehicleController extends Controller
                 'engine_no.required'                    =>  'Engine No is required',
                 'ownership.required'                    =>  'Ownership is required',
                 'pool_vehicle.required'                 =>  'Pool Vehicle is required',
+                'primary_driver_id.required'            =>  'Primary Driver is required',
                 'on_duty_status.required'               =>  'On Duty Status is required',
                 'shift_hour_id.required'                  =>  'Shift Hours is required',
                 'vehicle_type_id.required'              =>  'Vehicle type is required',
@@ -201,6 +223,7 @@ class VehicleController extends Controller
         $vehicle->engine_no                 =   $request->engine_no;
         $vehicle->ownership                 =   $request->ownership;
         $vehicle->pool_vehicle              =   $request->pool_vehicle;
+        $vehicle->is_new_vehicle            =   $request->boolean('is_new_vehicle');
         $vehicle->shift_hour_id             =   $request->shift_hour_id;
         $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
         $vehicle->cone                      =   $request->cone;
@@ -353,6 +376,13 @@ class VehicleController extends Controller
             }
         }
 
+        $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $this->vehicleDriverAssignmentService->syncAssignments(
+            $vehicle,
+            (int) $request->primary_driver_id,
+            $request->input('pool_driver_ids', [])
+        );
+
         // Delete draft if it exists
         $this->deleteDraftAfterSuccess($request, 'vehicles');
 
@@ -378,12 +408,15 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
+        $drivers = $this->getAssignableDrivers();
 
         $status = array(
             '1' =>  'Yes',
             '2' =>  'No',
         );
-        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings'));
+        $vehicle->loadMissing(['poolDrivers']);
+
+        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours','shift_timings', 'drivers'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -401,7 +434,11 @@ class VehicleController extends Controller
                 'engine_no'                 =>  'required',
                 'ownership'                 =>  'required',
                 'pool_vehicle'              =>  'required|in:1,0',
+                'primary_driver_id'         =>  'required|exists:drivers,id',
+                'pool_driver_ids'           =>  'nullable|array',
+                'pool_driver_ids.*'         =>  'exists:drivers,id|different:primary_driver_id',
                 'on_duty_status'            =>  'required',
+                'is_new_vehicle'            =>  'required|boolean',
                 'vehicle_type_id'           =>  'required',
                 'cone'                      =>  'nullable|numeric|min:0',
                 'station_id'                =>  'required',
@@ -441,6 +478,7 @@ class VehicleController extends Controller
                 'engine_no.required'                    =>  'Engine No is required',
                 'ownership.required'                    =>  'Ownership is required',
                 'pool_vehicle.required'                 =>  'Pool Vehicle is required',
+                'primary_driver_id.required'            =>  'Primary Driver is required',
                 'on_duty_status.required'               =>  'On Duty Status is required',
                 'vehicle_type_id.required'              =>  'Vehicle type is required',
                 'cone.required'                         =>  'Cone is required',
@@ -488,6 +526,7 @@ class VehicleController extends Controller
         $vehicle->engine_no                 =   $request->engine_no;
         $vehicle->ownership                 =   $request->ownership;
         $vehicle->pool_vehicle              =   $request->pool_vehicle;
+        $vehicle->is_new_vehicle            =   $request->boolean('is_new_vehicle');
         $vehicle->shift_hour_id             =   $request->shift_hour_id;
         $vehicle->vehicle_type_id           =   $request->vehicle_type_id;
         $vehicle->cone                      =   $request->cone;
@@ -557,6 +596,13 @@ class VehicleController extends Controller
         }
         $vehicle->save();
 
+        $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $this->vehicleDriverAssignmentService->syncAssignments(
+            $vehicle,
+            (int) $request->primary_driver_id,
+            $request->input('pool_driver_ids', [])
+        );
+
         return redirect()->route('vehicles.index')->with('success', 'Vehicle Updated successfully.');
     }
 
@@ -568,6 +614,9 @@ class VehicleController extends Controller
             'fabricationVendor',
             'station',
             'ibcCenter',
+            'primaryDriver',
+            'currentDriver',
+            'poolDrivers',
         ]);
 
         $register_on_portal = [
@@ -604,5 +653,20 @@ class VehicleController extends Controller
             'success' => true,
             'message' => 'Vehicle deleted successfully.'
         ]);
+    }
+
+    private function getAssignableDrivers()
+    {
+        return Driver::where('is_active', 1)
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'vehicle_id'])
+            ->mapWithKeys(function (Driver $driver) {
+                $label = $driver->full_name;
+                if ($driver->vehicle_id) {
+                    $label .= ' (Assigned)';
+                }
+
+                return [$driver->id => $label];
+            });
     }
 }

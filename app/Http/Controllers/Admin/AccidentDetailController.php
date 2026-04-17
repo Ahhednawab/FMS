@@ -281,8 +281,8 @@ class AccidentDetailController extends Controller
             return response()->json(['error' => 'Vehicle not found'], 404);
         }
 
-        // Get last driver assigned to vehicle
-        $driver = $vehicle->drivers()->latest()->first();
+        $vehicle->loadMissing(['currentDriver', 'primaryDriver']);
+        $driver = $vehicle->currentDriver ?: $vehicle->primaryDriver ?: $vehicle->drivers()->latest()->first();
 
         return response()->json([
             'vehicle_no' => $vehicle->vehicle_no,

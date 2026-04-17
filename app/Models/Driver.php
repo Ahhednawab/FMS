@@ -23,6 +23,7 @@ class Driver extends Model
         'dob',
         'vehicle_id',
         'shift_timing_id',
+        'is_available',
         'cnic_no',
         'cnic_expiry_date',
         'cnic_file',
@@ -59,6 +60,22 @@ class Driver extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
+
+    public function primaryVehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'primary_driver_id');
+    }
+
+    public function currentVehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'current_driver_id');
+    }
+
+    public function poolVehicles()
+    {
+        return $this->belongsToMany(Vehicle::class, 'vehicle_pool_drivers')
+            ->withTimestamps();
     }
 
     public function maritalStatus()

@@ -329,6 +329,60 @@
                             </select>
                         </div>
 
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <strong>Primary Driver<span style="color:red">*</span></strong>
+                                <select name="primary_driver_id" class="custom-select @error('primary_driver_id') is-invalid @enderror">
+                                    <option value="">-- Select Driver --</option>
+                                    @foreach ($drivers as $id => $name)
+                                        <option value="{{ $id }}"
+                                            {{ (int) ($draftData['primary_driver_id'] ?? old('primary_driver_id')) === (int) $id ? 'selected' : '' }}>
+                                            {{ $name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('primary_driver_id')
+                                    <label class="text-danger">{{ $message }}</label>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <strong>Pool Drivers</strong>
+                                @php
+                                    $selectedPoolDrivers = $draftData['pool_driver_ids'] ?? old('pool_driver_ids', []);
+                                @endphp
+                                <select name="pool_driver_ids[]" class="form-control" multiple size="4">
+                                    @foreach ($drivers as $id => $name)
+                                        <option value="{{ $id }}"
+                                            {{ in_array((string) $id, array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
+                                            {{ $name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('pool_driver_ids')
+                                    <label class="text-danger">{{ $message }}</label>
+                                @enderror
+                                @error('pool_driver_ids.*')
+                                    <label class="text-danger">{{ $message }}</label>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <strong>New Vehicle?<span style="color:red">*</span></strong>
+                                <select name="is_new_vehicle" class="custom-select @error('is_new_vehicle') is-invalid @enderror">
+                                    <option value="0" {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle', '0')) === '0' ? 'selected' : '' }}>No</option>
+                                    <option value="1" {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle')) === '1' ? 'selected' : '' }}>Yes</option>
+                                </select>
+                                @error('is_new_vehicle')
+                                    <label class="text-danger">{{ $message }}</label>
+                                @enderror
+                            </div>
+                        </div>
+
 
                         <!-- Vehicle Type -->
                         <div class="col-md-2">

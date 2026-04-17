@@ -9,11 +9,17 @@ use App\Models\FuelType;
 use App\Models\MaintenanceCategory;
 use App\Models\ServiceProvider;
 use App\Models\Parts;
+use App\Services\VehicleMaintenanceScheduleService;
 
 use Illuminate\Http\Request;
 
 class VehicleMaintenanceController extends Controller
 {
+    public function __construct(
+        private VehicleMaintenanceScheduleService $vehicleMaintenanceScheduleService
+    ) {
+    }
+
     public function index()
     {
         $vehicleMaintenances = VehicleMaintenance::with(['vehicle', 'fuelType', 'maintenanceCategory', 'serviceProvider', 'parts'])->where('is_active', 1)->get();
@@ -80,6 +86,7 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance->service_cost           =   $request->service_cost;
         $vehicleMaintenance->service_description    =   $request->service_description;
         $vehicleMaintenance->save();
+        $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle Maintenances created successfully.');
     }
@@ -140,6 +147,7 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance->service_cost           =   $request->service_cost;
         $vehicleMaintenance->service_description    =   $request->service_description;
         $vehicleMaintenance->save();
+        $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle Maintenances updated successfully.');
     }

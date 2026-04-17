@@ -216,6 +216,60 @@
                                     </select>
                                 </div>
 
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Primary Driver<span style="color:red">*</span></strong>
+                                        <select name="primary_driver_id" class="custom-select @error('primary_driver_id') is-invalid @enderror">
+                                            <option value="">-- Select Driver --</option>
+                                            @foreach ($drivers as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ (int) old('primary_driver_id', $vehicle->primary_driver_id) === (int) $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('primary_driver_id')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Pool Drivers</strong>
+                                        @php
+                                            $selectedPoolDrivers = old('pool_driver_ids', $vehicle->poolDrivers->pluck('id')->all());
+                                        @endphp
+                                        <select name="pool_driver_ids[]" class="form-control" multiple size="4">
+                                            @foreach ($drivers as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ in_array((string) $id, array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('pool_driver_ids')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                        @error('pool_driver_ids.*')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <strong>New Vehicle?<span style="color:red">*</span></strong>
+                                        <select name="is_new_vehicle" class="custom-select @error('is_new_vehicle') is-invalid @enderror">
+                                            <option value="0" {{ (string) old('is_new_vehicle', (int) $vehicle->is_new_vehicle) === '0' ? 'selected' : '' }}>No</option>
+                                            <option value="1" {{ (string) old('is_new_vehicle', (int) $vehicle->is_new_vehicle) === '1' ? 'selected' : '' }}>Yes</option>
+                                        </select>
+                                        @error('is_new_vehicle')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
 
                                 <!-- Vehicle Type -->
                                 <div class="col-md-2">

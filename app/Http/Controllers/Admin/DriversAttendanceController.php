@@ -8,14 +8,14 @@ use App\Models\Driver;
 use App\Models\DriverStatus;
 use App\Models\AttendanceStatus;
 use App\Models\Station;
+use App\Services\VehicleDriverAssignmentService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DriversAttendanceController extends Controller
 {
-    public function __construct()
+    public function __construct(private VehicleDriverAssignmentService $vehicleDriverAssignmentService)
     {
-
         if (!auth()->user()->hasPermission('driver_attendances')) {
             abort(403, 'You do not have permission to access this page.');
         }
@@ -138,7 +138,8 @@ class DriversAttendanceController extends Controller
         }
 
         foreach ($toInsert as $row) {
-            DriversAttendance::create($row);
+            $attendance = DriversAttendance::create($row);
+            $this->syncDriverAvailability($attendance->driver_id, (int) $attendance->status);
         }
 
         return redirect()->route('driverAttendances.index')->with('success', 'Driver Attendance marked successfully');
@@ -180,6 +181,7 @@ class DriversAttendanceController extends Controller
             'date'   => $date,
             'status' => $status,
         ]);
+        $this->syncDriverAvailability($driverAttendance->driver_id, (int) $status);
 
         return redirect()->route('driverAttendances.index')
             ->with('success', 'Driver Attendance updated successfully');
@@ -203,5 +205,26 @@ class DriversAttendanceController extends Controller
         $ids = $request->ids;
         DriversAttendance::whereIn('id', $ids)->update(['is_active' => 0]);
         return response()->json(['success' => true]);
+    }
+
+    private function syncDriverAvailability(int $driverId, int $statusId): void
+    {
+        $driver = Driver::with(['primaryVehicles', 'poolVehicles'])->find($driverId);
+        if (!$driver) {
+            return;
+        }
+
+        $statusName = strtolower((string) AttendanceStatus::where('id', $statusId)->value('name'));
+        $unavailableStatuses = ['absent', 'leave', 'off day', 'inspection', 'under maintenance', 'under maintanance'];
+        $driver->is_available = !in_array($statusName, $unavailableStatuses, true);
+        $driver->save();
+
+        foreach ($driver->primaryVehicles as $vehicle) {
+            $this->vehicleDriverAssignmentService->resolveCurrentDriver($vehicle);
+        }
+
+        foreach ($driver->poolVehicles as $vehicle) {
+            $this->vehicleDriverAssignmentService->resolveCurrentDriver($vehicle);
+        }
     }
 }
