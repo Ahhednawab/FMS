@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\VehicleMaintenance;
-use App\Models\Vehicle;
 use App\Models\FuelType;
 use App\Models\MaintenanceCategory;
-use App\Models\ServiceProvider;
 use App\Models\Parts;
+use App\Models\ServiceProvider;
+use App\Models\Vehicle;
+use App\Models\VehicleMaintenance;
 use App\Services\VehicleMaintenanceScheduleService;
-
 use Illuminate\Http\Request;
 
 class VehicleMaintenanceController extends Controller
 {
     public function __construct(
         private VehicleMaintenanceScheduleService $vehicleMaintenanceScheduleService
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -56,35 +54,36 @@ class VehicleMaintenanceController extends Controller
                 'service_description' => 'required',
             ],
             [
-                'vehicle_id.required'           =>  'Vehicle No is required',
-                'model.required'                =>  'Model is required',
-                'odometer_reading.required'     =>  'Odometer Reading is required',
-                'fuel_type.required'            =>  'Fuel Type is required',
-                'category.required'             =>  'Maintenance Category is required',
-                'service_date.required'         =>  'Service Date is required',
-                'service_provider.required'     =>  'Service Provider is required',
-                'parts_replaced.required'       =>  'Parts Replaced is required',
-                'service_cost.required'         =>  'Cost of Service is required',
-                'service_description.required'  =>  'Service Description is required',
+                'vehicle_id.required' => 'Vehicle No is required',
+                'model.required' => 'Model is required',
+                'odometer_reading.required' => 'Odometer Reading is required',
+                'fuel_type.required' => 'Fuel Type is required',
+                'category.required' => 'Maintenance Category is required',
+                'service_date.required' => 'Service Date is required',
+                'service_provider.required' => 'Service Provider is required',
+                'parts_replaced.required' => 'Parts Replaced is required',
+                'service_cost.required' => 'Cost of Service is required',
+                'service_description.required' => 'Service Description is required',
             ]
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
+
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $vehicleMaintenance = new VehicleMaintenance();
-        $vehicleMaintenance->maintenance_id         =   $request->maintenance_id;
-        $vehicleMaintenance->vehicle_id             =   $request->vehicle_id;
-        $vehicleMaintenance->model                  =   $request->model;
-        $vehicleMaintenance->odometer_reading       =   $request->odometer_reading;
-        $vehicleMaintenance->fuel_type              =   $request->fuel_type;
-        $vehicleMaintenance->category               =   $request->category;
-        $vehicleMaintenance->service_date           =   $request->service_date;
-        $vehicleMaintenance->service_provider       =   $request->service_provider;
-        $vehicleMaintenance->parts_replaced         =   $request->parts_replaced;
-        $vehicleMaintenance->service_cost           =   $request->service_cost;
-        $vehicleMaintenance->service_description    =   $request->service_description;
+        $vehicleMaintenance = new VehicleMaintenance;
+        $vehicleMaintenance->maintenance_id = $request->maintenance_id;
+        $vehicleMaintenance->vehicle_id = $request->vehicle_id;
+        $vehicleMaintenance->model = $request->model;
+        $vehicleMaintenance->odometer_reading = $request->odometer_reading;
+        $vehicleMaintenance->fuel_type = $request->fuel_type;
+        $vehicleMaintenance->category = $request->category;
+        $vehicleMaintenance->service_date = $request->service_date;
+        $vehicleMaintenance->service_provider = $request->service_provider;
+        $vehicleMaintenance->parts_replaced = $request->parts_replaced;
+        $vehicleMaintenance->service_cost = $request->service_cost;
+        $vehicleMaintenance->service_description = $request->service_description;
         $vehicleMaintenance->save();
         $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
 
@@ -119,33 +118,34 @@ class VehicleMaintenanceController extends Controller
                 'service_description' => 'required',
             ],
             [
-                'vehicle_id.required'           =>  'Vehicle No is required',
-                'model.required'                =>  'Model is required',
-                'odometer_reading.required'     =>  'Odometer Reading is required',
-                'fuel_type.required'            =>  'Fuel Type is required',
-                'category.required'             =>  'Maintenance Category is required',
-                'service_date.required'         =>  'Service Date is required',
-                'service_provider.required'     =>  'Service Provider is required',
-                'parts_replaced.required'       =>  'Parts Replaced is required',
-                'service_cost.required'         =>  'Cost of Service is required',
-                'service_description.required'  =>  'Service Description is required',
+                'vehicle_id.required' => 'Vehicle No is required',
+                'model.required' => 'Model is required',
+                'odometer_reading.required' => 'Odometer Reading is required',
+                'fuel_type.required' => 'Fuel Type is required',
+                'category.required' => 'Maintenance Category is required',
+                'service_date.required' => 'Service Date is required',
+                'service_provider.required' => 'Service Provider is required',
+                'parts_replaced.required' => 'Parts Replaced is required',
+                'service_cost.required' => 'Cost of Service is required',
+                'service_description.required' => 'Service Description is required',
             ]
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
+
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $vehicleMaintenance->vehicle_id             =   $request->vehicle_id;
-        $vehicleMaintenance->model                  =   $request->model;
-        $vehicleMaintenance->odometer_reading       =   $request->odometer_reading;
-        $vehicleMaintenance->fuel_type              =   $request->fuel_type;
-        $vehicleMaintenance->category               =   $request->category;
-        $vehicleMaintenance->service_date           =   $request->service_date;
-        $vehicleMaintenance->service_provider       =   $request->service_provider;
-        $vehicleMaintenance->parts_replaced         =   $request->parts_replaced;
-        $vehicleMaintenance->service_cost           =   $request->service_cost;
-        $vehicleMaintenance->service_description    =   $request->service_description;
+        $vehicleMaintenance->vehicle_id = $request->vehicle_id;
+        $vehicleMaintenance->model = $request->model;
+        $vehicleMaintenance->odometer_reading = $request->odometer_reading;
+        $vehicleMaintenance->fuel_type = $request->fuel_type;
+        $vehicleMaintenance->category = $request->category;
+        $vehicleMaintenance->service_date = $request->service_date;
+        $vehicleMaintenance->service_provider = $request->service_provider;
+        $vehicleMaintenance->parts_replaced = $request->parts_replaced;
+        $vehicleMaintenance->service_cost = $request->service_cost;
+        $vehicleMaintenance->service_description = $request->service_description;
         $vehicleMaintenance->save();
         $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
 
@@ -161,6 +161,7 @@ class VehicleMaintenanceController extends Controller
     {
         $vehicleMaintenance->is_active = 0;
         $vehicleMaintenance->save();
+
         return redirect()->route('vehicleMaintenances.index')->with('delete_msg', 'Vehicle Maintenances deleted successfully.');
     }
 }
