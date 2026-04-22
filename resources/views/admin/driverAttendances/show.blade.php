@@ -70,6 +70,27 @@
                                 <p>{{ $driverAttendance->attendanceStatus->name }}</p>
                             </div>
                         </div>
+
+                        <div class="col-md-2 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Vehicle</h5>
+                                <p>{{ $driverAttendance->vehicle?->vehicle_no ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Original Driver</h5>
+                                <p>{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver->full_name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Replacement</h5>
+                                <p>{{ $driverAttendance->is_replacement ? ($driverAttendance->replacementDriver?->full_name ?? $driverAttendance->driver->full_name) : 'No' }}</p>
+                            </div>
+                        </div>
                     </div>
 
 

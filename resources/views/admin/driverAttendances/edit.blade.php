@@ -78,11 +78,27 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <strong>Vehicle</strong>
+                                        <input type="text" class="form-control" name="vehicle_assignment"
+                                            value="{{ $driverAttendance->vehicle?->vehicle_no ?? 'N/A' }}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Original Driver</strong>
+                                        <input type="text" class="form-control" name="original_driver"
+                                            value="{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver->full_name }}" readonly>
+                                    </div>
+                                </div>
+
                                 <!-- Attendance -->
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <strong>Attendance</strong>
-                                        <select class="custom-select" name="status">
+                                        <select class="custom-select" name="status" id="attendance_status">
                                             <option value="">Select</option>
                                             @foreach ($driver_attendance_status as $key => $value)
                                                 <option value="{{ $key }}"
@@ -94,6 +110,25 @@
                                             <label class="text-danger">{{ $message }}</label>
                                         @enderror
 
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3" id="replacement_driver_wrapper"
+                                    style="{{ (string) old('status', $driverAttendance->status) === (string) $replaceStatusId ? '' : 'display:none;' }}">
+                                    <div class="form-group">
+                                        <strong>Pool Driver</strong>
+                                        <select class="custom-select" name="replacement_driver_id" id="replacement_driver_id">
+                                            <option value="">Select Pool Driver</option>
+                                            @foreach ($poolDriverOptions as $poolDriverId => $poolDriverName)
+                                                <option value="{{ $poolDriverId }}"
+                                                    {{ (string) old('replacement_driver_id', $driverAttendance->replacement_driver_id) === (string) $poolDriverId ? 'selected' : '' }}>
+                                                    {{ $poolDriverName }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('replacement_driver_id')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -120,20 +155,22 @@
 
     <script>
         $(document).ready(function() {
-            function calculateMileage() {
-                var previous_km = $('.previous_km').val() || 0;
-                var current_km = $('.current_km').val() || 0;
-                var mileage = current_km - previous_km;
-                if (mileage < 0) mileage = 0;
-                if (previous_km) {
-                    previous_km = current_km;
+            const replaceStatusId = @json($replaceStatusId);
+
+            function toggleReplacementDropdown() {
+                const selectedStatus = $('#attendance_status').val();
+
+                if (replaceStatusId !== null && String(selectedStatus) === String(replaceStatusId)) {
+                    $('#replacement_driver_wrapper').show();
+                    return;
                 }
-                $('input[name="mileage"]').val(mileage.toFixed(0))
+
+                $('#replacement_driver_id').val('');
+                $('#replacement_driver_wrapper').hide();
             }
 
-            $('.current_km').on('input', function() {
-                calculateMileage();
-            });
+            $('#attendance_status').on('change', toggleReplacementDropdown);
+            toggleReplacementDropdown();
         });
     </script>
 @endsection

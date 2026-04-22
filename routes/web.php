@@ -144,6 +144,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
     Route::resource('dailyMileages', DailyMileageController::class);
     Route::get('fetchDailyMilages', [DailyMileageController::class, 'fetchDailyMilages'])->name('fetchDailyMilages');
+    Route::get('dailyMileages/fetch-previous-mileage', [DailyMileageController::class, 'fetchPreviousMileageByVehicleAndDate'])->name('dailyMileages.fetchPreviousMileage');
 
     Route::resource('dailyMileageReports', DailyMileageReportController::class);
     Route::resource('dailyFuels', DailyFuelController::class);
@@ -299,6 +300,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     // Fleet Transactions
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
     Route::resource('dailyMileages', DailyMileageController::class);
+    Route::get('dailyMileages/fetch-previous-mileage', [DailyMileageController::class, 'fetchPreviousMileageByVehicleAndDate'])->name('dailyMileages.fetchPreviousMileage');
     Route::resource('dailyMileageReports', DailyMileageReportController::class);
     Route::resource('dailyFuels', DailyFuelController::class);
     Route::resource('dailyFuelReports', DailyFuelReportController::class);

@@ -135,6 +135,9 @@
                                 </label>
                             </th>
                             <th>Driver</th>
+                            <th class="text-center">Vehicle</th>
+                            <th class="text-center">Original Driver</th>
+                            <th class="text-center">Replacement</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Shift</th>
                             <th class="text-center">Date</th>
@@ -152,6 +155,11 @@
                                     </label>
                                 </td>
                                 <td>{{ $value->driver->full_name }}</td>
+                                <td class="text-center">{{ $value->vehicle?->vehicle_no ?? 'N/A' }}</td>
+                                <td class="text-center">{{ $value->originalDriver?->full_name ?? $value->driver?->full_name ?? 'N/A' }}</td>
+                                <td class="text-center">
+                                    {{ $value->is_replacement ? ($value->replacementDriver?->full_name ?? $value->driver?->full_name ?? 'N/A') : 'No' }}
+                                </td>
                                 <td class="text-center">{{  $value->driver->driverStatus?->name ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     @php($st = $value->driver->shiftTiming)

@@ -37,6 +37,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Vehicle No</strong>
+                                        <input type="hidden" name="vehicle_id" value="{{ $dailyMileage->vehicle_id }}">
+                                        <input type="hidden" id="daily_mileage_id" value="{{ $dailyMileage->id }}">
                                         <input type="text" class="form-control" name="vehicle_no"
                                             value="{{ old('vehicle_id', $dailyMileage->vehicle->vehicle_no ?? '') }}"
                                             readonly>
@@ -107,18 +109,42 @@
     <script>
         $(document).ready(function() {
             function calculateMileage() {
-                var previous_km = $('.previous_km').val() || 0;
-                var current_km = $('.current_km').val() || 0;
+                var previous_km = parseInt($('.previous_km').val(), 10) || 0;
+                var current_km = parseInt($('.current_km').val(), 10) || 0;
                 var mileage = current_km - previous_km;
                 if (mileage < 0) mileage = 0;
-                if (previous_km) {
-                    previous_km = current_km;
-                }
                 $('input[name="mileage"]').val(mileage.toFixed(0))
             }
 
             $('.current_km').on('input', function() {
                 calculateMileage();
+            });
+
+            $('input[name="report_date"]').on('change', function() {
+                const reportDate = $(this).val();
+                const vehicleId = $('input[name="vehicle_id"]').val();
+                const excludeId = $('#daily_mileage_id').val();
+
+                if (!reportDate || !vehicleId) {
+                    return;
+                }
+
+                $.get("{{ route('dailyMileages.fetchPreviousMileage') }}", {
+                    report_date: reportDate,
+                    vehicle_id: vehicleId,
+                    exclude_id: excludeId
+                }).done(function(response) {
+                    $('.previous_km').val(response.previous_km);
+                    calculateMileage();
+
+                    if (response.duplicate_exists) {
+                        new Noty({
+                            type: 'warning',
+                            text: 'Another entry already exists for this vehicle on the selected date.',
+                            timeout: 3000
+                        }).show();
+                    }
+                });
             });
         });
     </script>

@@ -125,6 +125,9 @@
                         <div class="col-md-2">
                             <strong class="pl-2">Attendance</strong>
                         </div>
+                        <div class="col-md-2">
+                            <strong class="pl-2">Pool Driver</strong>
+                        </div>
                     </div>
                     @foreach ($drivers as $i => $driver)
                         <div class="row align-items-center mb-3">
@@ -132,7 +135,7 @@
                             <div class="col-auto pr-0 d-flex align-items-center" style="margin-bottom: 29px;">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input driver-checkbox"
-                                        data-driver-id="{{ $driver->id }}" style="margin-top: 0;">
+                                        data-driver-idx="{{ $i }}" style="margin-top: 0;">
                                 </div>
                             </div>
                             <input type="hidden" class="form-control" name="driver_id[]" value="{{ $driver->id }}">
@@ -198,6 +201,26 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-md-2 replacement-driver-wrapper"
+                                data-driver-idx="{{ $i }}"
+                                data-replace-visible="{{ old('status.' . $i) == (string) $replaceStatusId ? '1' : '0' }}"
+                                style="{{ old('status.' . $i) == (string) $replaceStatusId ? '' : 'display:none;' }}">
+                                <div class="form-group">
+                                    <select class="custom-select @error('replacement_driver_id.' . $i) is-invalid @enderror"
+                                        name="replacement_driver_id[]" data-driver-idx="{{ $i }}">
+                                        <option value="">Select Pool Driver</option>
+                                        @foreach (($poolDriverOptions[$driver->id] ?? collect()) as $poolDriverId => $poolDriverName)
+                                            <option value="{{ $poolDriverId }}"
+                                                {{ old('replacement_driver_id.' . $i) == (string) $poolDriverId ? 'selected' : '' }}>
+                                                {{ $poolDriverName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error("replacement_driver_id.$i")
+                                        <label class="text-danger">{{ $message }}</label>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                     <div class="row">
@@ -217,6 +240,21 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            const replaceStatusId = @json($replaceStatusId);
+
+            function toggleReplacementDropdown(driverIdx, selectedStatusId) {
+                const showReplacement = replaceStatusId !== null && String(selectedStatusId) === String(replaceStatusId);
+                const $wrapper = $(`.replacement-driver-wrapper[data-driver-idx='${driverIdx}']`);
+                const $select = $wrapper.find('select[name="replacement_driver_id[]"]');
+
+                if (showReplacement) {
+                    $wrapper.show();
+                } else {
+                    $select.val('');
+                    $wrapper.hide();
+                }
+            }
+
             // Handle status button clicks
             $('.status-btn').on('click', function() {
                 const statusId = $(this).data('status-id');
@@ -234,8 +272,9 @@
                 }
                 // Update status for each selected driver
                 $checkedBoxes.each(function() {
-                    const driverIdx = $(this).data('driver-id');
+                    const driverIdx = $(this).data('driver-idx');
                     $(`select[name='status[]'][data-driver-idx='${driverIdx}']`).val(statusId);
+                    toggleReplacementDropdown(driverIdx, statusId);
                 });
                 // Show success message
                 new Noty({
@@ -258,6 +297,14 @@
                         $('#selectAll').prop('checked', true);
                     }
                 }
+            });
+
+            $('select[name="status[]"]').on('change', function() {
+                toggleReplacementDropdown($(this).data('driver-idx'), $(this).val());
+            });
+
+            $('select[name="status[]"]').each(function() {
+                toggleReplacementDropdown($(this).data('driver-idx'), $(this).val());
             });
         });
     </script>
