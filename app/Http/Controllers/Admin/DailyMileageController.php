@@ -213,7 +213,7 @@ class DailyMileageController extends Controller
                     'current_km' => $currentKm,
                 ]);
 
-                $this->recalculateFutureMileageRecords((int) $vehicleId, $reportDate, (int) $record->id, $currentKm);
+                $this->recalculateVehicleMileageChain((int) $vehicleId, $reportDate, (int) $record->id);
             }
         });
 
@@ -284,11 +284,10 @@ class DailyMileageController extends Controller
                 'mileage' => $currentKm - $previousKm,
             ]);
 
-            $this->recalculateFutureMileageRecords(
+            $this->recalculateVehicleMileageChain(
                 (int) $dailyMileage->vehicle_id,
                 $reportDate,
-                (int) $dailyMileage->id,
-                $currentKm
+                (int) $dailyMileage->id
             );
         });
 
@@ -425,57 +424,86 @@ class DailyMileageController extends Controller
             ->first();
     }
 
-    private function recalculateFutureMileageRecords(int $vehicleId, string $reportDate, int $anchorRecordId, int $startingKm): void
+    private function recalculateVehicleMileageChain(int $vehicleId, string $reportDate, int $anchorRecordId): void
     {
-        $runningPreviousKm = $startingKm;
+        $vehicle = Vehicle::query()->lockForUpdate()->findOrFail($vehicleId);
 
-        $futureRecords = DailyMileageReport::query()
+        $records = DailyMileageReport::query()
             ->where('vehicle_id', $vehicleId)
             ->where('is_active', 1)
-            ->where(function ($query) use ($reportDate, $anchorRecordId) {
-                $query->whereDate('report_date', '>', $reportDate)
-                    ->orWhere(function ($nested) use ($reportDate, $anchorRecordId) {
-                        $nested->whereDate('report_date', $reportDate)
-                            ->where('id', '>', $anchorRecordId);
-                    });
-            })
             ->orderBy('report_date')
             ->orderBy('id')
             ->lockForUpdate()
             ->get();
 
-        foreach ($futureRecords as $record) {
-            if ((int) $record->current_km < $runningPreviousKm) {
-                Log::warning('Daily mileage chronology conflict detected', [
+        $runningCurrentKm = (int) $vehicle->kilometer;
+        $anchorReached = false;
+
+        foreach ($records as $record) {
+            $isAnchorRecord = (int) $record->id === $anchorRecordId;
+
+            if (! $anchorReached && ! $isAnchorRecord) {
+                $runningCurrentKm = (int) $record->current_km;
+                continue;
+            }
+
+            if ($isAnchorRecord) {
+                $anchorReached = true;
+
+                $anchorMileage = (int) $record->current_km - $runningCurrentKm;
+
+                if ($anchorMileage < 0) {
+                    Log::warning('Daily mileage chronology conflict detected on anchor record', [
+                        'vehicle_id' => $vehicleId,
+                        'record_id' => $record->id,
+                        'report_date' => optional($record->report_date)->toDateString() ?? (string) $record->report_date,
+                        'required_previous_km' => $runningCurrentKm,
+                        'current_km' => (int) $record->current_km,
+                    ]);
+
+                    throw ValidationException::withMessages([
+                        'current_km' => 'Current KM cannot be less than the previous mileage in the vehicle chain.',
+                    ]);
+                }
+
+                $record->update([
+                    'previous_km' => $runningCurrentKm,
+                    'mileage' => $anchorMileage,
+                    'current_km' => $runningCurrentKm + $anchorMileage,
+                ]);
+
+                Log::info('Daily mileage anchor recalculated', [
                     'vehicle_id' => $vehicleId,
                     'record_id' => $record->id,
                     'report_date' => optional($record->report_date)->toDateString() ?? (string) $record->report_date,
-                    'required_previous_km' => $runningPreviousKm,
+                    'previous_km' => $runningCurrentKm,
                     'current_km' => (int) $record->current_km,
+                    'mileage' => $anchorMileage,
                 ]);
 
-                throw ValidationException::withMessages([
-                    'current_km' => 'This update would break chronological mileage order for a later record on '
-                        . Carbon::parse($record->report_date)->format('d-M-Y')
-                        . '. Please fix that later record first.',
-                ]);
+                $runningCurrentKm = (int) $record->current_km;
+                continue;
             }
 
+            $preservedMileage = (int) $record->mileage;
+            $recalculatedCurrentKm = $runningCurrentKm + $preservedMileage;
+
             $record->update([
-                'previous_km' => $runningPreviousKm,
-                'mileage' => (int) $record->current_km - $runningPreviousKm,
+                'previous_km' => $runningCurrentKm,
+                'current_km' => $recalculatedCurrentKm,
+                'mileage' => $preservedMileage,
             ]);
 
             Log::info('Daily mileage future record recalculated', [
                 'vehicle_id' => $vehicleId,
                 'record_id' => $record->id,
                 'report_date' => optional($record->report_date)->toDateString() ?? (string) $record->report_date,
-                'previous_km' => $runningPreviousKm,
-                'current_km' => (int) $record->current_km,
-                'mileage' => (int) $record->current_km - $runningPreviousKm,
+                'previous_km' => $runningCurrentKm,
+                'current_km' => $recalculatedCurrentKm,
+                'mileage' => $preservedMileage,
             ]);
 
-            $runningPreviousKm = (int) $record->current_km;
+            $runningCurrentKm = $recalculatedCurrentKm;
         }
     }
 }
