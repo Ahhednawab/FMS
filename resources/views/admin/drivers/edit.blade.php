@@ -145,6 +145,22 @@
                             </div>
 
                             <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Driver Type</strong>
+                                        <select class="custom-select" name="driver_type" id="driver_type">
+                                            @foreach ($driverTypes as $key => $value)
+                                                <option value="{{ $key }}"
+                                                    {{ old('driver_type', $driver->driver_type ?? 'regular') == $key ? 'selected' : '' }}>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if ($errors->has('driver_type'))
+                                            <label class="text-danger">{{ $errors->first('driver_type') }}</label>
+                                        @endif
+                                    </div>
+                                </div>
                                 <!-- Marital Status -->
                                 <div class="col-md-3">
                                     <div class="form-group">
@@ -177,7 +193,7 @@
 
                                 <!-- Vehicle Number -->
                                 <div class="col-md-3">
-                                    <div class="form-group">
+                                    <div class="form-group regular-driver-only">
                                         <strong>Vehicle Number</strong>
                                         <select class="custom-select select2 vehicle" id="vehicle_id" name="vehicle_id">
                                             <option value="">--Select--</option>
@@ -195,7 +211,7 @@
 
                                 <!-- Shift Timing -->
                                 <div class="col-md-3">
-                                    <div class="form-group">
+                                    <div class="form-group regular-driver-only">
                                         <strong>Shift Timing</strong>
                                         <select class="form-control " id="shift_timing_id" name="shift_timing_id">
                                             <option value="">--Select--</option>
@@ -506,11 +522,24 @@
 
     <script>
         $(document).ready(function() {
+            function toggleRegularDriverFields() {
+                const isPoolDriver = $('#driver_type').val() === 'pool';
+                $('.regular-driver-only').closest('.col-md-3').toggle(!isPoolDriver);
+
+                if (isPoolDriver) {
+                    $('#vehicle_id').val('').trigger('change');
+                    $('#shift_timing_id').val('');
+                }
+            }
+
             $('.vehicle').select2({
                 placeholder: "--Select--",
                 allowClear: true,
                 theme: 'bootstrap4'
             });
+
+            $('#driver_type').on('change', toggleRegularDriverFields);
+            toggleRegularDriverFields();
 
             $('#cnic_no').inputmask("99999-9999999-9");
             $('#phone').inputmask("0399-9999999");

@@ -74,7 +74,8 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
-        $drivers = $this->getAssignableDrivers();
+        $regularDrivers = $this->getAssignableDrivers('regular');
+        $poolDrivers = $this->getAssignableDrivers('pool');
 
         $status = [
             '1' => 'Yes',
@@ -82,7 +83,7 @@ class VehicleController extends Controller
         ];
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
 
-        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'drivers') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -203,6 +204,22 @@ class VehicleController extends Controller
                 'tax_file.required' => 'Tax Attachment is required',
             ]
         );
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('primary_driver_id')) {
+                $primaryDriver = Driver::find($request->primary_driver_id);
+                if (! $primaryDriver || $primaryDriver->driver_type !== 'regular') {
+                    $validator->errors()->add('primary_driver_id', 'Primary driver must be a regular driver.');
+                }
+            }
+
+            foreach ((array) $request->input('pool_driver_ids', []) as $poolDriverId) {
+                $poolDriver = Driver::find($poolDriverId);
+                if (! $poolDriver || $poolDriver->driver_type !== 'pool') {
+                    $validator->errors()->add('pool_driver_ids', 'Pool drivers must be selected from pool driver records only.');
+                    break;
+                }
+            }
+        });
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
 
@@ -409,7 +426,8 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
-        $drivers = $this->getAssignableDrivers();
+        $regularDrivers = $this->getAssignableDrivers('regular');
+        $poolDrivers = $this->getAssignableDrivers('pool');
 
         $status = [
             '1' => 'Yes',
@@ -417,7 +435,7 @@ class VehicleController extends Controller
         ];
         $vehicle->loadMissing(['poolDrivers']);
 
-        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'drivers'));
+        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers'));
     }
 
     public function update(Request $request, Vehicle $vehicle)
@@ -509,6 +527,22 @@ class VehicleController extends Controller
                 'tax_file.required' => 'Tax Attachment is required',
             ]
         );
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('primary_driver_id')) {
+                $primaryDriver = Driver::find($request->primary_driver_id);
+                if (! $primaryDriver || $primaryDriver->driver_type !== 'regular') {
+                    $validator->errors()->add('primary_driver_id', 'Primary driver must be a regular driver.');
+                }
+            }
+
+            foreach ((array) $request->input('pool_driver_ids', []) as $poolDriverId) {
+                $poolDriver = Driver::find($poolDriverId);
+                if (! $poolDriver || $poolDriver->driver_type !== 'pool') {
+                    $validator->errors()->add('pool_driver_ids', 'Pool drivers must be selected from pool driver records only.');
+                    break;
+                }
+            }
+        });
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
 
@@ -657,14 +691,15 @@ class VehicleController extends Controller
         ]);
     }
 
-    private function getAssignableDrivers()
+    private function getAssignableDrivers(string $driverType)
     {
         return Driver::where('is_active', 1)
+            ->where('driver_type', $driverType)
             ->orderBy('full_name')
-            ->get(['id', 'full_name', 'vehicle_id'])
+            ->get(['id', 'full_name', 'vehicle_id', 'driver_type'])
             ->mapWithKeys(function (Driver $driver) {
                 $label = $driver->full_name;
-                if ($driver->vehicle_id) {
+                if ($driver->vehicle_id && $driver->driver_type === 'regular') {
                     $label .= ' (Assigned)';
                 }
 

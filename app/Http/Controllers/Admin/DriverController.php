@@ -87,9 +87,13 @@ class DriverController extends Controller
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
+        $driverTypes = [
+            'regular' => 'Regular Driver',
+            'pool' => 'Pool Driver',
+        ];
         $draftInfo = $this->getDraftDataForView($request, 'drivers');
 
-        return view('admin.drivers.create', compact('serial_no', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings') + $draftInfo);
+        return view('admin.drivers.create', compact('serial_no', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -134,6 +138,7 @@ class DriverController extends Controller
                 'salary' =>  'nullable|numeric',
                 'account_no' =>  'nullable',
                 'driver_status_id' =>  'nullable',
+                'driver_type' => 'required|in:regular,pool',
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
                 // 'vehicle_id' =>  'nullable|unique:drivers,vehicle_id',
@@ -169,6 +174,7 @@ class DriverController extends Controller
                 'salary.required'                   =>  'Salary is required',
                 'account_no.required'               =>  'Account No is required',
                 'driver_status_id.required'         =>  'Status is required',
+                'driver_type.required'              =>  'Driver type is required',
                 'marital_status_id.required'        =>  'Marital Status is required',
                 'dob.required'                      =>  'DOB is required',
                 // 'vehicle_id.required'               =>  'Vehicle Number is required',
@@ -207,6 +213,10 @@ class DriverController extends Controller
 
         // Add custom validation for shift timing conflict
         $validator->after(function ($validator) use ($request) {
+            if ($request->driver_type === 'pool') {
+                return;
+            }
+
             if ($request->vehicle_id && $request->shift_timing_id) {
                 $vehicle = Vehicle::find($request->vehicle_id);
                 if ($vehicle && $vehicle->shift_hour_id == 2) {
@@ -241,10 +251,11 @@ class DriverController extends Controller
         $driver->salary                 =   $request->salary;
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
+        $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
-        $driver->vehicle_id             =   $request->vehicle_id;
-        $driver->shift_timing_id        =   $request->shift_timing_id;
+        $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : $request->vehicle_id;
+        $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;
@@ -452,7 +463,11 @@ class DriverController extends Controller
             'yes'   =>  'Yes',
             'no'    =>  'No',
         );
-        return view('admin.drivers.edit', compact('driver', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings'));
+        $driverTypes = [
+            'regular' => 'Regular Driver',
+            'pool' => 'Pool Driver',
+        ];
+        return view('admin.drivers.edit', compact('driver', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes'));
     }
 
     public function update(Request $request, Driver $driver)
@@ -465,6 +480,7 @@ class DriverController extends Controller
             'salary' =>  'nullable|numeric',
             'account_no' =>  'nullable',
             'driver_status_id' =>  'nullable',
+            'driver_type' => 'required|in:regular,pool',
             'marital_status_id' =>  'nullable',
             'dob' =>  'nullable|date',
             // 'vehicle_id' =>  'required',
@@ -557,6 +573,10 @@ class DriverController extends Controller
 
         // Add custom validation for shift timing conflict (excluding current driver)
         $validator->after(function ($validator) use ($request, $driver) {
+            if ($request->driver_type === 'pool') {
+                return;
+            }
+
             if ($request->vehicle_id && $request->shift_timing_id) {
                 $vehicle = Vehicle::find($request->vehicle_id);
                 if ($vehicle && $vehicle->shift_hour_id == 2) {
@@ -590,10 +610,11 @@ class DriverController extends Controller
         $driver->salary                 =   $request->salary;
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
+        $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
-        $driver->vehicle_id             =   ($request->driver_status_id == 1) ? $request->vehicle_id : NULL;
-        $driver->shift_timing_id        =   ($request->driver_status_id == 1) ? $request->shift_timing_id : NULL;
+        $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->vehicle_id : null);
+        $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->shift_timing_id : null);
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;

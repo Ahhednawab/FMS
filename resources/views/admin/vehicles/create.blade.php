@@ -334,7 +334,7 @@
                                 <strong>Primary Driver<span style="color:red">*</span></strong>
                                 <select name="primary_driver_id" class="custom-select @error('primary_driver_id') is-invalid @enderror">
                                     <option value="">-- Select Driver --</option>
-                                    @foreach ($drivers as $id => $name)
+                                    @foreach ($regularDrivers as $id => $name)
                                         <option value="{{ $id }}"
                                             {{ (int) ($draftData['primary_driver_id'] ?? old('primary_driver_id')) === (int) $id ? 'selected' : '' }}>
                                             {{ $name }}
@@ -354,7 +354,7 @@
                                     $selectedPoolDrivers = $draftData['pool_driver_ids'] ?? old('pool_driver_ids', []);
                                 @endphp
                                 <select name="pool_driver_ids[]" class="form-control" multiple size="4">
-                                    @foreach ($drivers as $id => $name)
+                                    @foreach ($poolDrivers as $id => $name)
                                         <option value="{{ $id }}"
                                             {{ in_array((string) $id, array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
                                             {{ $name }}

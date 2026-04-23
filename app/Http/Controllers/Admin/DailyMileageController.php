@@ -151,9 +151,9 @@ class DailyMileageController extends Controller
                 $previousKm = $last?->current_km ?? 0;
             }
 
-            if ($currentKm < $previousKm) {
+            if ($currentKm <= $previousKm) {
                 return back()->withErrors([
-                    "vehicles.$vehicleId.current_km" => "Current KM cannot be less than Previous KM ($previousKm)"
+                    "vehicles.$vehicleId.current_km" => "Current KM must be greater than Previous KM ($previousKm)"
                 ])->withInput();
             }
 
@@ -185,9 +185,9 @@ class DailyMileageController extends Controller
                 $previousKm = $previousRecord?->current_km ?? (int) $vehicle->kilometer;
                 $currentKm = (int) $data['current_km'];
 
-                if ($currentKm < $previousKm) {
+                if ($currentKm <= $previousKm) {
                     throw ValidationException::withMessages([
-                        "vehicles.$vehicleId.current_km" => "Current KM cannot be less than Previous KM ($previousKm)",
+                        "vehicles.$vehicleId.current_km" => "Current KM must be greater than Previous KM ($previousKm)",
                     ]);
                 }
 

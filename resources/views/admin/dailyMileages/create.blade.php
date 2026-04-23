@@ -78,7 +78,11 @@
                         <div class="col-md-3">
                             <label><strong>Report Date</strong></label>
                             <input type="date" name="report_date" id="report_date" class="form-control"
+                                value="{{ old('report_date') }}"
                                 max="{{ date('Y-m-d') }}" required>
+                            @error('report_date')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
 
@@ -109,23 +113,31 @@
                             {{-- Previous KM --}}
                             <div class="col-md-2">
                                 <label>Previous KM</label>
-                                <input type="number" class="form-control previous_km"
-                                    name="vehicles[{{ $vid }}][previous_km]" value="{{ $value['previous_km'] }}"
+                                <input type="number" class="form-control previous_km @error("vehicles.$vid.previous_km") is-invalid @enderror"
+                                    name="vehicles[{{ $vid }}][previous_km]" value="{{ old("vehicles.$vid.previous_km", $value['previous_km']) }}"
                                     readonly>
+                                @error("vehicles.$vid.previous_km")
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- Current KM --}}
                             <div class="col-md-2">
                                 <label>Current KM</label>
-                                <input type="number" class="form-control current_km"
-                                    name="vehicles[{{ $vid }}][current_km]" min="0">
+                                <input type="number" class="form-control current_km @error("vehicles.$vid.current_km") is-invalid @enderror"
+                                    name="vehicles[{{ $vid }}][current_km]" min="0"
+                                    value="{{ old("vehicles.$vid.current_km") }}">
+                                @error("vehicles.$vid.current_km")
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{-- Mileage --}}
                             <div class="col-md-2">
                                 <label>Mileage</label>
                                 <input type="number" class="form-control mileage"
-                                    name="vehicles[{{ $vid }}][mileage]" readonly>
+                                    name="vehicles[{{ $vid }}][mileage]"
+                                    value="{{ old("vehicles.$vid.mileage") }}" readonly>
                             </div>
 
                         </div>

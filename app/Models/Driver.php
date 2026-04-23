@@ -19,6 +19,7 @@ class Driver extends Model
         'salary',
         'account_no',
         'driver_status_id',
+        'driver_type',
         'marital_status_id',
         'dob',
         'vehicle_id',
@@ -49,6 +50,10 @@ class Driver extends Model
         'ke_card_serial',     // new
         'location',           // new
         'designation',        // new
+    ];
+
+    protected $attributes = [
+        'driver_type' => 'regular',
     ];
 
 
@@ -126,5 +131,15 @@ class Driver extends Model
     public function attendances()
     {
         return $this->hasMany(DriversAttendance::class, 'driver_id');
+    }
+
+    public function scopeRegular($query)
+    {
+        return $query->where('driver_type', 'regular');
+    }
+
+    public function scopePool($query)
+    {
+        return $query->where('driver_type', 'pool');
     }
 }

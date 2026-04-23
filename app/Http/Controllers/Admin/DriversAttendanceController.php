@@ -75,10 +75,12 @@ class DriversAttendanceController extends Controller
             'vehicle.poolDrivers' => function ($query) {
                 $query->where('drivers.is_active', 1)
                     ->where('drivers.is_available', 1)
+                    ->where('drivers.driver_type', 'pool')
                     ->orderBy('drivers.full_name');
             },
         ])
             ->where('drivers.is_active', 1)
+            ->where('drivers.driver_type', 'regular')
 
             ->when($request->driver_status_id, function ($q) use ($request) {
                 $q->where('drivers.driver_status_id', $request->driver_status_id);
@@ -171,7 +173,7 @@ class DriversAttendanceController extends Controller
                 }
 
                 $replacementDriver = $driver->vehicle->poolDrivers->firstWhere('id', $replacementDriverId);
-                if (! $replacementDriver || ! $replacementDriver->is_active || ! $replacementDriver->is_available) {
+                if (! $replacementDriver || $replacementDriver->driver_type !== 'pool' || ! $replacementDriver->is_active || ! $replacementDriver->is_available) {
                     $fieldErrors['replacement_driver_id.' . $i] = 'Selected replacement driver is not available.';
                     continue;
                 }
@@ -287,6 +289,7 @@ class DriversAttendanceController extends Controller
 
             $vehicle->loadMissing(['poolDrivers' => function ($query) {
                 $query->where('drivers.is_active', 1)
+                    ->where('drivers.driver_type', 'pool')
                     ->where('drivers.is_available', 1);
             }]);
 
