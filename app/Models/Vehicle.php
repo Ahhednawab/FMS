@@ -12,6 +12,24 @@ class Vehicle extends Model
 
     protected $table = 'vehicles';
 
+    protected $casts = [
+        'tracker_installation_date' => 'date',
+        'inspection_date' => 'date',
+        'next_inspection_date' => 'date',
+        'fitness_date' => 'date',
+        'next_fitness_date' => 'date',
+        'insurance_date' => 'date',
+        'insurance_expiry_date' => 'date',
+        'route_permit_date' => 'date',
+        'route_permit_expiry_date' => 'date',
+        'tax_date' => 'date',
+        'next_tax_date' => 'date',
+        'pool_vehicle' => 'boolean',
+        'on_duty_status' => 'boolean',
+        'is_new_vehicle' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
     protected $fillable = [
         'vehicle_no',
         'make',

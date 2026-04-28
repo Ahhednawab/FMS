@@ -158,20 +158,37 @@ class ExpiredVehiclesTable extends Component
 
     public function getFilteredVehicles()
     {
-        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+        $today = Carbon::today();
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth()->toDateString();
 
         $query = $this->expiredBaseQuery();
 
         // Apply reason filter
         if (!empty($this->reason) && array_key_exists($this->reason, $this->reasonList)) {
-            $query->where($this->reason, '<=', $nextMonthEnd);
+            $query->whereNotNull($this->reason)
+                ->whereDate($this->reason, '<=', $nextMonthEnd);
         } else {
             $query->where(function ($q) use ($nextMonthEnd) {
-                $q->where('next_inspection_date', '<=', $nextMonthEnd)
-                    ->orWhere('next_fitness_date', '<=', $nextMonthEnd)
-                    ->orWhere('insurance_expiry_date', '<=', $nextMonthEnd)
-                    ->orWhere('route_permit_expiry_date', '<=', $nextMonthEnd)
-                    ->orWhere('next_tax_date', '<=', $nextMonthEnd);
+                $q->where(function ($dateQuery) use ($nextMonthEnd) {
+                    $dateQuery->whereNotNull('next_inspection_date')
+                        ->whereDate('next_inspection_date', '<=', $nextMonthEnd);
+                })
+                    ->orWhere(function ($dateQuery) use ($nextMonthEnd) {
+                        $dateQuery->whereNotNull('next_fitness_date')
+                            ->whereDate('next_fitness_date', '<=', $nextMonthEnd);
+                    })
+                    ->orWhere(function ($dateQuery) use ($nextMonthEnd) {
+                        $dateQuery->whereNotNull('insurance_expiry_date')
+                            ->whereDate('insurance_expiry_date', '<=', $nextMonthEnd);
+                    })
+                    ->orWhere(function ($dateQuery) use ($nextMonthEnd) {
+                        $dateQuery->whereNotNull('route_permit_expiry_date')
+                            ->whereDate('route_permit_expiry_date', '<=', $nextMonthEnd);
+                    })
+                    ->orWhere(function ($dateQuery) use ($nextMonthEnd) {
+                        $dateQuery->whereNotNull('next_tax_date')
+                            ->whereDate('next_tax_date', '<=', $nextMonthEnd);
+                    });
             });
         }
 
@@ -182,6 +199,14 @@ class ExpiredVehiclesTable extends Component
                     ->orWhere('model', 'like', '%' . $this->search . '%');
             });
         }
+
+        Log::debug('Expired vehicles query prepared', [
+            'today' => $today->toDateString(),
+            'threshold' => $nextMonthEnd,
+            'reason' => $this->reason,
+            'search' => $this->search,
+            'timezone' => config('app.timezone'),
+        ]);
 
         return $query;
     }

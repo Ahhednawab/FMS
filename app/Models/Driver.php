@@ -10,6 +10,19 @@ class Driver extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'dob' => 'date',
+        'employment_date' => 'date',
+        'cnic_expiry_date' => 'date',
+        'eobi_start_date' => 'date',
+        'license_expiry_date' => 'date',
+        'uniform_issue_date' => 'date',
+        'sandal_issue_date' => 'date',
+        'last_date' => 'date',
+        'is_available' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
     protected $fillable = [
         'serial_no',
         'full_name',

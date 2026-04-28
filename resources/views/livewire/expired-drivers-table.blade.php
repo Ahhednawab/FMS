@@ -34,7 +34,7 @@
     <!-- /page header -->
 
     <div>
-        @if($expiredDrivers->total() > 0 || true)
+        @if($expiredDrivers->total() > 0)
             <div class="card" style="min-height: 660px;"    >
                 <div class="card-body">
 

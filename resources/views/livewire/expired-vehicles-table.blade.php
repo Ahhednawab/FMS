@@ -12,7 +12,7 @@
 
             <div class="header-elements d-none">
                 <div class="d-flex justify-content-center align-items-center">
-                    <span class="badge badge-danger mr-2">{{ $mainVehicles->count() }} Expired</span>
+                    <span class="badge badge-danger mr-2">{{ $mainVehicles->total() }} Expired</span>
                   
                     <button wire:click="export" wire:loading.attr="disabled" class="btn btn-success btn-sm mx-1">
                         <span wire:loading.remove wire:target="export">
@@ -35,7 +35,7 @@
 
 
     <div>
-        @if($mainVehicles->count() > 0 || true)
+        @if($mainVehicles->total() > 0)
             <div class="card" style="min-height: 660px;">
                 <div class="card-body">
                     <div class="row mb-3">
@@ -232,24 +232,10 @@
 </div>
 
 <script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('filterUpdated', (reason) => {
-            console.log('Selected reason:', reason);  // Log the selected filter value
-        });
-    });
-
     document.addEventListener('DOMContentLoaded', function () {
         $('#allVehiclesModal').on('hidden.bs.modal', function () {
             const cleanUrl = '/admin/dashboard';
             window.history.replaceState({}, document.title, cleanUrl);
         });
     });
-  
-   
-    const input1 = document.getElementById('ve_search');
-    input1.addEventListener('keyup', function() {
-        @this.set('search', input1.value);   // set the property manually
-        @this.getFilteredVehicles();        // optionally call a function
-    });
- 
 </script>

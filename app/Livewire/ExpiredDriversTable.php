@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Driver;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ExpiredDriversExport;
 
@@ -114,12 +115,16 @@ class ExpiredDriversTable extends Component
     public function loadExpiredDriversQuery()
     {
         $today = Carbon::today();
-        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+        $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth()->toDateString();
 
         $query = Driver::where('is_active', 1)
             ->where(function ($query) use ($nextMonthEnd) {
-                $query->where('cnic_expiry_date', '<=', $nextMonthEnd)
-                    ->orWhere('license_expiry_date', '<=', $nextMonthEnd);
+                $query->whereNotNull('cnic_expiry_date')
+                    ->whereDate('cnic_expiry_date', '<=', $nextMonthEnd)
+                    ->orWhere(function ($licenseQuery) use ($nextMonthEnd) {
+                        $licenseQuery->whereNotNull('license_expiry_date')
+                            ->whereDate('license_expiry_date', '<=', $nextMonthEnd);
+                    });
             })
             ->with(['driverStatus', 'vehicle'])
             ->whereHas('driverStatus', function ($query) {
@@ -131,6 +136,14 @@ class ExpiredDriversTable extends Component
 
         /** Apply Search Filter */
         $this->applySearch($query);
+
+        Log::debug('Expired drivers query prepared', [
+            'today' => $today->toDateString(),
+            'threshold' => $nextMonthEnd,
+            'reason' => $this->filterReason,
+            'search' => $this->search,
+            'timezone' => config('app.timezone'),
+        ]);
 
         return $query;
     }
@@ -155,13 +168,17 @@ class ExpiredDriversTable extends Component
     public function applyReasonFilter($query)
     {
         if (!empty($this->filterReason)) {
-            $query->where(function ($q) {
+            $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth()->toDateString();
+
+            $query->where(function ($q) use ($nextMonthEnd) {
                 if ($this->filterReason === "CNIC Expiry") {
-                    $q->where('cnic_expiry_date', '<=', Carbon::now()->addMonth()->endOfMonth());
+                    $q->whereNotNull('cnic_expiry_date')
+                        ->whereDate('cnic_expiry_date', '<=', $nextMonthEnd);
                 }
 
                 if ($this->filterReason === "License Expiry") {
-                    $q->where('license_expiry_date', '<=', Carbon::now()->addMonth()->endOfMonth());
+                    $q->whereNotNull('license_expiry_date')
+                        ->whereDate('license_expiry_date', '<=', $nextMonthEnd);
                 }
             });
         }
