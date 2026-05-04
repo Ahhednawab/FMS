@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\ExpiredDriversDataTableController;
+use App\Http\Controllers\Admin\ExpiredVehiclesDataTableController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\MileageAlertController;
 use App\Http\Controllers\NotificationController;
@@ -105,6 +107,10 @@ Route::get('users/getmanagers', [UserController::class, 'getManagers'])
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard/expired-drivers', [ExpiredDriversDataTableController::class, 'index'])->name('dashboard.expiredDrivers');
+    Route::get('/dashboard/expired-drivers/export', [ExpiredDriversDataTableController::class, 'export'])->name('dashboard.expiredDrivers.export');
+    Route::get('/dashboard/expired-vehicles', [ExpiredVehiclesDataTableController::class, 'index'])->name('dashboard.expiredVehicles');
+    Route::get('/dashboard/expired-vehicles/export', [ExpiredVehiclesDataTableController::class, 'export'])->name('dashboard.expiredVehicles.export');
 
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

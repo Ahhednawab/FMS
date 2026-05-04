@@ -4,7 +4,6 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
-@livewireStyles
 
 <style>
     .content-wrapper {
@@ -133,15 +132,25 @@
                 <!-- Live Data Tables -->
                 <div class="row mt-4">
                     @if (auth()->user()->hasPermission('driver_attendances'))
-                        <!-- Drivers Table -->
                         <div class="col-lg-6">
-                            @livewire('expired-drivers-table')
+                            <div id="expired-drivers-wrapper">
+                                @include('dashboard.partials.expired-drivers-section', [
+                                    'expiredDrivers' => $expiredDrivers,
+                                    'reasonList' => $driverReasonList,
+                                    'filters' => ['filter_reason' => '', 'search' => ''],
+                                ])
+                            </div>
                         </div>
                     @endif
                     @if (auth()->user()->hasPermission('vehicle_attendances'))
-                        <!-- Vehicles Table -->
                         <div class="col-lg-6">
-                            @livewire('expired-vehicles-table')
+                            <div id="expired-vehicles-wrapper">
+                                @include('dashboard.partials.expired-vehicles-section', [
+                                    'expiredVehicles' => $expiredVehicles,
+                                    'reasonList' => $vehicleReasonList,
+                                    'filters' => ['reason' => '', 'search' => ''],
+                                ])
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -334,11 +343,52 @@
 
     </div>
 
-    @livewireScripts
-
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
     <script>
+        let driverFilterTimer = null;
+        let vehicleFilterTimer = null;
+
+        function getExpiredDriversFilters() {
+            return {
+                filter_reason: $('#expired-drivers-wrapper .js-driver-reason').val() || '',
+                search: $('#expired-drivers-wrapper .js-driver-search').val() || ''
+            };
+        }
+
+        function getExpiredVehiclesFilters() {
+            return {
+                reason: $('#expired-vehicles-wrapper .js-vehicle-reason').val() || '',
+                search: $('#expired-vehicles-wrapper .js-vehicle-search').val() || ''
+            };
+        }
+
+        function loadExpiredDrivers(page = 1, options = {}) {
+            $.get("{{ route('dashboard.expiredDrivers') }}", {
+                ...getExpiredDriversFilters(),
+                page
+            }, function(res) {
+                $('#expired-drivers-wrapper').html(res.html);
+
+                if (options.openModal) {
+                    $('#allDriversModal').modal('show');
+                }
+            });
+        }
+
+        function loadExpiredVehicles(page = 1, options = {}) {
+            $.get("{{ route('dashboard.expiredVehicles') }}", {
+                ...getExpiredVehiclesFilters(),
+                page
+            }, function(res) {
+                $('#expired-vehicles-wrapper').html(res.html);
+
+                if (options.openModal) {
+                    $('#allVehiclesModal').modal('show');
+                }
+            });
+        }
+
         function loadDrivers(page = 1) {
             $.get("{{ route('notifications.index') }}", {
                 type: 'driver',
@@ -532,6 +582,64 @@
         $('#maintenance_vehicle, #maintenance_alert').on('change', () => loadMaintenance(1));
         $('#driver_id, #driver_title').on('change', () => loadDrivers(1));
 
+        $(document).on('change', '#expired-drivers-wrapper .js-driver-reason', function() {
+            loadExpiredDrivers(1);
+        });
+
+        $(document).on('input', '#expired-drivers-wrapper .js-driver-search', function() {
+            clearTimeout(driverFilterTimer);
+            driverFilterTimer = setTimeout(() => loadExpiredDrivers(1), 300);
+        });
+
+        $(document).on('click', '#expired-drivers-wrapper .js-clear-driver-filters', function() {
+            $('#expired-drivers-wrapper .js-driver-reason').val('');
+            $('#expired-drivers-wrapper .js-driver-search').val('');
+            loadExpiredDrivers(1);
+        });
+
+        $(document).on('click', '#expired-drivers-wrapper .expired-drivers-pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            loadExpiredDrivers(url.searchParams.get('page') || 1);
+        });
+
+        $(document).on('click', '#expired-drivers-wrapper .expired-drivers-modal-pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            loadExpiredDrivers(url.searchParams.get('page') || 1, {
+                openModal: true
+            });
+        });
+
+        $(document).on('change', '#expired-vehicles-wrapper .js-vehicle-reason', function() {
+            loadExpiredVehicles(1);
+        });
+
+        $(document).on('input', '#expired-vehicles-wrapper .js-vehicle-search', function() {
+            clearTimeout(vehicleFilterTimer);
+            vehicleFilterTimer = setTimeout(() => loadExpiredVehicles(1), 300);
+        });
+
+        $(document).on('click', '#expired-vehicles-wrapper .js-clear-vehicle-filters', function() {
+            $('#expired-vehicles-wrapper .js-vehicle-reason').val('');
+            $('#expired-vehicles-wrapper .js-vehicle-search').val('');
+            loadExpiredVehicles(1);
+        });
+
+        $(document).on('click', '#expired-vehicles-wrapper .expired-vehicles-pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            loadExpiredVehicles(url.searchParams.get('page') || 1);
+        });
+
+        $(document).on('click', '#expired-vehicles-wrapper .expired-vehicles-modal-pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            loadExpiredVehicles(url.searchParams.get('page') || 1, {
+                openModal: true
+            });
+        });
+
         // INIT
         $(document).ready(function() {
             $('#master_vehicle, #master_title, #maintenance_vehicle, #maintenance_alert, #driver_id, #driver_title')
@@ -546,7 +654,6 @@
             loadMasterDataAlerts();
             loadDrivers();
             loadDriverAlerts();
-
         });
     </script>
 
@@ -678,18 +785,6 @@
             dataTablesInitialized = true;
         }
 
-        $(document).ready(function() {
-            // Initialize DataTables after a short delay to ensure Livewire components are loaded
-            // setTimeout(function() {
-            //     initializeDataTables();
-            // }, 2000);
-        });
-
-        // Only initialize once when Livewire loads
-        document.addEventListener('livewire:load', function() {
-            // setTimeout(function() {
-            //     initializeDataTables();
-            // }, 1000);
-        });
+        $(document).ready(function() {});
     </script>
 @endsection

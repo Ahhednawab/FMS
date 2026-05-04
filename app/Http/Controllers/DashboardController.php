@@ -6,6 +6,8 @@ use App\Models\Vehicle;
 use App\Models\Warehouse;
 use App\Models\Driver;
 use Illuminate\Http\Request;
+use App\Services\Dashboard\ExpiredDriversDashboardService;
+use App\Services\Dashboard\ExpiredVehiclesDashboardService;
 use App\Models\WarehouseAssignment;
 use App\Models\MasterWarehouseInventory;
 
@@ -14,7 +16,11 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(
+        Request $request,
+        ExpiredDriversDashboardService $expiredDriversService,
+        ExpiredVehiclesDashboardService $expiredVehiclesService
+    )
     {
         $vehicleId = $request->get('vehicle_id');
         $driverId = $request->get('driver_id'); // optional filter for drivers
@@ -28,7 +34,31 @@ class DashboardController extends Controller
             // Load vehicles for dropdown
             $vehicles = Vehicle::select('id', 'vehicle_no')->orderBy('vehicle_no')->get();
 
-            return view('dashboard', compact('vehicles', 'drivers', 'vehicleId', 'driverId'));
+            $expiredDrivers = $expiredDriversService->paginate([
+                'filter_reason' => '',
+                'search' => '',
+                'page' => 1,
+            ]);
+
+            $expiredVehicles = $expiredVehiclesService->paginate([
+                'reason' => '',
+                'search' => '',
+                'page' => 1,
+            ]);
+
+            $driverReasonList = $expiredDriversService->reasonList();
+            $vehicleReasonList = $expiredVehiclesService->reasonList();
+
+            return view('dashboard', compact(
+                'vehicles',
+                'drivers',
+                'vehicleId',
+                'driverId',
+                'expiredDrivers',
+                'expiredVehicles',
+                'driverReasonList',
+                'vehicleReasonList'
+            ));
         } else if (strtolower(auth()->user()->role->slug) == "master-warehouse") {
 
             $vehicles = Vehicle::select('id', 'vehicle_no')->orderBy('vehicle_no')->get();
