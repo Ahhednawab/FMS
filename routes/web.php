@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ExpiredVehiclesDataTableController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\MileageAlertController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -149,6 +150,8 @@ Route::middleware(['auth'])->group(function () {
     // Fleet Transactions
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
     Route::resource('dailyMileages', DailyMileageController::class);
+    Route::get('/daily-mileage', [TrackingController::class, 'index'])->name('daily-mileage.index');
+    Route::get('trackingData', [TrackingController::class, 'index'])->name('trackingData.index');
     Route::get('fetchDailyMilages', [DailyMileageController::class, 'fetchDailyMilages'])->name('fetchDailyMilages');
     Route::get('dailyMileages/fetch-previous-mileage', [DailyMileageController::class, 'fetchPreviousMileageByVehicleAndDate'])->name('dailyMileages.fetchPreviousMileage');
 

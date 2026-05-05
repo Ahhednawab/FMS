@@ -6,6 +6,18 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
         rel="stylesheet" />
+    <style>
+        .daily-mileage-action-bar {
+            position: sticky;
+            bottom: 0;
+            z-index: 1020;
+            background: #fff;
+            border-top: 1px solid #e5e5e5;
+            box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.08);
+            margin-top: 1rem;
+            padding: 0.875rem 0;
+        }
+    </style>
 
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
@@ -87,65 +99,67 @@
                     </div>
 
                     {{-- Vehicle Rows --}}
-                    @foreach ($vehicleData as $value)
-                        @php $vid = $value['vehicle_id']; @endphp
+                    <div id="daily-mileage-rows">
+                        @foreach ($vehicleData as $value)
+                            @php $vid = $value['vehicle_id']; @endphp
 
-                        <div class="row kilometer border-bottom py-2">
+                            <div class="row kilometer border-bottom py-2">
 
-                            <input type="hidden" class="station_key"
-                                value="{{ $value['station_id'] ?? $value['station'] }}">
-                            {{-- Hidden Vehicle ID --}}
-                            <input type="hidden" name="vehicles[{{ $vid }}][vehicle_id]"
-                                value="{{ $vid }}">
+                                <input type="hidden" class="station_key"
+                                    value="{{ $value['station_id'] ?? $value['station'] }}">
+                                {{-- Hidden Vehicle ID --}}
+                                <input type="hidden" name="vehicles[{{ $vid }}][vehicle_id]"
+                                    value="{{ $vid }}">
 
-                            {{-- Station --}}
-                            <div class="col-md-3">
-                                <label>Station</label>
-                                <input type="text" class="form-control" value="{{ $value['station'] }}" readonly>
+                                {{-- Station --}}
+                                <div class="col-md-3">
+                                    <label>Station</label>
+                                    <input type="text" class="form-control" value="{{ $value['station'] }}" readonly>
+                                </div>
+
+                                {{-- Vehicle No --}}
+                                <div class="col-md-2">
+                                    <label>Vehicle No</label>
+                                    <input type="text" class="form-control" value="{{ $value['vehicle_no'] }}" readonly>
+                                </div>
+
+                                {{-- Previous KM --}}
+                                <div class="col-md-2">
+                                    <label>Previous KM</label>
+                                    <input type="number" class="form-control previous_km @error("vehicles.$vid.previous_km") is-invalid @enderror"
+                                        name="vehicles[{{ $vid }}][previous_km]" value="{{ old("vehicles.$vid.previous_km", $value['previous_km']) }}"
+                                        readonly>
+                                    @error("vehicles.$vid.previous_km")
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                {{-- Current KM --}}
+                                <div class="col-md-2">
+                                    <label>Current KM</label>
+                                    <input type="number" class="form-control current_km @error("vehicles.$vid.current_km") is-invalid @enderror"
+                                        name="vehicles[{{ $vid }}][current_km]" min="0"
+                                        value="{{ old("vehicles.$vid.current_km") }}">
+                                    @error("vehicles.$vid.current_km")
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                {{-- Mileage --}}
+                                <div class="col-md-2">
+                                    <label>Mileage</label>
+                                    <input type="number" class="form-control mileage"
+                                        name="vehicles[{{ $vid }}][mileage]"
+                                        value="{{ old("vehicles.$vid.mileage") }}" readonly>
+                                </div>
+
                             </div>
-
-                            {{-- Vehicle No --}}
-                            <div class="col-md-2">
-                                <label>Vehicle No</label>
-                                <input type="text" class="form-control" value="{{ $value['vehicle_no'] }}" readonly>
-                            </div>
-
-                            {{-- Previous KM --}}
-                            <div class="col-md-2">
-                                <label>Previous KM</label>
-                                <input type="number" class="form-control previous_km @error("vehicles.$vid.previous_km") is-invalid @enderror"
-                                    name="vehicles[{{ $vid }}][previous_km]" value="{{ old("vehicles.$vid.previous_km", $value['previous_km']) }}"
-                                    readonly>
-                                @error("vehicles.$vid.previous_km")
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            {{-- Current KM --}}
-                            <div class="col-md-2">
-                                <label>Current KM</label>
-                                <input type="number" class="form-control current_km @error("vehicles.$vid.current_km") is-invalid @enderror"
-                                    name="vehicles[{{ $vid }}][current_km]" min="0"
-                                    value="{{ old("vehicles.$vid.current_km") }}">
-                                @error("vehicles.$vid.current_km")
-                                    <span class="text-danger">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            {{-- Mileage --}}
-                            <div class="col-md-2">
-                                <label>Mileage</label>
-                                <input type="number" class="form-control mileage"
-                                    name="vehicles[{{ $vid }}][mileage]"
-                                    value="{{ old("vehicles.$vid.mileage") }}" readonly>
-                            </div>
-
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
 
                     {{-- Buttons --}}
-                    <div class="row mt-3">
-                        <div class="col-md-12 text-right">
+                    <div class="daily-mileage-action-bar">
+                        <div class="text-right">
                             <button type="submit" class="btn btn-primary">Save</button>
                             <a href="{{ route('dailyMileages.index') }}" class="btn btn-warning">Cancel</a>
                         </div>
@@ -280,7 +294,7 @@
                             mileageMap[item.vehicle_id] = item;
                         });
 
-                        let $container = $('.kilometer').parent();
+                        let $container = $('#daily-mileage-rows');
                         let filledRows = [];
                         let unfilledRows = [];
 

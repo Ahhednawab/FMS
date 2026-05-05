@@ -34,4 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
+    'tracking_data' => [
+        'endpoint' => env('TRACKING_DATA_ENDPOINT', 'http://125.209.111.151/keapi/TrackingServices.asmx'),
+        'api_key' => env('TRACKING_DATA_API_KEY'),
+    ],
 ];

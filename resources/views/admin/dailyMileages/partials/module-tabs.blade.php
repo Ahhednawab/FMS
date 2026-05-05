@@ -8,8 +8,8 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('trackingData.index') }}"
-                    class="nav-link {{ request()->routeIs('trackingData.*') ? 'active' : '' }}">
+                <a href="{{ route('daily-mileage.index') }}"
+                    class="nav-link {{ request()->routeIs('trackingData.*') || request()->routeIs('daily-mileage.*') ? 'active' : '' }}">
                     Tracking Data
                 </a>
             </li>

@@ -249,6 +249,8 @@
                     <li
                         class="nav-item nav-item-submenu
           {{ request()->routeIs('dailyMileages.*') ||
+          request()->routeIs('daily-mileage.*') ||
+          request()->routeIs('trackingData.*') ||
           request()->routeIs('dailyMileageReports.*') ||
           request()->routeIs('dailyFuels.*') ||
           request()->routeIs('dailyFuelReports.*')
@@ -259,6 +261,8 @@
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                             style="{{ request()->routeIs('dailyMileages.*') ||
+                            request()->routeIs('daily-mileage.*') ||
+                            request()->routeIs('trackingData.*') ||
                             request()->routeIs('dailyMileageReports.*') ||
                             request()->routeIs('dailyFuels.*') ||
                             request()->routeIs('dailyFuelReports.*')
@@ -269,6 +273,9 @@
                                 <li class="nav-item"><a href="{{ route('dailyMileages.index') }}"
                                         class="nav-link {{ request()->routeIs('dailyMileages.*') ? 'active' : '' }}">Daily
                                         Mileage</a></li>
+                                <li class="nav-item"><a href="{{ route('daily-mileage.index') }}"
+                                        class="nav-link {{ request()->routeIs('trackingData.*') || request()->routeIs('daily-mileage.*') ? 'active' : '' }}">Tracking
+                                        Data</a></li>
                             @endif
                             @if (auth()->user()->hasPermission('daily_mileage_reports'))
                                 <li class="nav-item"><a href="{{ route('dailyMileageReports.index') }}"
