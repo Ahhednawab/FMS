@@ -161,6 +161,23 @@
                                         @endif
                                     </div>
                                 </div>
+                                <div class="col-md-3 pool-driver-station-group" style="display:none;">
+                                    <div class="form-group">
+                                        <strong>Station</strong>
+                                        <select class="custom-select" name="station_id" id="station_id">
+                                            <option value="">Select Station</option>
+                                            @foreach ($stations as $key => $value)
+                                                <option value="{{ $key }}"
+                                                    {{ old('station_id', $driver->station_id ?? '') == $key ? 'selected' : '' }}>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if ($errors->has('station_id'))
+                                            <label class="text-danger">{{ $errors->first('station_id') }}</label>
+                                        @endif
+                                    </div>
+                                </div>
                                 <!-- Marital Status -->
                                 <div class="col-md-3">
                                     <div class="form-group">
@@ -525,10 +542,13 @@
             function toggleRegularDriverFields() {
                 const isPoolDriver = $('#driver_type').val() === 'pool';
                 $('.regular-driver-only').closest('.col-md-3').toggle(!isPoolDriver);
+                $('.pool-driver-station-group').toggle(isPoolDriver);
 
                 if (isPoolDriver) {
                     $('#vehicle_id').val('').trigger('change');
                     $('#shift_timing_id').val('');
+                } else {
+                    $('#station_id').val('');
                 }
             }
 

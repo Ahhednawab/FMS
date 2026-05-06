@@ -9,6 +9,7 @@ use App\Models\DriverStatus;
 use App\Models\Vehicle;
 use App\Models\MaritalStatus;
 use App\Models\LicenseCategory;
+use App\Models\Station;
 use App\Models\ShiftTimings;
 use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
@@ -91,9 +92,10 @@ class DriverController extends Controller
             'regular' => 'Regular Driver',
             'pool' => 'Pool Driver',
         ];
+        $stations = Station::where('is_active', 1)->orderBy('area')->pluck('area', 'id');
         $draftInfo = $this->getDraftDataForView($request, 'drivers');
 
-        return view('admin.drivers.create', compact('serial_no', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes') + $draftInfo);
+        return view('admin.drivers.create', compact('serial_no', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes', 'stations') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -139,6 +141,7 @@ class DriverController extends Controller
                 'account_no' =>  'nullable',
                 'driver_status_id' =>  'nullable',
                 'driver_type' => 'required|in:regular,pool',
+                'station_id' => 'nullable|exists:stations,id',
                 'marital_status_id' =>  'nullable',
                 'dob' =>  'nullable|date',
                 // 'vehicle_id' =>  'nullable|unique:drivers,vehicle_id',
@@ -214,6 +217,9 @@ class DriverController extends Controller
         // Add custom validation for shift timing conflict
         $validator->after(function ($validator) use ($request) {
             if ($request->driver_type === 'pool') {
+                if (! $request->filled('station_id')) {
+                    $validator->errors()->add('station_id', 'Station is required for pool drivers.');
+                }
                 return;
             }
 
@@ -254,6 +260,7 @@ class DriverController extends Controller
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
+        $driver->station_id             =   $request->driver_type === 'pool' ? $request->station_id : null;
         $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : $request->vehicle_id;
         $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
@@ -467,7 +474,8 @@ class DriverController extends Controller
             'regular' => 'Regular Driver',
             'pool' => 'Pool Driver',
         ];
-        return view('admin.drivers.edit', compact('driver', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes'));
+        $stations = Station::where('is_active', 1)->orderBy('area')->pluck('area', 'id');
+        return view('admin.drivers.edit', compact('driver', 'driver_status', 'marital_status', 'licence_category', 'status', 'vehicles', 'shift_timings', 'driverTypes', 'stations'));
     }
 
     public function update(Request $request, Driver $driver)
@@ -481,6 +489,7 @@ class DriverController extends Controller
             'account_no' =>  'nullable',
             'driver_status_id' =>  'nullable',
             'driver_type' => 'required|in:regular,pool',
+            'station_id' => 'nullable|exists:stations,id',
             'marital_status_id' =>  'nullable',
             'dob' =>  'nullable|date',
             // 'vehicle_id' =>  'required',
@@ -574,6 +583,9 @@ class DriverController extends Controller
         // Add custom validation for shift timing conflict (excluding current driver)
         $validator->after(function ($validator) use ($request, $driver) {
             if ($request->driver_type === 'pool') {
+                if (! $request->filled('station_id')) {
+                    $validator->errors()->add('station_id', 'Station is required for pool drivers.');
+                }
                 return;
             }
 
@@ -613,6 +625,7 @@ class DriverController extends Controller
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
+        $driver->station_id             =   $request->driver_type === 'pool' ? $request->station_id : null;
         $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->vehicle_id : null);
         $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->shift_timing_id : null);
         $driver->cnic_no                =   $request->cnic_no;

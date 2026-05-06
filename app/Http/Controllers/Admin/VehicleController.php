@@ -75,7 +75,7 @@ class VehicleController extends Controller
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
         $regularDrivers = $this->getAssignableDrivers('regular');
-        $poolDrivers = $this->getAssignableDrivers('pool');
+        $poolDrivers = $this->getAssignableDrivers('pool', true);
 
         $status = [
             '1' => 'Yes',
@@ -216,6 +216,16 @@ class VehicleController extends Controller
                 $poolDriver = Driver::find($poolDriverId);
                 if (! $poolDriver || $poolDriver->driver_type !== 'pool') {
                     $validator->errors()->add('pool_driver_ids', 'Pool drivers must be selected from pool driver records only.');
+                    break;
+                }
+
+                if (! $request->filled('station_id')) {
+                    $validator->errors()->add('station_id', 'Station is required before assigning pool drivers.');
+                    break;
+                }
+
+                if ((int) $poolDriver->station_id !== (int) $request->station_id) {
+                    $validator->errors()->add('pool_driver_ids', 'Pool drivers must belong to the selected station.');
                     break;
                 }
             }
@@ -427,7 +437,7 @@ class VehicleController extends Controller
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
         $regularDrivers = $this->getAssignableDrivers('regular');
-        $poolDrivers = $this->getAssignableDrivers('pool');
+        $poolDrivers = $this->getAssignableDrivers('pool', true);
 
         $status = [
             '1' => 'Yes',
@@ -539,6 +549,16 @@ class VehicleController extends Controller
                 $poolDriver = Driver::find($poolDriverId);
                 if (! $poolDriver || $poolDriver->driver_type !== 'pool') {
                     $validator->errors()->add('pool_driver_ids', 'Pool drivers must be selected from pool driver records only.');
+                    break;
+                }
+
+                if (! $request->filled('station_id')) {
+                    $validator->errors()->add('station_id', 'Station is required before assigning pool drivers.');
+                    break;
+                }
+
+                if ((int) $poolDriver->station_id !== (int) $request->station_id) {
+                    $validator->errors()->add('pool_driver_ids', 'Pool drivers must belong to the selected station.');
                     break;
                 }
             }
@@ -691,19 +711,29 @@ class VehicleController extends Controller
         ]);
     }
 
-    private function getAssignableDrivers(string $driverType)
+    private function getAssignableDrivers(string $driverType, bool $includeStation = false)
     {
         return Driver::where('is_active', 1)
             ->where('driver_type', $driverType)
             ->orderBy('full_name')
-            ->get(['id', 'full_name', 'vehicle_id', 'driver_type'])
-            ->mapWithKeys(function (Driver $driver) {
+            ->get(['id', 'full_name', 'vehicle_id', 'driver_type', 'station_id'])
+            ->when($includeStation, function ($drivers) {
+                return $drivers->map(function (Driver $driver) {
+                    return [
+                        'id' => $driver->id,
+                        'name' => $driver->full_name,
+                        'station_id' => $driver->station_id,
+                    ];
+                });
+            }, function ($drivers) {
+                return $drivers->mapWithKeys(function (Driver $driver) {
                 $label = $driver->full_name;
                 if ($driver->vehicle_id && $driver->driver_type === 'regular') {
                     $label .= ' (Assigned)';
                 }
 
                 return [$driver->id => $label];
+                });
             });
     }
 }

@@ -353,11 +353,11 @@
                                 @php
                                     $selectedPoolDrivers = $draftData['pool_driver_ids'] ?? old('pool_driver_ids', []);
                                 @endphp
-                                <select name="pool_driver_ids[]" class="form-control" multiple size="4">
-                                    @foreach ($poolDrivers as $id => $name)
-                                        <option value="{{ $id }}"
-                                            {{ in_array((string) $id, array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
-                                            {{ $name }}
+                                <select name="pool_driver_ids[]" id="pool_driver_ids" class="form-control" multiple size="4">
+                                    @foreach ($poolDrivers as $driver)
+                                        <option value="{{ $driver['id'] }}" data-station="{{ $driver['station_id'] }}"
+                                            {{ in_array((string) $driver['id'], array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
+                                            {{ $driver['name'] }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -1089,6 +1089,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const stationSelect = document.getElementById('station_id');
             const ibcCenterSelect = document.getElementById('ibc_center_id');
+            const poolDriverSelect = document.getElementById('pool_driver_ids');
 
             function filterIBCCenters() {
                 const selectedStation = stationSelect.value;
@@ -1112,8 +1113,27 @@
                 }
             }
 
-            stationSelect.addEventListener('change', filterIBCCenters);
+            function filterPoolDrivers() {
+                if (!poolDriverSelect) return;
+
+                const selectedStation = stationSelect.value;
+
+                Array.from(poolDriverSelect.options).forEach(option => {
+                    const matches = !selectedStation || option.getAttribute('data-station') === selectedStation;
+                    option.hidden = !matches;
+
+                    if (!matches) {
+                        option.selected = false;
+                    }
+                });
+            }
+
+            stationSelect.addEventListener('change', function() {
+                filterIBCCenters();
+                filterPoolDrivers();
+            });
             filterIBCCenters(); // Initial filter (e.g. in edit mode)
+            filterPoolDrivers();
         });
     </script>
 

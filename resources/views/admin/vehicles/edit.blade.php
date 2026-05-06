@@ -240,11 +240,11 @@
                                         @php
                                             $selectedPoolDrivers = old('pool_driver_ids', $vehicle->poolDrivers->pluck('id')->all());
                                         @endphp
-                                        <select name="pool_driver_ids[]" class="form-control" multiple size="4">
-                                            @foreach ($poolDrivers as $id => $name)
-                                                <option value="{{ $id }}"
-                                                    {{ in_array((string) $id, array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
-                                                    {{ $name }}
+                                        <select name="pool_driver_ids[]" id="pool_driver_ids" class="form-control" multiple size="4">
+                                            @foreach ($poolDrivers as $driver)
+                                                <option value="{{ $driver['id'] }}" data-station="{{ $driver['station_id'] }}"
+                                                    {{ in_array((string) $driver['id'], array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
+                                                    {{ $driver['name'] }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -687,5 +687,57 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stationSelect = document.getElementById('station_id');
+            const ibcCenterSelect = document.getElementById('ibc_center_id');
+            const poolDriverSelect = document.getElementById('pool_driver_ids');
+
+            function filterIBCCenters() {
+                const selectedStation = stationSelect.value;
+                const currentIBC = ibcCenterSelect.value;
+                let matchFound = false;
+
+                Array.from(ibcCenterSelect.options).forEach(option => {
+                    if (!option.value) return;
+
+                    const matches = option.getAttribute('data-station') === selectedStation;
+                    option.style.display = matches ? 'block' : 'none';
+
+                    if (matches && option.value === currentIBC) {
+                        matchFound = true;
+                    }
+                });
+
+                if (!matchFound) {
+                    ibcCenterSelect.value = '';
+                }
+            }
+
+            function filterPoolDrivers() {
+                if (!poolDriverSelect) return;
+
+                const selectedStation = stationSelect.value;
+
+                Array.from(poolDriverSelect.options).forEach(option => {
+                    const matches = !selectedStation || option.getAttribute('data-station') === selectedStation;
+                    option.hidden = !matches;
+
+                    if (!matches) {
+                        option.selected = false;
+                    }
+                });
+            }
+
+            stationSelect.addEventListener('change', function() {
+                filterIBCCenters();
+                filterPoolDrivers();
+            });
+
+            filterIBCCenters();
+            filterPoolDrivers();
+        });
+    </script>
 
 @endsection

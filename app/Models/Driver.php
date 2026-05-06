@@ -36,6 +36,7 @@ class Driver extends Model
         'marital_status_id',
         'dob',
         'vehicle_id',
+        'station_id',
         'shift_timing_id',
         'is_available',
         'cnic_no',
@@ -78,6 +79,11 @@ class Driver extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
+
+    public function station()
+    {
+        return $this->belongsTo(Station::class, 'station_id');
     }
 
     public function primaryVehicles()
