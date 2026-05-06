@@ -184,6 +184,16 @@
                                         @endif
                                     </div>
                                 </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Parking KM</strong>
+                                        <input type="number" step="0.01" min="0" class="form-control"
+                                            name="parking_km" value="{{ old('parking_km', $vehicle->parking_km ?? '') }}">
+                                        @if ($errors->has('parking_km'))
+                                            <label class="text-danger">{{ $errors->first('parking_km') }}</label>
+                                        @endif
+                                    </div>
+                                </div>
 
                                 <!-- Shift Hours -->
                                 <div class="col-md-2">
@@ -448,7 +458,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Inspection Date</strong>
-                                        <input type="date" class="form-control" name="inspection_date"
+                                        <input type="date" class="form-control" id="inspection_date" name="inspection_date"
                                             value="{{ old('inspection_date', $vehicle->inspection_date ?? '') }}">
                                         @if ($errors->has('inspection_date'))
                                             <label class="text-danger">{{ $errors->first('inspection_date') }}</label>
@@ -461,7 +471,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Next Inspection Date</strong>
-                                        <input type="date" class="form-control" name="next_inspection_date"
+                                        <input type="date" class="form-control" id="next_inspection_date" name="next_inspection_date" readonly
                                             value="{{ old('next_inspection_date', $vehicle->next_inspection_date ?? '') }}">
                                         @if ($errors->has('next_inspection_date'))
                                             <label
@@ -488,7 +498,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Fitness Date</strong>
-                                        <input type="date" class="form-control" name="fitness_date"
+                                        <input type="date" class="form-control" id="fitness_date" name="fitness_date"
                                             value="{{ old('fitness_date', $vehicle->fitness_date ?? '') }}">
                                         @if ($errors->has('fitness_date'))
                                             <label class="text-danger">{{ $errors->first('fitness_date') }}</label>
@@ -499,8 +509,8 @@
                                 <!-- Next Fitness Date -->
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Next fitness date</strong>
-                                        <input type="date" class="form-control" name="next_fitness_date"
+                                        <strong>Fitness Expiry Date</strong>
+                                        <input type="date" class="form-control" id="next_fitness_date" name="next_fitness_date" readonly
                                             value="{{ old('next_fitness_date', $vehicle->next_fitness_date ?? '') }}">
                                         @if ($errors->has('next_fitness_date'))
                                             <label class="text-danger">{{ $errors->first('next_fitness_date') }}</label>
@@ -693,6 +703,43 @@
             const stationSelect = document.getElementById('station_id');
             const ibcCenterSelect = document.getElementById('ibc_center_id');
             const poolDriverSelect = document.getElementById('pool_driver_ids');
+            const inspectionDateInput = document.getElementById('inspection_date');
+            const nextInspectionDateInput = document.getElementById('next_inspection_date');
+            const fitnessDateInput = document.getElementById('fitness_date');
+            const nextFitnessDateInput = document.getElementById('next_fitness_date');
+            const vehicleConditionSelect = document.querySelector('select[name="is_new_vehicle"]');
+
+            function formatDate(date) {
+                if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function calculateNextInspectionDate() {
+                if (!inspectionDateInput || !nextInspectionDateInput) return;
+                if (!inspectionDateInput.value) {
+                    nextInspectionDateInput.value = '';
+                    return;
+                }
+
+                const inspectionDate = new Date(inspectionDateInput.value);
+                inspectionDate.setMonth(inspectionDate.getMonth() + 8);
+                nextInspectionDateInput.value = formatDate(inspectionDate);
+            }
+
+            function calculateFitnessExpiryDate() {
+                if (!fitnessDateInput || !nextFitnessDateInput || !vehicleConditionSelect) return;
+                if (!fitnessDateInput.value) {
+                    nextFitnessDateInput.value = '';
+                    return;
+                }
+
+                const fitnessDate = new Date(fitnessDateInput.value);
+                fitnessDate.setMonth(fitnessDate.getMonth() + (vehicleConditionSelect.value === '1' ? 6 : 12));
+                nextFitnessDateInput.value = formatDate(fitnessDate);
+            }
 
             function filterIBCCenters() {
                 const selectedStation = stationSelect.value;
@@ -734,9 +781,14 @@
                 filterIBCCenters();
                 filterPoolDrivers();
             });
+            inspectionDateInput?.addEventListener('change', calculateNextInspectionDate);
+            fitnessDateInput?.addEventListener('change', calculateFitnessExpiryDate);
+            vehicleConditionSelect?.addEventListener('change', calculateFitnessExpiryDate);
 
             filterIBCCenters();
             filterPoolDrivers();
+            calculateNextInspectionDate();
+            calculateFitnessExpiryDate();
         });
     </script>
 

@@ -271,8 +271,19 @@
                                 @enderror
                             </div>
                         </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <strong>Parking KM</strong>
+                                <input type="number" step="0.01" min="0" name="parking_km"
+                                    class="form-control @error('parking_km') is-invalid @enderror"
+                                    value="{{ $draftData['parking_km'] ?? old('parking_km') }}">
+                                @error('parking_km')
+                                    <label class="text-danger">{{ $message }}</label>
+                                @enderror
+                            </div>
+                        </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-2 mb-3">
                             <strong>Insurance Policy No<span style="color:red">*</span></strong>
                             <input type="text" name="insurance_policy_no" class="form-control"
                                 value="{{ old('insurance_policy_no', $model->insurance_policy_no ?? '') }}">
@@ -664,10 +675,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Inspection Date<span style="color:red">*</span></strong>
-                                <input type="date" name="inspection_date"
+                                <input type="date" id="inspection_date" name="inspection_date"
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['inspection_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('inspection_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['inspection_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('inspection_date') is-invalid @enderror"
                                     value="{{ $draftData['inspection_date'] ?? old('inspection_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -687,10 +698,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Next Inspection Date<span style="color:red">*</span></strong>
-                                <input type="date" name="next_inspection_date"
+                                <input type="date" id="next_inspection_date" name="next_inspection_date" readonly
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('next_inspection_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('next_inspection_date') is-invalid @enderror"
                                     value="{{ $draftData['next_inspection_date'] ?? old('next_inspection_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -733,10 +744,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Fitness Date<span style="color:red">*</span></strong>
-                                <input type="date" name="fitness_date"
+                                <input type="date" id="fitness_date" name="fitness_date"
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['fitness_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('fitness_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['fitness_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('fitness_date') is-invalid @enderror"
                                     value="{{ $draftData['fitness_date'] ?? old('fitness_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -754,11 +765,11 @@
                         <!-- Next Fitness Date -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Next fitness date<span style="color:red">*</span></strong>
-                                <input type="date" name="next_fitness_date"
+                                <strong>Fitness Expiry Date<span style="color:red">*</span></strong>
+                                <input type="date" id="next_fitness_date" name="next_fitness_date" readonly
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('next_fitness_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('next_fitness_date') is-invalid @enderror"
                                     value="{{ $draftData['next_fitness_date'] ?? old('next_fitness_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -860,10 +871,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Insurance Date<span style="color:red">*</span></strong>
-                                <input type="date" name="insurance_date"
+                                <input type="date" id="insurance_date" name="insurance_date"
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['insurance_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('insurance_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['insurance_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('insurance_date') is-invalid @enderror"
                                     value="{{ $draftData['insurance_date'] ?? old('insurance_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -882,10 +893,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Insurance Expiry Date<span style="color:red">*</span></strong>
-                                <input type="date" name="insurance_expiry_date"
+                                <input type="date" id="insurance_expiry_date" name="insurance_expiry_date" readonly
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('insurance_expiry_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('insurance_expiry_date') is-invalid @enderror"
                                     value="{{ $draftData['insurance_expiry_date'] ?? old('insurance_expiry_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -930,10 +941,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Route Permit Date<span style="color:red">*</span></strong>
-                                <input type="date" name="route_permit_date"
+                                <input type="date" id="route_permit_date" name="route_permit_date"
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['route_permit_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('route_permit_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['route_permit_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('route_permit_date') is-invalid @enderror"
                                     value="{{ $draftData['route_permit_date'] ?? old('route_permit_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -952,10 +963,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Route Permit Expiry Date<span style="color:red">*</span></strong>
-                                <input type="date" name="route_permit_expiry_date"
+                                <input type="date" id="route_permit_expiry_date" name="route_permit_expiry_date" readonly
                                     class="form-control
-               {{ request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? '') ? 'is-invalid' : '' }}
-               @error('route_permit_expiry_date') is-invalid @enderror"
+                {{ request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? '') ? 'is-invalid' : '' }}
+                @error('route_permit_expiry_date') is-invalid @enderror"
                                     value="{{ $draftData['route_permit_expiry_date'] ?? old('route_permit_expiry_date') }}">
 
                                 {{-- Draft Required Message --}}
@@ -1090,6 +1101,71 @@
             const stationSelect = document.getElementById('station_id');
             const ibcCenterSelect = document.getElementById('ibc_center_id');
             const poolDriverSelect = document.getElementById('pool_driver_ids');
+            const inspectionDateInput = document.getElementById('inspection_date');
+            const nextInspectionDateInput = document.getElementById('next_inspection_date');
+            const fitnessDateInput = document.getElementById('fitness_date');
+            const nextFitnessDateInput = document.getElementById('next_fitness_date');
+            const insuranceDateInput = document.getElementById('insurance_date');
+            const insuranceExpiryDateInput = document.getElementById('insurance_expiry_date');
+            const routePermitDateInput = document.getElementById('route_permit_date');
+            const routePermitExpiryDateInput = document.getElementById('route_permit_expiry_date');
+            const vehicleConditionSelect = document.querySelector('select[name="is_new_vehicle"]');
+
+            function formatDate(date) {
+                if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function calculateNextInspectionDate() {
+                if (!inspectionDateInput || !nextInspectionDateInput) return;
+                if (!inspectionDateInput.value) {
+                    nextInspectionDateInput.value = '';
+                    return;
+                }
+
+                const inspectionDate = new Date(inspectionDateInput.value);
+                inspectionDate.setMonth(inspectionDate.getMonth() + 8);
+                nextInspectionDateInput.value = formatDate(inspectionDate);
+            }
+
+            function calculateFitnessExpiryDate() {
+                if (!fitnessDateInput || !nextFitnessDateInput || !vehicleConditionSelect) return;
+                if (!fitnessDateInput.value) {
+                    nextFitnessDateInput.value = '';
+                    return;
+                }
+
+                const fitnessDate = new Date(fitnessDateInput.value);
+                fitnessDate.setMonth(fitnessDate.getMonth() + (vehicleConditionSelect.value === '1' ? 6 : 12));
+                nextFitnessDateInput.value = formatDate(fitnessDate);
+            }
+
+            function calculateInsuranceExpiryDate() {
+                if (!insuranceDateInput || !insuranceExpiryDateInput) return;
+                if (!insuranceDateInput.value) {
+                    insuranceExpiryDateInput.value = '';
+                    return;
+                }
+
+                const insuranceDate = new Date(insuranceDateInput.value);
+                insuranceDate.setFullYear(insuranceDate.getFullYear() + 1);
+                insuranceExpiryDateInput.value = formatDate(insuranceDate);
+            }
+
+            function calculateRoutePermitExpiryDate() {
+                if (!routePermitDateInput || !routePermitExpiryDateInput) return;
+                if (!routePermitDateInput.value) {
+                    routePermitExpiryDateInput.value = '';
+                    return;
+                }
+
+                const routePermitDate = new Date(routePermitDateInput.value);
+                routePermitDate.setFullYear(routePermitDate.getFullYear() + 3);
+                routePermitExpiryDateInput.value = formatDate(routePermitDate);
+            }
 
             function filterIBCCenters() {
                 const selectedStation = stationSelect.value;
@@ -1132,8 +1208,17 @@
                 filterIBCCenters();
                 filterPoolDrivers();
             });
+            inspectionDateInput?.addEventListener('change', calculateNextInspectionDate);
+            fitnessDateInput?.addEventListener('change', calculateFitnessExpiryDate);
+            insuranceDateInput?.addEventListener('change', calculateInsuranceExpiryDate);
+            routePermitDateInput?.addEventListener('change', calculateRoutePermitExpiryDate);
+            vehicleConditionSelect?.addEventListener('change', calculateFitnessExpiryDate);
             filterIBCCenters(); // Initial filter (e.g. in edit mode)
             filterPoolDrivers();
+            calculateNextInspectionDate();
+            calculateFitnessExpiryDate();
+            calculateInsuranceExpiryDate();
+            calculateRoutePermitExpiryDate();
         });
     </script>
 

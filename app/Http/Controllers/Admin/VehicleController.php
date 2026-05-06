@@ -141,6 +141,7 @@ class VehicleController extends Controller
             'induction_date' => 'required|date',
             'pso_card' => 'required',
             'akpl' => 'required',
+            'parking_km' => 'nullable|numeric|min:0',
             ' insurance_policy_no' => 'nullable|string',
             'shift_timing_id' => 'required|exists:shift_timing,id',
             'registration_file' => ($draftAttached['registration_file'] ? 'nullable' : 'required').'|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
@@ -268,6 +269,7 @@ class VehicleController extends Controller
         $vehicle->induction_date = $request->induction_date;
         $vehicle->pso_card = $request->pso_card;
         $vehicle->akpl = $request->akpl;
+        $vehicle->parking_km = $request->parking_km;
         $vehicle->insurance_policy_no = $request->insurance_policy_no;
         $vehicle->shift_timing_id = $request->shift_timing_id;
         $vehicle->fitness_date = $request->fitness_date;
@@ -481,6 +483,7 @@ class VehicleController extends Controller
                 'induction_date' => 'required|date',
                 'pso_card' => 'required',
                 'akpl' => 'required',
+                'parking_km' => 'nullable|numeric|min:0',
                 'shift_timing_id' => 'required|exists:shift_timing,id',
                 'registration_file' => 'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'fitness_date' => 'required|date',
@@ -599,6 +602,7 @@ class VehicleController extends Controller
         $vehicle->induction_date = $request->induction_date;
         $vehicle->pso_card = $request->pso_card;
         $vehicle->akpl = $request->akpl;
+        $vehicle->parking_km = $request->parking_km;
         $vehicle->fitness_date = $request->fitness_date;
         $vehicle->next_fitness_date = $request->next_fitness_date;
         $vehicle->insurance_policy_no = $request->insurance_policy_no;
@@ -650,6 +654,15 @@ class VehicleController extends Controller
             $authority->move($uploadPath, $taxFileName);
             $vehicle->tax_file = $taxFileName;
         }
+
+        $vehicle->next_inspection_date = Carbon::parse($request->inspection_date)->addMonths(8);
+
+        if ($request->boolean('is_new_vehicle')) {
+            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addMonths(6);
+        } else {
+            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addYear();
+        }
+
         $vehicle->save();
 
         $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
