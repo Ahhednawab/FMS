@@ -226,15 +226,21 @@
                                     </select>
                                 </div>
 
+                                @php
+                                    $secondaryAssignedDriver = $vehicle->drivers->firstWhere('id', '!=', $vehicle->primary_driver_id);
+                                    $primaryAssignedDriver = $vehicle->drivers->firstWhere('id', $vehicle->primary_driver_id);
+                                @endphp
+
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Primary Driver<span style="color:red">*</span></strong>
-                                        <select name="primary_driver_id" class="custom-select @error('primary_driver_id') is-invalid @enderror">
+                                        <strong>Driver 1<span style="color:red">*</span></strong>
+                                        <select name="primary_driver_id" id="primary_driver_id"
+                                            class="custom-select @error('primary_driver_id') is-invalid @enderror">
                                             <option value="">-- Select Driver --</option>
-                                            @foreach ($regularDrivers as $id => $name)
-                                                <option value="{{ $id }}"
-                                                    {{ (int) old('primary_driver_id', $vehicle->primary_driver_id) === (int) $id ? 'selected' : '' }}>
-                                                    {{ $name }}
+                                            @foreach ($regularDrivers as $driver)
+                                                <option value="{{ $driver['id'] }}"
+                                                    {{ (int) old('primary_driver_id', $vehicle->primary_driver_id) === (int) $driver['id'] ? 'selected' : '' }}>
+                                                    {{ $driver['name'] }}{{ $driver['vehicle_id'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned)' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -242,6 +248,69 @@
                                             <label class="text-danger">{{ $message }}</label>
                                         @enderror
                                     </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <strong>Shift Timing 1<span style="color:red">*</span></strong>
+                                        <select name="primary_shift_timing_id" id="primary_shift_timing_id"
+                                            class="form-control @error('primary_shift_timing_id') is-invalid @enderror">
+                                            <option value="">Select Shift Timing</option>
+                                            @foreach ($shift_timings as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ (int) old('primary_shift_timing_id', optional($primaryAssignedDriver)->shift_timing_id) === (int) $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('primary_shift_timing_id')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 secondary-driver-block">
+                                    <div class="form-group">
+                                        <strong>Driver 2</strong>
+                                        <select name="secondary_driver_id" id="secondary_driver_id"
+                                            class="custom-select @error('secondary_driver_id') is-invalid @enderror">
+                                            <option value="">-- Select Driver --</option>
+                                            @foreach ($regularDrivers as $driver)
+                                                <option value="{{ $driver['id'] }}"
+                                                    {{ (int) old('secondary_driver_id', optional($secondaryAssignedDriver)->id) === (int) $driver['id'] ? 'selected' : '' }}>
+                                                    {{ $driver['name'] }}{{ $driver['vehicle_id'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned)' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('secondary_driver_id')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 secondary-driver-block">
+                                    <div class="form-group">
+                                        <strong>Shift Timing 2</strong>
+                                        <select name="secondary_shift_timing_id" id="secondary_shift_timing_id"
+                                            class="form-control @error('secondary_shift_timing_id') is-invalid @enderror">
+                                            <option value="">Select Shift Timing</option>
+                                            @foreach ($shift_timings as $id => $name)
+                                                <option value="{{ $id }}"
+                                                    {{ (int) old('secondary_shift_timing_id', optional($secondaryAssignedDriver)->shift_timing_id) === (int) $id ? 'selected' : '' }}>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('secondary_shift_timing_id')
+                                            <label class="text-danger">{{ $message }}</label>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <small id="assigned-driver-hint" class="form-text text-muted">
+                                        Only 1 driver allowed for 12-hour vehicles.
+                                    </small>
                                 </div>
 
                                 <div class="col-md-3">
@@ -703,10 +772,19 @@
             const stationSelect = document.getElementById('station_id');
             const ibcCenterSelect = document.getElementById('ibc_center_id');
             const poolDriverSelect = document.getElementById('pool_driver_ids');
+            const shiftHourSelect = document.querySelector('select[name="shift_hour_id"]');
+            const assignedDriverHint = document.getElementById('assigned-driver-hint');
+            const secondaryDriverBlocks = document.querySelectorAll('.secondary-driver-block');
+            const secondaryDriverSelect = document.getElementById('secondary_driver_id');
+            const secondaryShiftTimingSelect = document.getElementById('secondary_shift_timing_id');
             const inspectionDateInput = document.getElementById('inspection_date');
             const nextInspectionDateInput = document.getElementById('next_inspection_date');
             const fitnessDateInput = document.getElementById('fitness_date');
             const nextFitnessDateInput = document.getElementById('next_fitness_date');
+            const insuranceDateInput = document.getElementById('insurance_date');
+            const insuranceExpiryDateInput = document.getElementById('insurance_expiry_date');
+            const routePermitDateInput = document.getElementById('route_permit_date');
+            const routePermitExpiryDateInput = document.getElementById('route_permit_expiry_date');
             const vehicleConditionSelect = document.querySelector('select[name="is_new_vehicle"]');
 
             function formatDate(date) {
@@ -739,6 +817,30 @@
                 const fitnessDate = new Date(fitnessDateInput.value);
                 fitnessDate.setMonth(fitnessDate.getMonth() + (vehicleConditionSelect.value === '1' ? 6 : 12));
                 nextFitnessDateInput.value = formatDate(fitnessDate);
+            }
+
+            function calculateInsuranceExpiryDate() {
+                if (!insuranceDateInput || !insuranceExpiryDateInput) return;
+                if (!insuranceDateInput.value) {
+                    insuranceExpiryDateInput.value = '';
+                    return;
+                }
+
+                const insuranceDate = new Date(insuranceDateInput.value);
+                insuranceDate.setFullYear(insuranceDate.getFullYear() + 1);
+                insuranceExpiryDateInput.value = formatDate(insuranceDate);
+            }
+
+            function calculateRoutePermitExpiryDate() {
+                if (!routePermitDateInput || !routePermitExpiryDateInput) return;
+                if (!routePermitDateInput.value) {
+                    routePermitExpiryDateInput.value = '';
+                    return;
+                }
+
+                const routePermitDate = new Date(routePermitDateInput.value);
+                routePermitDate.setFullYear(routePermitDate.getFullYear() + 3);
+                routePermitExpiryDateInput.value = formatDate(routePermitDate);
             }
 
             function filterIBCCenters() {
@@ -777,18 +879,53 @@
                 });
             }
 
+            function isTwentyFourHourShift() {
+                if (!shiftHourSelect) return false;
+                const selectedText = shiftHourSelect.options[shiftHourSelect.selectedIndex]?.text?.toLowerCase() || '';
+                return selectedText.includes('24');
+            }
+
+            function toggleSecondaryDriverFields() {
+                const showSecondaryDriver = isTwentyFourHourShift();
+                if (assignedDriverHint) {
+                    assignedDriverHint.textContent = showSecondaryDriver
+                        ? 'Maximum 2 drivers allowed for 24-hour vehicles.'
+                        : 'Only 1 driver allowed for 12-hour vehicles.';
+                }
+
+                secondaryDriverBlocks.forEach(block => {
+                    block.style.display = showSecondaryDriver ? '' : 'none';
+                });
+
+                if (!showSecondaryDriver) {
+                    if (secondaryDriverSelect) {
+                        secondaryDriverSelect.value = '';
+                    }
+
+                    if (secondaryShiftTimingSelect) {
+                        secondaryShiftTimingSelect.value = '';
+                    }
+                }
+            }
+
             stationSelect.addEventListener('change', function() {
                 filterIBCCenters();
                 filterPoolDrivers();
             });
+            shiftHourSelect?.addEventListener('change', toggleSecondaryDriverFields);
             inspectionDateInput?.addEventListener('change', calculateNextInspectionDate);
             fitnessDateInput?.addEventListener('change', calculateFitnessExpiryDate);
+            insuranceDateInput?.addEventListener('change', calculateInsuranceExpiryDate);
+            routePermitDateInput?.addEventListener('change', calculateRoutePermitExpiryDate);
             vehicleConditionSelect?.addEventListener('change', calculateFitnessExpiryDate);
 
             filterIBCCenters();
             filterPoolDrivers();
+            toggleSecondaryDriverFields();
             calculateNextInspectionDate();
             calculateFitnessExpiryDate();
+            calculateInsuranceExpiryDate();
+            calculateRoutePermitExpiryDate();
         });
     </script>
 

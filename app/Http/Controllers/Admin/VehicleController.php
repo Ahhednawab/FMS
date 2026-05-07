@@ -74,7 +74,7 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_hours = ShiftHours::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
-        $regularDrivers = $this->getAssignableDrivers('regular');
+        $regularDrivers = $this->getAssignableRegularDrivers();
         $poolDrivers = $this->getAssignableDrivers('pool', true);
 
         $status = [
@@ -123,8 +123,11 @@ class VehicleController extends Controller
             'ownership' => 'required',
             'pool_vehicle' => 'required|in:1,0',
             'primary_driver_id' => 'required|exists:drivers,id',
+            'primary_shift_timing_id' => 'required|exists:shift_timing,id',
+            'secondary_driver_id' => 'nullable|exists:drivers,id|different:primary_driver_id',
+            'secondary_shift_timing_id' => 'nullable|exists:shift_timing,id|different:primary_shift_timing_id',
             'pool_driver_ids' => 'nullable|array',
-            'pool_driver_ids.*' => 'exists:drivers,id|different:primary_driver_id',
+            'pool_driver_ids.*' => 'exists:drivers,id',
             'shift_hour_id' => 'required',
             'vehicle_type_id' => 'required',
             'cone' => 'nullable|numeric|min:0',
@@ -143,7 +146,7 @@ class VehicleController extends Controller
             'akpl' => 'required',
             'parking_km' => 'nullable|numeric|min:0',
             ' insurance_policy_no' => 'nullable|string',
-            'shift_timing_id' => 'required|exists:shift_timing,id',
+            'shift_timing_id' => 'nullable|exists:shift_timing,id',
             'registration_file' => ($draftAttached['registration_file'] ? 'nullable' : 'required').'|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
             'fitness_date' => 'required|date',
             'next_fitness_date' => 'required|date|after:fitness_date',
@@ -206,10 +209,37 @@ class VehicleController extends Controller
             ]
         );
         $validator->after(function ($validator) use ($request) {
-            if ($request->filled('primary_driver_id')) {
-                $primaryDriver = Driver::find($request->primary_driver_id);
-                if (! $primaryDriver || $primaryDriver->driver_type !== 'regular') {
-                    $validator->errors()->add('primary_driver_id', 'Primary driver must be a regular driver.');
+            $isTwentyFourHourVehicle = $this->isTwentyFourHourShift($request->input('shift_hour_id'));
+
+            $primaryDriverId = (int) $request->input('primary_driver_id');
+            $secondaryDriverId = (int) $request->input('secondary_driver_id');
+            $primaryShiftTimingId = (int) $request->input('primary_shift_timing_id');
+            $secondaryShiftTimingId = (int) $request->input('secondary_shift_timing_id');
+
+            if (! $isTwentyFourHourVehicle && ($secondaryDriverId || $secondaryShiftTimingId)) {
+                $validator->errors()->add('secondary_driver_id', 'Only 1 driver allowed for 12-hour vehicles.');
+            }
+
+            if ($isTwentyFourHourVehicle && ($secondaryDriverId xor $secondaryShiftTimingId)) {
+                $validator->errors()->add('secondary_driver_id', 'Driver 2 and Shift Timing 2 are both required together.');
+            }
+
+            if ($isTwentyFourHourVehicle && $primaryDriverId && $secondaryDriverId && $primaryShiftTimingId === $secondaryShiftTimingId) {
+                $validator->errors()->add('secondary_shift_timing_id', 'Each assigned driver must belong to a different shift timing.');
+            }
+
+            $assignedDriverIds = collect([$primaryDriverId, $secondaryDriverId])
+                ->filter()
+                ->unique()
+                ->values();
+
+            $assignedDrivers = Driver::whereIn('id', $assignedDriverIds)->get()->keyBy('id');
+
+            foreach ($assignedDriverIds as $assignedDriverId) {
+                $assignedDriver = $assignedDrivers->get($assignedDriverId);
+                if (! $assignedDriver || $assignedDriver->driver_type !== 'regular') {
+                    $validator->errors()->add('primary_driver_id', 'Assigned drivers must be selected from regular driver records only.');
+                    break;
                 }
             }
 
@@ -271,7 +301,7 @@ class VehicleController extends Controller
         $vehicle->akpl = $request->akpl;
         $vehicle->parking_km = $request->parking_km;
         $vehicle->insurance_policy_no = $request->insurance_policy_no;
-        $vehicle->shift_timing_id = $request->shift_timing_id;
+        $vehicle->shift_timing_id = $request->input('shift_timing_id') ?: $request->input('primary_shift_timing_id');
         $vehicle->fitness_date = $request->fitness_date;
         $vehicle->next_fitness_date = $request->next_fitness_date;
         $vehicle->insurance_policy_no = $request->insurance_policy_no;
@@ -407,10 +437,22 @@ class VehicleController extends Controller
         }
 
         $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $assignedDriverIds = collect([
+            (int) $request->input('primary_driver_id'),
+            (int) $request->input('secondary_driver_id'),
+        ])->filter()->unique()->values()->all();
+        $driverShiftAssignments = [
+            (int) $request->input('primary_driver_id') => (int) $request->input('primary_shift_timing_id'),
+        ];
+        if ($request->filled('secondary_driver_id')) {
+            $driverShiftAssignments[(int) $request->input('secondary_driver_id')] = (int) $request->input('secondary_shift_timing_id');
+        }
         $this->vehicleDriverAssignmentService->syncAssignments(
             $vehicle,
-            (int) $request->primary_driver_id,
-            $request->input('pool_driver_ids', [])
+            (int) $request->input('primary_driver_id'),
+            $request->input('pool_driver_ids', []),
+            $assignedDriverIds,
+            $driverShiftAssignments
         );
 
         // Delete draft if it exists
@@ -438,14 +480,14 @@ class VehicleController extends Controller
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
-        $regularDrivers = $this->getAssignableDrivers('regular');
+        $regularDrivers = $this->getAssignableRegularDrivers();
         $poolDrivers = $this->getAssignableDrivers('pool', true);
 
         $status = [
             '1' => 'Yes',
             '2' => 'No',
         ];
-        $vehicle->loadMissing(['poolDrivers']);
+        $vehicle->loadMissing(['poolDrivers', 'drivers']);
 
         return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers'));
     }
@@ -466,8 +508,11 @@ class VehicleController extends Controller
                 'ownership' => 'required',
                 'pool_vehicle' => 'required|in:1,0',
                 'primary_driver_id' => 'required|exists:drivers,id',
+                'primary_shift_timing_id' => 'required|exists:shift_timing,id',
+                'secondary_driver_id' => 'nullable|exists:drivers,id|different:primary_driver_id',
+                'secondary_shift_timing_id' => 'nullable|exists:shift_timing,id|different:primary_shift_timing_id',
                 'pool_driver_ids' => 'nullable|array',
-                'pool_driver_ids.*' => 'exists:drivers,id|different:primary_driver_id',
+                'pool_driver_ids.*' => 'exists:drivers,id',
                 'on_duty_status' => 'required',
                 'is_new_vehicle' => 'required|boolean',
                 'vehicle_type_id' => 'required',
@@ -484,7 +529,7 @@ class VehicleController extends Controller
                 'pso_card' => 'required',
                 'akpl' => 'required',
                 'parking_km' => 'nullable|numeric|min:0',
-                'shift_timing_id' => 'required|exists:shift_timing,id',
+                'shift_timing_id' => 'nullable|exists:shift_timing,id',
                 'registration_file' => 'nullable|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
                 'fitness_date' => 'required|date',
                 'next_fitness_date' => 'required|date|after:fitness_date',
@@ -541,10 +586,37 @@ class VehicleController extends Controller
             ]
         );
         $validator->after(function ($validator) use ($request) {
-            if ($request->filled('primary_driver_id')) {
-                $primaryDriver = Driver::find($request->primary_driver_id);
-                if (! $primaryDriver || $primaryDriver->driver_type !== 'regular') {
-                    $validator->errors()->add('primary_driver_id', 'Primary driver must be a regular driver.');
+            $isTwentyFourHourVehicle = $this->isTwentyFourHourShift($request->input('shift_hour_id'));
+
+            $primaryDriverId = (int) $request->input('primary_driver_id');
+            $secondaryDriverId = (int) $request->input('secondary_driver_id');
+            $primaryShiftTimingId = (int) $request->input('primary_shift_timing_id');
+            $secondaryShiftTimingId = (int) $request->input('secondary_shift_timing_id');
+
+            if (! $isTwentyFourHourVehicle && ($secondaryDriverId || $secondaryShiftTimingId)) {
+                $validator->errors()->add('secondary_driver_id', 'Only 1 driver allowed for 12-hour vehicles.');
+            }
+
+            if ($isTwentyFourHourVehicle && ($secondaryDriverId xor $secondaryShiftTimingId)) {
+                $validator->errors()->add('secondary_driver_id', 'Driver 2 and Shift Timing 2 are both required together.');
+            }
+
+            if ($isTwentyFourHourVehicle && $primaryDriverId && $secondaryDriverId && $primaryShiftTimingId === $secondaryShiftTimingId) {
+                $validator->errors()->add('secondary_shift_timing_id', 'Each assigned driver must belong to a different shift timing.');
+            }
+
+            $assignedDriverIds = collect([$primaryDriverId, $secondaryDriverId])
+                ->filter()
+                ->unique()
+                ->values();
+
+            $assignedDrivers = Driver::whereIn('id', $assignedDriverIds)->get()->keyBy('id');
+
+            foreach ($assignedDriverIds as $assignedDriverId) {
+                $assignedDriver = $assignedDrivers->get($assignedDriverId);
+                if (! $assignedDriver || $assignedDriver->driver_type !== 'regular') {
+                    $validator->errors()->add('primary_driver_id', 'Assigned drivers must be selected from regular driver records only.');
+                    break;
                 }
             }
 
@@ -613,7 +685,7 @@ class VehicleController extends Controller
         $vehicle->route_permit_expiry_date = $request->route_permit_expiry_date;
         $vehicle->tax_date = $request->tax_date;
         $vehicle->next_tax_date = $request->next_tax_date;
-        $vehicle->shift_timing_id = $request->shift_timing_id;
+        $vehicle->shift_timing_id = $request->input('shift_timing_id') ?: $request->input('primary_shift_timing_id');
 
         $registrationFileName = null;
         if ($request->hasFile('registration_file')) {
@@ -666,10 +738,22 @@ class VehicleController extends Controller
         $vehicle->save();
 
         $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $assignedDriverIds = collect([
+            (int) $request->input('primary_driver_id'),
+            (int) $request->input('secondary_driver_id'),
+        ])->filter()->unique()->values()->all();
+        $driverShiftAssignments = [
+            (int) $request->input('primary_driver_id') => (int) $request->input('primary_shift_timing_id'),
+        ];
+        if ($request->filled('secondary_driver_id')) {
+            $driverShiftAssignments[(int) $request->input('secondary_driver_id')] = (int) $request->input('secondary_shift_timing_id');
+        }
         $this->vehicleDriverAssignmentService->syncAssignments(
             $vehicle,
-            (int) $request->primary_driver_id,
-            $request->input('pool_driver_ids', [])
+            (int) $request->input('primary_driver_id'),
+            $request->input('pool_driver_ids', []),
+            $assignedDriverIds,
+            $driverShiftAssignments
         );
 
         return redirect()->route('vehicles.index')->with('success', 'Vehicle Updated successfully.');
@@ -748,5 +832,36 @@ class VehicleController extends Controller
                 return [$driver->id => $label];
                 });
             });
+    }
+
+    private function getAssignableRegularDrivers()
+    {
+        return Driver::where('is_active', 1)
+            ->where('driver_type', 'regular')
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'vehicle_id', 'shift_timing_id'])
+            ->map(function (Driver $driver) {
+                return [
+                    'id' => $driver->id,
+                    'name' => $driver->full_name,
+                    'vehicle_id' => $driver->vehicle_id,
+                    'shift_timing_id' => $driver->shift_timing_id,
+                ];
+            });
+    }
+
+    private function isTwentyFourHourShift($shiftHourId): bool
+    {
+        $shiftHours = ShiftHours::find($shiftHourId);
+
+        if (! $shiftHours) {
+            return false;
+        }
+
+        if ((int) ($shiftHours->hours ?? 0) >= 24) {
+            return true;
+        }
+
+        return str_contains(strtolower((string) $shiftHours->name), '24');
     }
 }

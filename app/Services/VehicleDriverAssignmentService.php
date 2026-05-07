@@ -10,13 +10,31 @@ use Illuminate\Support\Collection;
 
 class VehicleDriverAssignmentService
 {
-    public function syncAssignments(Vehicle $vehicle, int $primaryDriverId, array $poolDriverIds = []): void
+    public function syncAssignments(
+        Vehicle $vehicle,
+        int $primaryDriverId,
+        array $poolDriverIds = [],
+        array $assignedDriverIds = [],
+        array $driverShiftAssignments = []
+    ): void
     {
+        $assignedDriverIds = collect($assignedDriverIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($assignedDriverIds->isEmpty()) {
+            $assignedDriverIds = collect([$primaryDriverId]);
+        }
+
+        $primaryDriverId = (int) $assignedDriverIds->first();
+
         $poolDriverIds = collect($poolDriverIds)
             ->filter()
             ->map(fn ($id) => (int) $id)
             ->unique()
-            ->reject(fn ($id) => $id === $primaryDriverId)
+            ->reject(fn ($id) => $assignedDriverIds->contains($id))
             ->values()
             ->all();
 
@@ -32,10 +50,18 @@ class VehicleDriverAssignmentService
             ->update(['current_driver_id' => null]);
 
         Driver::where('vehicle_id', $vehicle->id)
-            ->where('id', '!=', $primaryDriverId)
-            ->update(['vehicle_id' => null]);
+            ->whereNotIn('id', $assignedDriverIds->all())
+            ->update([
+                'vehicle_id' => null,
+                'shift_timing_id' => null,
+            ]);
 
-        Driver::whereKey($primaryDriverId)->update(['vehicle_id' => $vehicle->id]);
+        foreach ($assignedDriverIds as $assignedDriverId) {
+            Driver::whereKey($assignedDriverId)->update([
+                'vehicle_id' => $vehicle->id,
+                'shift_timing_id' => $driverShiftAssignments[$assignedDriverId] ?? null,
+            ]);
+        }
 
         $vehicle->poolDrivers()->sync($poolDriverIds);
         $vehicle->forceFill([
