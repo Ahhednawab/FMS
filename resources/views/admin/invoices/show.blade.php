@@ -1,6 +1,17 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $clearanceColors = [
+            'paid' => 'success',
+            'unpaid' => 'danger',
+            'overdue' => 'warning',
+        ];
+        $clearanceKey = strtolower(trim((string) $invoice->clearance_indication));
+        if ($clearanceKey === '' && (float) ($invoice->payment_received ?? 0) > 0 && (float) ($invoice->payment_received ?? 0) >= (float) ($invoice->cheque_value ?? 0)) {
+            $clearanceKey = 'paid';
+        }
+    @endphp
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Invoice Details</h5>
@@ -29,6 +40,14 @@
                 <tr>
                     <th>PO No</th>
                     <td>{{ $invoice->po_no }}</td>
+                </tr>
+                <tr>
+                    <th>Clearance Indication</th>
+                    <td>
+                        <span class="badge badge-{{ $clearanceColors[$clearanceKey] ?? 'secondary' }} px-3 py-2">
+                            {{ ucfirst($clearanceKey ?: 'n/a') }}
+                        </span>
+                    </td>
                 </tr>
             </table>
 

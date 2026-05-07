@@ -44,7 +44,9 @@ class InvoiceController extends Controller
 
     public function create()
     {
-        return view('admin.invoices.create');
+        return view('admin.invoices.create', [
+            'clearanceIndications' => $this->clearanceIndications(),
+        ]);
     }
 
 
@@ -79,6 +81,7 @@ class InvoiceController extends Controller
             'agreed_deduction' => 'nullable|numeric|min:0',
             'cheque_value' => 'nullable|numeric|min:0',
             'cheque_no' => 'nullable|string|max:255',
+            'clearance_indication' => 'nullable|in:paid,unpaid,overdue',
 
             'diff' => 'nullable|numeric',
             'due_date' => 'nullable|date',
@@ -132,7 +135,10 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice)
     {
-        return view('admin.invoices.edit', compact('invoice'));
+        return view('admin.invoices.edit', [
+            'invoice' => $invoice,
+            'clearanceIndications' => $this->clearanceIndications(),
+        ]);
     }
 
     public function update(Request $request, Invoice $invoice)
@@ -165,6 +171,7 @@ class InvoiceController extends Controller
             'agreed_deduction' => 'nullable|numeric|min:0',
             'cheque_value' => 'nullable|numeric|min:0',
             'cheque_no' => 'nullable|string|max:255',
+            'clearance_indication' => 'nullable|in:paid,unpaid,overdue',
 
             'diff' => 'nullable|numeric',
             'due_date' => 'nullable|date',
@@ -236,4 +243,12 @@ class InvoiceController extends Controller
         ]);
     }
 
+    private function clearanceIndications(): array
+    {
+        return [
+            'paid' => 'Paid',
+            'unpaid' => 'Unpaid',
+            'overdue' => 'Overdue',
+        ];
+    }
 }

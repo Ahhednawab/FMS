@@ -15,17 +15,32 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label>DP No</label>
-                        <input type="text" name="dp_no" class="form-control">
+                        <input type="text" name="dp_no" class="form-control" value="{{ old('dp_no') }}">
                     </div>
 
                     <div class="col-md-4 mb-3">
                         <label>Invoice No</label>
-                        <input type="text" name="invoice_no" class="form-control">
+                        <input type="text" name="invoice_no" class="form-control" value="{{ old('invoice_no') }}">
                     </div>
 
                     <div class="col-md-4 mb-3">
                         <label>PO No</label>
-                        <input type="text" name="po_no" class="form-control">
+                        <input type="text" name="po_no" class="form-control" value="{{ old('po_no') }}">
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label>Clearance Indication</label>
+                        <select name="clearance_indication" class="form-control @error('clearance_indication') is-invalid @enderror">
+                            <option value="">Select Clearance</option>
+                            @foreach ($clearanceIndications as $value => $label)
+                                <option value="{{ $value }}" {{ old('clearance_indication') === $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('clearance_indication')
+                            <label class="text-danger">{{ $message }}</label>
+                        @enderror
                     </div>
                 </div>
 

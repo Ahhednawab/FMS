@@ -1,6 +1,14 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        $clearanceColors = [
+            'paid' => 'info',
+            'unpaid' => 'danger',
+            'overdue' => 'warning',
+        ];
+    @endphp
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Invoices</h5>
@@ -9,7 +17,6 @@
             </a>
         </div>
 
-        <!-- Filters -->
         <div class="card-body border-bottom">
             <form method="GET" action="{{ route('invoices.index') }}" class="d-flex align-items-center gap-3 flex-wrap">
                 <div class="mx-1">
@@ -52,10 +59,8 @@
                 <button class="btn btn-danger mr-2 ml-2 d-none" id="bulkDeleteBtn">
                     <i class="icon-trash"></i> Bulk Delete
                 </button>
-
             </div>
         </div>
-
 
         <div class="card-body table-responsive">
             <table id="invoiceTable" class="table table-bordered table-striped">
@@ -70,6 +75,7 @@
                         <th>DP No</th>
                         <th>Invoice Month</th>
                         <th>Invoice Date</th>
+                        <th>Clearance Indication</th>
                         <th>Total Claim</th>
                         <th>Amount Receivable</th>
                         <th width="160">Actions</th>
@@ -78,6 +84,13 @@
 
                 <tbody>
                     @forelse ($invoices as $invoice)
+                        @php
+                            $clearanceKey = strtolower(trim((string) $invoice->clearance_indication));
+                            if ($clearanceKey === '' && (float) ($invoice->payment_received ?? 0) > 0 && (float) ($invoice->payment_received ?? 0) >= (float) ($invoice->cheque_value ?? 0)) {
+                                $clearanceKey = 'paid';
+                            }
+                            $badgeClass = $clearanceColors[$clearanceKey] ?? 'secondary';
+                        @endphp
                         <tr>
                             <td>
                                 <input type="checkbox" class="row-checkbox" value="{{ $invoice->id }}">
@@ -85,19 +98,16 @@
                             <td>{{ $invoices->firstItem() + $loop->index }}</td>
                             <td>{{ $invoice->serial_no }}</td>
                             <td>{{ $invoice->invoice_no }}</td>
-                            <td>{{ $invoice->dp_no ?? '—' }}</td>
+                            <td>{{ $invoice->dp_no ?: 'N/A' }}</td>
+                            <td>{{ optional($invoice->invoice_month)->format('M Y') ?: 'N/A' }}</td>
+                            <td>{{ optional($invoice->invoice_date)->format('d-M-Y') ?: 'N/A' }}</td>
                             <td>
-                                {{ optional($invoice->invoice_month)->format('M Y') ?? '—' }}
+                                <span class="badge badge-{{ $badgeClass }} px-3 py-2">
+                                    {{ ucfirst($clearanceKey ?: 'n/a') }}
+                                </span>
                             </td>
-                            <td>
-                                {{ optional($invoice->invoice_date)->format('d-M-Y') ?? '—' }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($invoice->total_claim ?? 0, 2) }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($invoice->cheque_value ?? 0, 2) }}
-                            </td>
+                            <td class="text-right">{{ number_format($invoice->total_claim ?? 0, 2) }}</td>
+                            <td class="text-right">{{ number_format($invoice->cheque_value ?? 0, 2) }}</td>
                             <td class="text-center">
                                 <a href="{{ route('invoices.show', $invoice) }}" class="btn btn-info btn-sm">
                                     <i class="icon-eye"></i>
@@ -109,9 +119,8 @@
                             </td>
                         </tr>
                     @empty
-                        {{-- FALLBACK WHEN NO RECORDS --}}
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-muted py-4">
                                 <i class="icon-file-empty icon-2x d-block mb-2"></i>
                                 No invoices found.<br>
                                 <a href="{{ route('invoices.create') }}" class="btn btn-sm btn-primary mt-2">
@@ -123,7 +132,6 @@
                 </tbody>
             </table>
 
-            {{-- PAGINATION --}}
             @if ($invoices->hasPages())
                 <div class="mt-3">
                     {{ $invoices->appends(request()->query())->links('pagination::bootstrap-4') }}
@@ -137,11 +145,7 @@
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.colVis.min.js') }}"></script>
-
-    {{-- Excel --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    {{-- PDF --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
@@ -167,7 +171,6 @@
                 }
             });
 
-            // Hide calendar button if jQuery UI is loaded
             $('#ui-datepicker-div').css('display', 'none');
 
             var invoiceTable = $('#invoiceTable').DataTable({
@@ -177,10 +180,9 @@
                 ordering: true,
                 dom: 'Bfrtip',
                 columnDefs: [{
-                        orderable: false,
-                        targets: [0, -1]
-                    } // checkbox + actions
-                ],
+                    orderable: false,
+                    targets: [0, -1]
+                }],
                 buttons: [{
                     extend: 'colvis',
                     text: 'Column visibility',
@@ -191,17 +193,10 @@
 
             invoiceTable.buttons().container()
                 .appendTo('.card-body.border-bottom .d-flex.justify-content-end');
-
-
         });
 
-        /* ===============================
-        EXPORT TO EXCEL
-        ================================ */
         document.getElementById('excelBtn').addEventListener('click', function() {
             const table = document.getElementById('invoiceTable');
-
-            // Clone table & remove Actions column
             const clone = table.cloneNode(true);
             clone.querySelectorAll('tr').forEach(row => row.deleteCell(-1));
 
@@ -211,9 +206,6 @@
             XLSX.writeFile(wb, 'invoices.xlsx');
         });
 
-        /* ===============================
-        EXPORT TO PDF
-        ================================ */
         document.getElementById('pdfBtn').addEventListener('click', function() {
             const {
                 jsPDF
@@ -231,18 +223,15 @@
                     cellPadding: 4
                 },
                 columnStyles: {
-                    8: {
+                    10: {
                         cellWidth: 0
-                    } // hide Actions column
+                    }
                 }
             });
 
             doc.save('invoices.pdf');
         });
 
-        /* ===============================
-        PRINT
-        ================================ */
         document.getElementById('printBtn').addEventListener('click', function() {
             const printContents = document.getElementById('invoiceTable').outerHTML;
             const win = window.open('', '', 'height=700,width=1000');
@@ -268,9 +257,6 @@
             win.print();
         });
 
-        // ===============================
-        // CHECKBOX LOGIC
-        // ===============================
         $('#selectAll').on('change', function() {
             $('.row-checkbox').prop('checked', this.checked);
             toggleBulkButton();
@@ -289,11 +275,7 @@
             $('#bulkDeleteBtn').toggleClass('d-none', selected === 0);
         }
 
-        // ===============================
-        // BULK DELETE WITH CONFIRMATION
-        // ===============================
         $('#bulkDeleteBtn').on('click', function() {
-
             const ids = $('.row-checkbox:checked').map(function() {
                 return this.value;
             }).get();

@@ -41,6 +41,7 @@ class Invoice extends Model
         'agreed_deduction',
         'cheque_value',
         'cheque_no',
+        'clearance_indication',
         'diff',
         'due_date',
         'cheque_rec_date',
