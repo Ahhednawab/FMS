@@ -112,6 +112,33 @@
             </div>
         </div>
 
+        <div class="row">
+            {{-- <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Total Present Days</h6>
+                        <h3 class="mb-0 text-success">{{ $presentCount }}</h3>
+                    </div>
+                </div>
+            </div> --}}
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Total Absent Days</h6>
+                        <h3 class="mb-0 text-danger">{{ $absentCount }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Total Attendance Records</h6>
+                        <h3 class="mb-0 text-primary">{{ $driverAttendances->count() }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Basic datatable -->
         <div class="card">
             <div class="card-body">

@@ -44,7 +44,15 @@ class DriversAttendanceController extends Controller
             ])
             ->orderBy('id', 'DESC')
             ->get();
-        return view('admin.driverAttendances.index', compact('driverAttendances'));
+        $presentCount = $driverAttendances->filter(function ($attendance) {
+            return strtolower((string) optional($attendance->attendanceStatus)->name) === 'present';
+        })->count();
+
+        $absentCount = $driverAttendances->filter(function ($attendance) {
+            return strtolower((string) optional($attendance->attendanceStatus)->name) === 'absent';
+        })->count();
+
+        return view('admin.driverAttendances.index', compact('driverAttendances', 'presentCount', 'absentCount'));
     }
 
     public function create(Request $request)
