@@ -17,7 +17,13 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('daily-mileage.index') }}" method="GET">
+                @if (!empty($apiError))
+                    <div class="alert alert-danger mb-3">
+                        {{ $apiError }}
+                    </div>
+                @endif
+
+                <form action="{{ route('trackingData.index') }}" method="GET">
                     <div class="row align-items-end">
                         <div class="col-md-3">
                             <label><strong>Date</strong></label>
@@ -26,7 +32,7 @@
                         </div>
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-primary">Load Report</button>
-                            <a href="{{ route('daily-mileage.index') }}" class="btn btn-secondary">Reset</a>
+                            <a href="{{ route('trackingData.index') }}" class="btn btn-secondary">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -35,7 +41,6 @@
 
         @include('admin.trackingData.partials.results', [
             'trackingData' => $trackingData,
-            'totals' => $totals,
         ])
     </div>
 @endsection

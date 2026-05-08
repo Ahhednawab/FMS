@@ -371,7 +371,34 @@ class DriversAttendanceController extends Controller
             'originalDriver',
             'replacementDriver',
         ]);
-        return view('admin.driverAttendances.show', compact('driverAttendance'));
+
+        $attendanceDate = $driverAttendance->date
+            ? Carbon::parse($driverAttendance->date)
+            : Carbon::now();
+        $attendanceStatusTable = (new AttendanceStatus())->getTable();
+
+        $monthlyAttendanceCounts = DriversAttendance::query()
+            ->selectRaw("
+                SUM(CASE WHEN LOWER({$attendanceStatusTable}.name) = 'present' THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN LOWER({$attendanceStatusTable}.name) = 'absent' THEN 1 ELSE 0 END) as absent_count
+            ")
+            ->join($attendanceStatusTable, "{$attendanceStatusTable}.id", '=', 'drivers_attendances.status')
+            ->where('drivers_attendances.driver_id', $driverAttendance->driver_id)
+            ->where('drivers_attendances.is_active', 1)
+            ->whereYear('drivers_attendances.date', $attendanceDate->year)
+            ->whereMonth('drivers_attendances.date', $attendanceDate->month)
+            ->first();
+
+        $presentDaysCount = (int) ($monthlyAttendanceCounts->present_count ?? 0);
+        $absentDaysCount = (int) ($monthlyAttendanceCounts->absent_count ?? 0);
+        $attendanceMonthLabel = $attendanceDate->format('F Y');
+
+        return view('admin.driverAttendances.show', compact(
+            'driverAttendance',
+            'presentDaysCount',
+            'absentDaysCount',
+            'attendanceMonthLabel'
+        ));
     }
 
     public function destroy(DriversAttendance $driverAttendance)

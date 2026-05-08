@@ -91,6 +91,20 @@
                                 <p>{{ $driverAttendance->is_replacement ? ($driverAttendance->replacementDriver?->full_name ?? $driverAttendance->driver->full_name) : 'No' }}</p>
                             </div>
                         </div>
+
+                        <div class="col-md-3 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Present Days ({{ $attendanceMonthLabel }})</h5>
+                                <p>{{ $presentDaysCount }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Absent Days ({{ $attendanceMonthLabel }})</h5>
+                                <p>{{ $absentDaysCount }}</p>
+                            </div>
+                        </div>
                     </div>
 
 
