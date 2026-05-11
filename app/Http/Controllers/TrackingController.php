@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DailyMileageReport;
+use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -20,7 +23,7 @@ class TrackingController extends Controller
         $apiError = null;
 
         try {
-            $trackingData = $this->fetchTrackingData($reportDate);
+            $trackingData = $this->buildTrackingReport($this->fetchTrackingData($reportDate), $reportDate);
         } catch (Throwable $exception) {
             $apiError = 'Unable to load tracking data right now.';
 
@@ -226,6 +229,88 @@ XML;
             ->filter(fn (array $row) => $row['RegNo'] !== '')
             ->values()
             ->all();
+    }
+
+    private function buildTrackingReport(array $apiRows, string $reportDate): array
+    {
+        $apiCollection = collect($apiRows);
+        $vehicleNumbers = $apiCollection
+            ->pluck('RegNo')
+            ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $vehicles = Vehicle::query()
+            ->with(['shiftTiming', 'shiftHours'])
+            ->whereIn('vehicle_no', $vehicleNumbers->all())
+            ->get()
+            ->keyBy(fn (Vehicle $vehicle) => $this->normalizeVehicleNo((string) $vehicle->vehicle_no));
+
+        $dailyMileageReports = DailyMileageReport::query()
+            ->whereDate('report_date', $reportDate)
+            ->whereIn('vehicle_id', $vehicles->pluck('id')->filter()->all())
+            ->get()
+            ->keyBy('vehicle_id');
+
+        return $apiCollection
+            ->map(function (array $row) use ($reportDate, $vehicles, $dailyMileageReports) {
+                $vehicleNo = $this->normalizeVehicleNo((string) ($row['RegNo'] ?? ''));
+                $vehicle = $vehicles->get($vehicleNo);
+                $dailyMileage = $vehicle ? $dailyMileageReports->get($vehicle->id) : null;
+
+                $offPeak = $this->toFloat($row['OffPeakKMs'] ?? 0);
+                $ams = $this->toFloat($row['AMSKMs'] ?? 0);
+                $totalKms = $this->toFloat($row['PeakKMs'] ?? 0);
+                $odoKms = $this->toFloat(optional($dailyMileage)->mileage);
+                $parking = $this->toFloat(optional($vehicle)->parking_km);
+
+                return [
+                    'date' => $reportDate,
+                    'vehicle' => (string) ($row['RegNo'] ?? ''),
+                    'akpl' => $vehicle?->akpl ?: 'N/A',
+                    'shift' => $this->resolveShiftHoursLabel($vehicle),
+                    'off_peak' => $offPeak,
+                    'mis_peak_hrs' => $ams,
+                    'ams' => $ams,
+                    'parking' => $parking,
+                    'total_kms' => $totalKms,
+                    'odo_kms' => $odoKms,
+                    'diff' => $totalKms - $odoKms,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function normalizeVehicleNo(string $vehicleNo): string
+    {
+        return strtoupper(trim($vehicleNo));
+    }
+
+    private function resolveShiftHoursLabel(?Vehicle $vehicle): string
+    {
+        if (! $vehicle) {
+            return 'N/A';
+        }
+
+        $hours = $vehicle->shiftHours?->hours;
+        if ($hours !== null && $hours !== '') {
+            return rtrim(rtrim((string) $hours, '0'), '.') . ' Hr';
+        }
+
+        return $vehicle->shiftHours?->name
+            ?: $vehicle->shiftTiming?->name
+            ?: 'N/A';
+    }
+
+    private function toFloat(mixed $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        return (float) $value;
     }
 
     private function normalizeApiValue(mixed $value): string
