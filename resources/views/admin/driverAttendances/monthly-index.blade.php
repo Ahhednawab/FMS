@@ -23,7 +23,7 @@
                             <input type="month" name="month" class="form-control" value="{{ $selectedMonth }}">
                         </div>
                         <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary">Load Monthly Attendance</button>
+                            <button type="submit" class="btn btn-primary" style="margin-bottom: 4px;">Load Monthly Attendance</button>
                             <a href="{{ route('driverAttendances.monthly.index') }}" class="btn btn-secondary">Reset</a>
                             <a href="{{ route('driverAttendances.monthly.exportAll', ['month' => $selectedMonth]) }}"
                                 class="btn btn-success">Download Excel</a>

@@ -120,7 +120,7 @@ class DriversAttendanceController extends Controller
         $presentStatusId = optional($attendanceStatuses->get('present'))->id;
         $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
 
-        $drivers = Driver::with(['vehicle', 'shiftTiming'])
+        $drivers = Driver::with(['vehicle.shiftHours', 'vehicle.station', 'station', 'shiftTiming'])
             ->whereHas('attendances', function ($query) use ($monthStart, $monthEnd) {
                 $query->where('is_active', 1)
                     ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
@@ -163,21 +163,67 @@ class DriversAttendanceController extends Controller
             ->groupBy('driver_id')
             ->map(fn ($records) => $records->keyBy(fn (DriversAttendance $attendance) => Carbon::parse($attendance->date)->toDateString()));
 
-        $driverSheets = $drivers->map(function (Driver $driver) use ($monthStart, $monthEnd, $attendanceRecords) {
+        $daysInMonth = collect(range(1, $monthEnd->day))->map(function (int $day) use ($monthDate) {
+            $date = $monthDate->copy()->day($day);
+
             return [
+                'day_number' => $day,
+                'date' => $date->toDateString(),
+                'day_name' => $date->format('D'),
+                'is_sunday' => $date->isSunday(),
+            ];
+        });
+
+        $driverSheets = $drivers->values()->map(function (Driver $driver, int $index) use ($monthStart, $monthEnd, $attendanceRecords, $daysInMonth) {
+            $calendarRows = $this->buildMonthlyCalendarRows(
+                $driver,
+                $monthStart,
+                $monthEnd,
+                $attendanceRecords->get($driver->id, collect())
+            );
+
+            $rowsByDate = $calendarRows->keyBy('date');
+            $offDaysCount = $daysInMonth->where('is_sunday', true)->count();
+            $presentCount = $calendarRows->where('status_key', 'present')->count();
+            $absentCount = $calendarRows->where('status_key', 'absent')->count();
+
+            return [
+                'serial_no' => $index + 1,
                 'driver' => $driver,
-                'rows' => $this->buildMonthlyCalendarRows(
-                    $driver,
-                    $monthStart,
-                    $monthEnd,
-                    $attendanceRecords->get($driver->id, collect())
-                ),
+                'station' => $driver->vehicle?->station?->area ?? $driver->station?->area ?? 'N/A',
+                'shift' => $this->resolveDriverShiftLabel($driver),
+                'days' => $daysInMonth->map(function (array $dayMeta) use ($rowsByDate) {
+                    $row = $rowsByDate->get($dayMeta['date']);
+                    $statusKey = $row['status_key'] ?? 'no_record';
+
+                    if ($dayMeta['is_sunday']) {
+                        return array_merge($dayMeta, [
+                            'code' => 'Off',
+                            'is_absent' => false,
+                        ]);
+                    }
+
+                    return array_merge($dayMeta, [
+                        'code' => match ($statusKey) {
+                            'present', 'replace' => 'P',
+                            'absent' => 'A',
+                            default => '',
+                        },
+                        'is_absent' => $statusKey === 'absent',
+                    ]);
+                }),
+                'present_count' => $presentCount,
+                'absent_count' => $absentCount,
+                'off_days_count' => $offDaysCount,
+                'total_present_days' => $presentCount + $offDaysCount,
+                'total_days_in_month' => $daysInMonth->count(),
             ];
         });
 
         $content = view('admin.driverAttendances.monthly-export-all', [
             'driverSheets' => $driverSheets,
             'monthLabel' => $monthDate->format('F Y'),
+            'daysInMonth' => $daysInMonth,
         ])->render();
 
         $fileName = 'monthly-attendance-all-drivers-' . $monthDate->format('Y-m') . '.xls';
@@ -824,6 +870,20 @@ class DriversAttendanceController extends Controller
         }
 
         return $calendarRows;
+    }
+
+    private function resolveDriverShiftLabel(Driver $driver): string
+    {
+        $hours = $driver->vehicle?->shiftHours?->hours;
+        if ($hours !== null && $hours !== '') {
+            $normalizedHours = (string) (int) $hours;
+
+            return $normalizedHours . ' Hours';
+        }
+
+        return $driver->vehicle?->shiftHours?->name
+            ?? $driver->shiftTiming?->name
+            ?? 'N/A';
     }
 
     private function getReplaceStatusId(): ?int
