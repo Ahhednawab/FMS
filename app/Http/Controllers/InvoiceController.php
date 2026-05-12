@@ -81,7 +81,7 @@ class InvoiceController extends Controller
             'agreed_deduction' => 'nullable|numeric|min:0',
             'cheque_value' => 'nullable|numeric|min:0',
             'cheque_no' => 'nullable|string|max:255',
-            'clearance_indication' => 'nullable|in:paid,unpaid,overdue',
+            'clearance_indication' => 'nullable|in:paid,unpaid',
 
             'diff' => 'nullable|numeric',
             'due_date' => 'nullable|date',
@@ -108,7 +108,7 @@ class InvoiceController extends Controller
        ✅ YOUR EXISTING LOGIC (UNCHANGED)
     ----------------------------------------- */
 
-        if (!empty($validated['submission_date'])) {
+        if (empty($validated['due_date']) && !empty($validated['submission_date'])) {
             $validated['due_date'] = Carbon::parse($validated['submission_date'])
                 ->addDays(40)
                 ->format('Y-m-d');
@@ -171,7 +171,7 @@ class InvoiceController extends Controller
             'agreed_deduction' => 'nullable|numeric|min:0',
             'cheque_value' => 'nullable|numeric|min:0',
             'cheque_no' => 'nullable|string|max:255',
-            'clearance_indication' => 'nullable|in:paid,unpaid,overdue',
+            'clearance_indication' => 'nullable|in:paid,unpaid',
 
             'diff' => 'nullable|numeric',
             'due_date' => 'nullable|date',
@@ -198,7 +198,7 @@ class InvoiceController extends Controller
        ✅ YOUR LOGIC (SAFE + FIXED)
     ----------------------------------------- */
 
-        if (!empty($validated['submission_date'])) {
+        if (empty($validated['due_date']) && !empty($validated['submission_date'])) {
             $validated['due_date'] = Carbon::parse($validated['submission_date'])
                 ->addDays(40)
                 ->format('Y-m-d');
@@ -248,7 +248,6 @@ class InvoiceController extends Controller
         return [
             'paid' => 'Paid',
             'unpaid' => 'Unpaid',
-            'overdue' => 'Overdue',
         ];
     }
 }

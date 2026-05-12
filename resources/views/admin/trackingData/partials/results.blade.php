@@ -8,7 +8,7 @@
                         <th>Vehicle</th>
                         <th>AKPL</th>
                         <th>Shift</th>
-                        <th>Off Peak</th>
+                        <th>Total Km in a Day</th>
                         <th>MIS Peak HRS</th>
                         <th>AMS</th>
                         <th>Parking</th>

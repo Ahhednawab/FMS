@@ -85,10 +85,7 @@
                 <tbody>
                     @forelse ($invoices as $invoice)
                         @php
-                            $clearanceKey = strtolower(trim((string) $invoice->clearance_indication));
-                            if ($clearanceKey === '' && (float) ($invoice->payment_received ?? 0) > 0 && (float) ($invoice->payment_received ?? 0) >= (float) ($invoice->cheque_value ?? 0)) {
-                                $clearanceKey = 'paid';
-                            }
+                            $clearanceKey = strtolower(trim((string) $invoice->effective_clearance_indication));
                             $badgeClass = $clearanceColors[$clearanceKey] ?? 'secondary';
                         @endphp
                         <tr>
