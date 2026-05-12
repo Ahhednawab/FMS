@@ -23,6 +23,8 @@
 
     <!-- Content area -->
     <div class="content">
+        @include('admin.driverAttendances.partials.module-tabs')
+
         <div class="card">
             <div class="card-body">
                 <div class="container mt-3">

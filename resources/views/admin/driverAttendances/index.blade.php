@@ -24,6 +24,8 @@
 
     <!-- Content area -->
     <div class="content">
+        @include('admin.driverAttendances.partials.module-tabs')
+
         @if ($message = Session::get('success'))
             <div id="alert-message" class="alert alert-success alert-dismissible alert-dismissible-2" role="alert">
                 {{ $message }}

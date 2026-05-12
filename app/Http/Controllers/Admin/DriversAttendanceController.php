@@ -55,6 +55,210 @@ class DriversAttendanceController extends Controller
         return view('admin.driverAttendances.index', compact('driverAttendances', 'presentCount', 'absentCount'));
     }
 
+    public function monthlyIndex(Request $request)
+    {
+        $monthDate = $this->resolveMonthDate($request->input('month', now()->format('Y-m')));
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+
+        $attendanceStatuses = AttendanceStatus::where('is_active', 1)->get()
+            ->keyBy(fn (AttendanceStatus $status) => strtolower((string) $status->name));
+
+        $presentStatusId = optional($attendanceStatuses->get('present'))->id;
+        $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
+
+        $drivers = Driver::with(['vehicle'])
+            ->whereHas('attendances', function ($query) use ($monthStart, $monthEnd) {
+                $query->where('is_active', 1)
+                    ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+            })
+            ->withCount([
+                'attendances as total_working_days' => function ($query) use ($monthStart, $monthEnd) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+                },
+                'attendances as total_present' => function ($query) use ($monthStart, $monthEnd, $presentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($presentStatusId) {
+                        $query->where('status', $presentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+                'attendances as total_absent' => function ($query) use ($monthStart, $monthEnd, $absentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($absentStatusId) {
+                        $query->where('status', $absentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+            ])
+            ->orderBy('full_name')
+            ->get();
+
+        return view('admin.driverAttendances.monthly-index', [
+            'drivers' => $drivers,
+            'selectedMonth' => $monthDate->format('Y-m'),
+            'monthLabel' => $monthDate->format('F Y'),
+        ]);
+    }
+
+    public function monthlyExportAll(Request $request)
+    {
+        $monthDate = $this->resolveMonthDate($request->input('month', now()->format('Y-m')));
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+
+        $attendanceStatuses = AttendanceStatus::where('is_active', 1)->get()
+            ->keyBy(fn (AttendanceStatus $status) => strtolower((string) $status->name));
+
+        $presentStatusId = optional($attendanceStatuses->get('present'))->id;
+        $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
+
+        $drivers = Driver::with(['vehicle', 'shiftTiming'])
+            ->whereHas('attendances', function ($query) use ($monthStart, $monthEnd) {
+                $query->where('is_active', 1)
+                    ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+            })
+            ->withCount([
+                'attendances as total_working_days' => function ($query) use ($monthStart, $monthEnd) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+                },
+                'attendances as total_present' => function ($query) use ($monthStart, $monthEnd, $presentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($presentStatusId) {
+                        $query->where('status', $presentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+                'attendances as total_absent' => function ($query) use ($monthStart, $monthEnd, $absentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($absentStatusId) {
+                        $query->where('status', $absentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+            ])
+            ->orderBy('full_name')
+            ->get();
+
+        $attendanceRecords = DriversAttendance::with(['attendanceStatus', 'vehicle'])
+            ->where('is_active', 1)
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->whereIn('driver_id', $drivers->pluck('id'))
+            ->orderBy('date')
+            ->get()
+            ->groupBy('driver_id')
+            ->map(fn ($records) => $records->keyBy(fn (DriversAttendance $attendance) => Carbon::parse($attendance->date)->toDateString()));
+
+        $driverSheets = $drivers->map(function (Driver $driver) use ($monthStart, $monthEnd, $attendanceRecords) {
+            return [
+                'driver' => $driver,
+                'rows' => $this->buildMonthlyCalendarRows(
+                    $driver,
+                    $monthStart,
+                    $monthEnd,
+                    $attendanceRecords->get($driver->id, collect())
+                ),
+            ];
+        });
+
+        $content = view('admin.driverAttendances.monthly-export-all', [
+            'driverSheets' => $driverSheets,
+            'monthLabel' => $monthDate->format('F Y'),
+        ])->render();
+
+        $fileName = 'monthly-attendance-all-drivers-' . $monthDate->format('Y-m') . '.xls';
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
+    public function monthlyShow(Request $request, Driver $driver)
+    {
+        $monthDate = $this->resolveMonthDate($request->input('month', now()->format('Y-m')));
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+        $availableStatuses = ['present', 'absent', 'leave', 'off', 'off day', 'replace', 'no_record'];
+        $selectedStatuses = collect($request->input('statuses', $availableStatuses))
+            ->map(fn ($status) => strtolower((string) $status))
+            ->intersect($availableStatuses)
+            ->values()
+            ->all();
+
+        $driver->load(['vehicle', 'shiftTiming']);
+
+        $attendanceRecords = DriversAttendance::with(['attendanceStatus', 'vehicle', 'originalDriver', 'replacementDriver'])
+            ->where('driver_id', $driver->id)
+            ->where('is_active', 1)
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn (DriversAttendance $attendance) => Carbon::parse($attendance->date)->toDateString());
+
+        $calendarRows = $this->buildMonthlyCalendarRows($driver, $monthStart, $monthEnd, $attendanceRecords);
+        $filteredCalendarRows = $calendarRows->filter(fn (array $row) => in_array($row['status_key'], $selectedStatuses, true))->values();
+
+        return view('admin.driverAttendances.monthly-show', [
+            'driver' => $driver,
+            'calendarRows' => $filteredCalendarRows,
+            'selectedMonth' => $monthDate->format('Y-m'),
+            'monthLabel' => $monthDate->format('F Y'),
+            'selectedStatuses' => $selectedStatuses,
+            'presentDaysCount' => $calendarRows->where('status_key', 'present')->count(),
+            'absentDaysCount' => $calendarRows->where('status_key', 'absent')->count(),
+            'totalWorkingDays' => $calendarRows->whereNotIn('status_key', ['no_record'])->count(),
+        ]);
+    }
+
+    public function monthlyExport(Request $request, Driver $driver)
+    {
+        $monthDate = $this->resolveMonthDate($request->input('month', now()->format('Y-m')));
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+
+        $driver->load(['vehicle', 'shiftTiming']);
+
+        $attendanceRecords = DriversAttendance::with(['attendanceStatus', 'vehicle'])
+            ->where('driver_id', $driver->id)
+            ->where('is_active', 1)
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn (DriversAttendance $attendance) => Carbon::parse($attendance->date)->toDateString());
+
+        $calendarRows = $this->buildMonthlyCalendarRows($driver, $monthStart, $monthEnd, $attendanceRecords);
+        $content = view('admin.driverAttendances.monthly-export', [
+            'driver' => $driver,
+            'calendarRows' => $calendarRows,
+            'monthLabel' => $monthDate->format('F Y'),
+            'totalWorkingDays' => $calendarRows->whereNotIn('status_key', ['no_record'])->count(),
+            'presentDaysCount' => $calendarRows->where('status_key', 'present')->count(),
+            'absentDaysCount' => $calendarRows->where('status_key', 'absent')->count(),
+        ])->render();
+
+        $fileName = 'monthly-attendance-' . $driver->id . '-' . $monthDate->format('Y-m') . '.xls';
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
     public function create(Request $request)
     {
 
@@ -594,6 +798,34 @@ class DriversAttendanceController extends Controller
         ], true);
     }
 
+    private function buildMonthlyCalendarRows(Driver $driver, Carbon $monthStart, Carbon $monthEnd, $attendanceRecords)
+    {
+        $calendarRows = collect();
+        $cursor = $monthStart->copy();
+
+        while ($cursor->lte($monthEnd)) {
+            $dateKey = $cursor->toDateString();
+            $attendance = $attendanceRecords->get($dateKey);
+            $statusName = strtolower(trim((string) optional(optional($attendance)->attendanceStatus)->name));
+            $statusKey = $statusName !== '' ? $statusName : 'no_record';
+
+            $calendarRows->push([
+                'date' => $dateKey,
+                'day_name' => $cursor->format('l'),
+                'vehicle' => $attendance?->vehicle?->vehicle_no ?? $driver->vehicle?->vehicle_no ?? 'N/A',
+                'status_label' => $attendance?->attendanceStatus?->name ?? 'No Record',
+                'status_key' => $statusKey,
+                'is_replacement' => (bool) ($attendance?->is_replacement ?? false),
+                'original_driver' => $attendance?->originalDriver?->full_name,
+                'replacement_driver' => $attendance?->replacementDriver?->full_name,
+            ]);
+
+            $cursor->addDay();
+        }
+
+        return $calendarRows;
+    }
+
     private function getReplaceStatusId(): ?int
     {
         $statusId = AttendanceStatus::query()
@@ -602,5 +834,14 @@ class DriversAttendanceController extends Controller
             ->value('id');
 
         return $statusId ? (int) $statusId : null;
+    }
+
+    private function resolveMonthDate(?string $month): Carbon
+    {
+        try {
+            return Carbon::createFromFormat('Y-m', (string) $month)->startOfMonth();
+        } catch (\Throwable) {
+            return now()->startOfMonth();
+        }
     }
 }

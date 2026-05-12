@@ -226,6 +226,10 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
     // Attendance
     // Filter (POST) route to reuse create() for filtering
+    Route::get('driverAttendances/monthly', [DriversAttendanceController::class, 'monthlyIndex'])->name('driverAttendances.monthly.index');
+    Route::get('driverAttendances/monthly-export-all', [DriversAttendanceController::class, 'monthlyExportAll'])->name('driverAttendances.monthly.exportAll');
+    Route::get('driverAttendances/monthly/{driver}', [DriversAttendanceController::class, 'monthlyShow'])->name('driverAttendances.monthly.show');
+    Route::get('driverAttendances/monthly/{driver}/export', [DriversAttendanceController::class, 'monthlyExport'])->name('driverAttendances.monthly.export');
     Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
     Route::post('driverAttendances/destroyMultiple', [DriversAttendanceController::class, 'destroyMultiple'])->name('driverAttendances.destroyMultiple');
     Route::resource('driverAttendances', DriversAttendanceController::class);
@@ -316,6 +320,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
 
     // Attendance
     // Filter (POST) route to reuse create() for filtering
+    Route::get('driverAttendances/monthly', [DriversAttendanceController::class, 'monthlyIndex'])->name('driverAttendances.monthly.index');
+    Route::get('driverAttendances/monthly-export-all', [DriversAttendanceController::class, 'monthlyExportAll'])->name('driverAttendances.monthly.exportAll');
+    Route::get('driverAttendances/monthly/{driver}', [DriversAttendanceController::class, 'monthlyShow'])->name('driverAttendances.monthly.show');
+    Route::get('driverAttendances/monthly/{driver}/export', [DriversAttendanceController::class, 'monthlyExport'])->name('driverAttendances.monthly.export');
     Route::post('driverAttendances/create', [DriversAttendanceController::class, 'create'])->name('driverAttendances.filter');
     Route::post('driverAttendances/destroyMultiple', [DriversAttendanceController::class, 'destroyMultiple'])->name('driverAttendances.destroyMultiple');
     Route::resource('driverAttendances', DriversAttendanceController::class);
