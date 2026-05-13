@@ -7,6 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
         rel="stylesheet" />
     <style>
+        .sticky-action-bar {
+            position: sticky;
+            bottom: 0;
+            z-index: 1020;
+            background: #fff;
+            border-top: 1px solid #e5e5e5;
+            box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.08);
+            margin-top: 1rem;
+            padding: 0.875rem 0;
+        }
+
         .select2-search--dropdown::after {
             content: '' !important;
             display: none !important;
@@ -177,13 +188,10 @@
                         @endforeach
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <label for=""></label>
-                            <div class="text-right">
-                                <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
-                                <a href="{{ route('dailyFuels.index') }}" class="btn btn-warning">Cancel</a>
-                            </div>
+                    <div class="sticky-action-bar">
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+                            <a href="{{ route('dailyFuels.index') }}" class="btn btn-warning">Cancel</a>
                         </div>
                     </div>
                 </form>
