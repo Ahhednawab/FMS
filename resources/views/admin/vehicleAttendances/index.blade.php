@@ -133,9 +133,10 @@
         <div class="card">
             <div class="card-body">
 
-                <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+                <a class="btn btn-light" id="excelBtn" title="Export to Excel"
+                    href="{{ route('vehicleAttendances.exportMonthlyRegister', ['from_date' => request('from_date'), 'to_date' => request('to_date')]) }}">
                     <i class="icon-file-excel"></i> Excel
-                </button>
+                </a>
                 <button class="btn btn-light" id="printBtn" title="Print">
                     <i class="icon-printer"></i> Print
                 </button>
@@ -255,16 +256,6 @@
                             }
                         }
                     },
-                    {
-                        extend: 'excelHtml5', // Excel button added
-                        text: 'Excel',
-                        className: 'd-none',
-                        exportOptions: {
-                            modifier: {
-                                page: 'all'
-                            }
-                        }
-                    }
                 ]
             });
 
@@ -275,10 +266,6 @@
 
             $('#pdfBtn').on('click', function() {
                 table.button('.buttons-pdf').trigger();
-            });
-
-            $('#excelBtn').on('click', function() { // Excel button trigger
-                table.button('.buttons-excel').trigger();
             });
 
             /* ============================

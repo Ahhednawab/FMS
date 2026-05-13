@@ -144,4 +144,9 @@ class Vehicle extends Model
         return $this->hasMany(VehicleMaintenanceSchedule::class);
     }
 
+    public function vehicleAttendances()
+    {
+        return $this->hasMany(VehiclesAttendance::class, 'vehicle_id');
+    }
+
 }

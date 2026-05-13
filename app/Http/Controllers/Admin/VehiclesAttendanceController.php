@@ -56,6 +56,126 @@ class VehiclesAttendanceController extends Controller
         return view('admin.vehicleAttendances.index', compact('vehicleAttendances', 'stations'));
     }
 
+    public function exportMonthlyRegister(Request $request)
+    {
+        $monthDate = $this->resolveMonthDate($request->input('month') ?: $request->input('from_date'));
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+
+        $attendanceStatuses = AttendanceStatus::where('is_active', 1)->get()
+            ->keyBy(fn (AttendanceStatus $status) => strtolower((string) $status->name));
+
+        $presentStatusId = optional($attendanceStatuses->get('present'))->id;
+        $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
+
+        $vehicles = Vehicle::with(['station', 'shiftHours'])
+            ->where('is_active', 1)
+            ->whereHas('vehicleAttendances', function ($query) use ($monthStart, $monthEnd) {
+                $query->where('is_active', 1)
+                    ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+            })
+            ->withCount([
+                'vehicleAttendances as total_working_days' => function ($query) use ($monthStart, $monthEnd) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+                },
+                'vehicleAttendances as total_present' => function ($query) use ($monthStart, $monthEnd, $presentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($presentStatusId) {
+                        $query->where('status', $presentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+                'vehicleAttendances as total_absent' => function ($query) use ($monthStart, $monthEnd, $absentStatusId) {
+                    $query->where('is_active', 1)
+                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+                    if ($absentStatusId) {
+                        $query->where('status', $absentStatusId);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                },
+            ])
+            ->orderBy('vehicle_no')
+            ->get();
+
+        $attendanceRecords = VehiclesAttendance::with('attendanceStatus')
+            ->where('is_active', 1)
+            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->whereIn('vehicle_id', $vehicles->pluck('id'))
+            ->orderBy('date')
+            ->get()
+            ->groupBy('vehicle_id')
+            ->map(fn ($records) => $records->keyBy(fn (VehiclesAttendance $attendance) => Carbon::parse($attendance->date)->toDateString()));
+
+        $daysInMonth = collect(range(1, $monthEnd->day))->map(function (int $day) use ($monthDate) {
+            $date = $monthDate->copy()->day($day);
+
+            return [
+                'day_number' => $day,
+                'date' => $date->toDateString(),
+                'day_name' => $date->format('D'),
+                'is_sunday' => $date->isSunday(),
+            ];
+        });
+
+        $vehicleSheets = $vehicles->values()->map(function (Vehicle $vehicle, int $index) use ($attendanceRecords, $daysInMonth) {
+            $rowsByDate = $attendanceRecords->get($vehicle->id, collect());
+            $offDaysCount = $daysInMonth->where('is_sunday', true)->count();
+            $presentCount = (int) $vehicle->total_present;
+            $absentCount = (int) $vehicle->total_absent;
+
+            return [
+                'serial_no' => $index + 1,
+                'station' => $vehicle->station?->area ?? 'N/A',
+                'vehicle_name' => $vehicle->vehicle_no,
+                'shift' => $this->resolveVehicleShiftLabel($vehicle),
+                'days' => $daysInMonth->map(function (array $dayMeta) use ($rowsByDate) {
+                    $row = $rowsByDate->get($dayMeta['date']);
+                    $statusKey = strtolower(trim((string) optional(optional($row)->attendanceStatus)->name));
+
+                    if ($dayMeta['is_sunday']) {
+                        return array_merge($dayMeta, [
+                            'code' => 'Off',
+                            'is_absent' => false,
+                        ]);
+                    }
+
+                    return array_merge($dayMeta, [
+                        'code' => match ($statusKey) {
+                            'present' => 'P',
+                            'absent' => 'A',
+                            default => '',
+                        },
+                        'is_absent' => $statusKey === 'absent',
+                    ]);
+                }),
+                'present_count' => $presentCount,
+                'absent_count' => $absentCount,
+                'off_days_count' => $offDaysCount,
+                'total_present_days' => $presentCount + $offDaysCount,
+                'total_days_in_month' => $daysInMonth->count(),
+            ];
+        });
+
+        $content = view('admin.vehicleAttendances.monthly-export-all', [
+            'vehicleSheets' => $vehicleSheets,
+            'monthLabel' => $monthDate->format('F Y'),
+            'daysInMonth' => $daysInMonth,
+        ])->render();
+
+        $fileName = 'monthly-vehicle-attendance-' . $monthDate->format('Y-m') . '.xls';
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
     public function create(Request $request)
     {
         $excludeStatuses = ['OFF'];
@@ -262,5 +382,31 @@ class VehiclesAttendanceController extends Controller
         $ids = $request->ids;
         VehiclesAttendance::whereIn('id', $ids)->update(['is_active' => 0]);
         return response()->json(['success' => true]);
+    }
+
+    private function resolveMonthDate(?string $month): Carbon
+    {
+        if (! empty($month)) {
+            try {
+                if (preg_match('/^\d{4}-\d{2}$/', $month)) {
+                    return Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+                }
+
+                return Carbon::parse($month)->startOfMonth();
+            } catch (\Throwable) {
+            }
+        }
+
+        return now()->startOfMonth();
+    }
+
+    private function resolveVehicleShiftLabel(Vehicle $vehicle): string
+    {
+        $hours = $vehicle->shiftHours?->hours;
+        if ($hours !== null && $hours !== '') {
+            return (string) ((int) $hours) . ' Hours';
+        }
+
+        return $vehicle->shiftHours?->name ?? 'N/A';
     }
 }
