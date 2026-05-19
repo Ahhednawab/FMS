@@ -19,7 +19,7 @@
                 </thead>
                 <tbody>
                     @forelse ($trackingData as $row)
-                        <tr>
+                        <tr class="tracking-data-row" data-vehicle="{{ $row['vehicle_filter_key'] }}">
                             <td>{{ $row['date'] }}</td>
                             <td>{{ $row['vehicle'] }}</td>
                             <td>{{ $row['akpl'] }}</td>
@@ -33,12 +33,19 @@
                             <td>{{ number_format($row['diff'], 1) }}</td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr id="tracking-data-original-empty">
                             <td colspan="11" class="text-center text-muted py-4">
                                 No data available.
                             </td>
                         </tr>
                     @endforelse
+                    @if (!empty($trackingData))
+                        <tr id="tracking-data-filter-empty" style="display: none;">
+                            <td colspan="11" class="text-center text-muted py-4">
+                                No records match the selected vehicle filter.
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

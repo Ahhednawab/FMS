@@ -6,27 +6,46 @@ use App\Models\DailyMileageReport;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TrackingController extends Controller
 {
     private const TRACKING_ENDPOINT = 'http://125.209.111.151/keapi/TrackingServices.asmx';
+
     private const TRACKING_SOAP_ACTION = 'http://tempuri.org/MIS_AMS';
+
     private const TRACKING_API_KEY = 'wo6Iqo1206nPfcZ1bSML6GVXTyuCVu';
 
     public function index(Request $request)
     {
         $reportDate = $this->resolveReportDate($request->query('report_date'));
+        $selectedVehicles = collect((array) $request->query('vehicle_no', []))
+            ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $vehicles = Vehicle::query()
+            ->where('is_active', 1)
+            ->orderBy('vehicle_no')
+            ->get(['vehicle_no']);
+
         $trackingData = [];
         $apiError = null;
 
         try {
             $trackingData = $this->buildTrackingReport($this->fetchTrackingData($reportDate), $reportDate);
+
+            if (! empty($selectedVehicles)) {
+                $trackingData = collect($trackingData)
+                    ->filter(fn (array $row) => in_array($row['vehicle_filter_key'], $selectedVehicles, true))
+                    ->values()
+                    ->all();
+            }
         } catch (Throwable $exception) {
             $apiError = 'Unable to load tracking data right now.';
-
             Log::error('Tracking data API request failed.', [
                 'report_date' => $reportDate,
                 'message' => $exception->getMessage(),
@@ -36,6 +55,8 @@ class TrackingController extends Controller
         return view('admin.trackingData.index', [
             'reportDate' => $reportDate,
             'trackingData' => $trackingData,
+            'vehicles' => $vehicles,
+            'selectedVehicles' => $selectedVehicles,
             'apiError' => $apiError,
         ]);
     }
@@ -51,7 +72,7 @@ class TrackingController extends Controller
 
     private function fetchTrackingData(string $reportDate): array
     {
-        
+
         $response = $this->sendSoapRequest($reportDate);
 
         if ($response === '') {
@@ -98,7 +119,7 @@ class TrackingController extends Controller
             CURLOPT_POST => true,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: text/xml; charset=utf-8',
-                'SOAPAction: "' . self::TRACKING_SOAP_ACTION . '"',
+                'SOAPAction: "'.self::TRACKING_SOAP_ACTION.'"',
             ],
             CURLOPT_POSTFIELDS => $this->buildSoapEnvelope($reportDate),
             CURLOPT_TIMEOUT => 30,
@@ -111,11 +132,11 @@ class TrackingController extends Controller
         curl_close($curl);
 
         if ($response === false) {
-            throw new \RuntimeException('cURL error: ' . $curlError);
+            throw new \RuntimeException('cURL error: '.$curlError);
         }
 
         if ($httpCode >= 400) {
-            throw new \RuntimeException('Tracking API returned HTTP ' . $httpCode);
+            throw new \RuntimeException('Tracking API returned HTTP '.$httpCode);
         }
 
         return trim((string) $response);
@@ -268,6 +289,7 @@ XML;
                 return [
                     'date' => $reportDate,
                     'vehicle' => (string) ($row['RegNo'] ?? ''),
+                    'vehicle_filter_key' => $vehicleNo,
                     'akpl' => $vehicle?->akpl ?: 'N/A',
                     'shift' => $this->resolveShiftHoursLabel($vehicle),
                     'off_peak' => $offPeak,
@@ -296,7 +318,7 @@ XML;
 
         $hours = $vehicle->shiftHours?->hours;
         if ($hours !== null && $hours !== '') {
-            return rtrim(rtrim((string) $hours, '0'), '.') . ' Hr';
+            return rtrim(rtrim((string) $hours, '0'), '.').' Hr';
         }
 
         return $vehicle->shiftHours?->name
