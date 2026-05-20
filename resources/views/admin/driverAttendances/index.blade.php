@@ -145,7 +145,7 @@
         <div class="card">
             <div class="card-body">
 
-                <button class="btn btn-light" id="excelBtn" title="Export to Excel">
+                {{-- <button class="btn btn-light" id="excelBtn" title="Export to Excel">
                     <i class="icon-file-excel"></i> Excel
                 </button>
                 <button class="btn btn-light" id="printBtn" title="Print">
@@ -153,7 +153,7 @@
                 </button>
                 <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
                     <i class="icon-file-pdf"></i> PDF
-                </button>
+                </button> --}}
                 <table class="table datatable-colvis-basic dataTable">
                     <thead>
                         <tr>

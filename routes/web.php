@@ -236,6 +236,9 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
     Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
     Route::post('vehicleAttendances/destroyMultiple', [VehiclesAttendanceController::class, 'destroyMultiple'])->name('vehicleAttendances.destroyMultiple');
+    Route::get('vehicleAttendances/monthly', [VehiclesAttendanceController::class, 'monthlyIndex'])->name('vehicleAttendances.monthly.index');
+    Route::get('vehicleAttendances/monthly/{vehicle}', [VehiclesAttendanceController::class, 'monthlyShow'])->name('vehicleAttendances.monthly.show');
+    Route::get('vehicleAttendances/monthly/{vehicle}/export', [VehiclesAttendanceController::class, 'monthlyExport'])->name('vehicleAttendances.monthly.export');
     Route::get('vehicleAttendances/export-monthly-register', [VehiclesAttendanceController::class, 'exportMonthlyRegister'])->name('vehicleAttendances.exportMonthlyRegister');
     Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
 
@@ -331,6 +334,9 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
 
     Route::post('vehicleAttendances/create', [VehiclesAttendanceController::class, 'create'])->name('vehicleAttendances.filter');
     Route::post('vehicleAttendances/destroyMultiple', [VehiclesAttendanceController::class, 'destroyMultiple'])->name('vehicleAttendances.destroyMultiple');
+    Route::get('vehicleAttendances/monthly', [VehiclesAttendanceController::class, 'monthlyIndex'])->name('vehicleAttendances.monthly.index');
+    Route::get('vehicleAttendances/monthly/{vehicle}', [VehiclesAttendanceController::class, 'monthlyShow'])->name('vehicleAttendances.monthly.show');
+    Route::get('vehicleAttendances/monthly/{vehicle}/export', [VehiclesAttendanceController::class, 'monthlyExport'])->name('vehicleAttendances.monthly.export');
     Route::get('vehicleAttendances/export-monthly-register', [VehiclesAttendanceController::class, 'exportMonthlyRegister'])->name('vehicleAttendances.exportMonthlyRegister');
     Route::resource('vehicleAttendances', VehiclesAttendanceController::class);
 

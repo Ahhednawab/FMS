@@ -24,6 +24,8 @@
 
     <!-- Content area -->
     <div class="content">
+        @include('admin.vehicleAttendances.partials.module-tabs')
+
         @if ($message = Session::get('success'))
             <div id="alert-message" class="alert alert-success alert-dismissible alert-dismissible-2" role="alert">
                 {{ $message }}
@@ -133,7 +135,7 @@
         <div class="card">
             <div class="card-body">
 
-                <a class="btn btn-light" id="excelBtn" title="Export to Excel"
+                {{-- <a class="btn btn-light" id="excelBtn" title="Export to Excel"
                     href="{{ route('vehicleAttendances.exportMonthlyRegister', ['from_date' => request('from_date'), 'to_date' => request('to_date')]) }}">
                     <i class="icon-file-excel"></i> Excel
                 </a>
@@ -142,7 +144,7 @@
                 </button>
                 <button class="btn btn-light ml-2" id="pdfBtn" title="Export PDF">
                     <i class="icon-file-pdf"></i> PDF
-                </button>
+                </button> --}}
                 <table class="table datatable-colvis-basic dataTable">
                     <thead>
                         <tr>
