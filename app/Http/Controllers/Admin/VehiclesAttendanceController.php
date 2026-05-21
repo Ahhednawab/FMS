@@ -253,6 +253,16 @@ class VehiclesAttendanceController extends Controller
             $offDaysCount = $daysInMonth->where('is_sunday', true)->count();
             $presentCount = (int) $vehicle->total_present;
             $absentCount = (int) $vehicle->total_absent;
+            $underMaintenanceCount = $rowsByDate->filter(function (VehiclesAttendance $attendance) {
+                $statusKey = strtolower(trim((string) optional($attendance->attendanceStatus)->name));
+
+                return in_array($statusKey, ['under maintenance', 'under maintanance'], true);
+            })->count();
+            $inspectionCount = $rowsByDate->filter(function (VehiclesAttendance $attendance) {
+                $statusKey = strtolower(trim((string) optional($attendance->attendanceStatus)->name));
+
+                return $statusKey === 'inspection';
+            })->count();
 
             return [
                 'serial_no' => $index + 1,
@@ -263,10 +273,30 @@ class VehiclesAttendanceController extends Controller
                     $row = $rowsByDate->get($dayMeta['date']);
                     $statusKey = strtolower(trim((string) optional(optional($row)->attendanceStatus)->name));
 
+                    if (in_array($statusKey, ['under maintenance', 'under maintanance'], true)) {
+                        return array_merge($dayMeta, [
+                            'code' => 'UM',
+                            'is_absent' => false,
+                            'is_under_maintenance' => true,
+                            'is_inspection' => false,
+                        ]);
+                    }
+
+                    if ($statusKey === 'inspection') {
+                        return array_merge($dayMeta, [
+                            'code' => 'IN',
+                            'is_absent' => false,
+                            'is_under_maintenance' => false,
+                            'is_inspection' => true,
+                        ]);
+                    }
+
                     if ($dayMeta['is_sunday']) {
                         return array_merge($dayMeta, [
                             'code' => 'Off',
                             'is_absent' => false,
+                            'is_under_maintenance' => false,
+                            'is_inspection' => false,
                         ]);
                     }
 
@@ -277,10 +307,14 @@ class VehiclesAttendanceController extends Controller
                             default => '',
                         },
                         'is_absent' => $statusKey === 'absent',
+                        'is_under_maintenance' => false,
+                        'is_inspection' => false,
                     ]);
                 }),
                 'present_count' => $presentCount,
                 'absent_count' => $absentCount,
+                'under_maintenance_count' => $underMaintenanceCount,
+                'inspection_count' => $inspectionCount,
                 'off_days_count' => $offDaysCount,
                 'total_present_days' => $presentCount + $offDaysCount,
                 'total_days_in_month' => $daysInMonth->count(),

@@ -99,7 +99,7 @@
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
                                     @foreach ($driver_attendance_status as $id => $status)
-                                        @continue(in_array(strtolower(trim($status)), ['replace', 'leave', 'leave remove'], true))
+                                        @continue(in_array(strtolower(trim($status)), ['replace', 'leave', 'leave remove', 'off'], true))
                                         <button type="button" class="btn btn-sm btn-outline-primary status-btn"
                                             data-status-id="{{ $id }}">
                                             {{ $status }}
@@ -205,7 +205,7 @@
                                         name="status[]" data-driver-idx="{{ $i }}">
                                         <option value="">Select</option>
                                         @foreach ($driver_attendance_status as $statusKey => $statusLabel)
-                                            @continue(in_array(strtolower(trim($statusLabel)), ['replace', 'leave', 'leave remove'], true))
+                                            @continue(in_array(strtolower(trim($statusLabel)), ['replace', 'leave', 'leave remove', 'off'], true))
                                             <option value="{{ $statusKey }}"
                                                 {{ old('status.' . $i) == (string) $statusKey ? 'selected' : '' }}>
                                                 {{ $statusLabel }}</option>
