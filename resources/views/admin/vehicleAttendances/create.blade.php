@@ -106,6 +106,7 @@
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
                                     @foreach ($attendanceStatus as $id => $status)
+                                        @continue(strtolower(trim($status)) === 'replace')
                                         <button type="button" class="btn btn-sm btn-outline-primary status-btn"
                                             data-status-id="{{ $id }}">
                                             {{ $status }}
@@ -192,6 +193,7 @@
                                             id="attendanceStatus-{{ $value['vehicle_id'] }}">
                                             <option value="">Select</option>
                                             @foreach ($attendanceStatus as $statusKey => $statusLabel)
+                                                @continue(strtolower(trim($statusLabel)) === 'replace')
                                                 <option value="{{ $statusKey }}"
                                                     {{ old('status.' . $value['vehicle_id']) == (string) $statusKey ? 'selected' : '' }}>
                                                     {{ $statusLabel }}

@@ -1063,7 +1063,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Tax Date</strong>
-                                <input type="date" name="tax_date"
+                                <input type="date" id="tax_date" name="tax_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['tax_date'] ?? '') ? 'is-invalid' : '' }}
                @error('tax_date') is-invalid @enderror"
@@ -1085,7 +1085,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Next Tax Date<span style="color:red">*</span></strong>
-                                <input type="date" name="next_tax_date"
+                                <input type="date" id="next_tax_date" name="next_tax_date" readonly
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['next_tax_date'] ?? '') ? 'is-invalid' : '' }}
                @error('next_tax_date') is-invalid @enderror"
@@ -1165,6 +1165,8 @@
             const insuranceExpiryDateInput = document.getElementById('insurance_expiry_date');
             const routePermitDateInput = document.getElementById('route_permit_date');
             const routePermitExpiryDateInput = document.getElementById('route_permit_expiry_date');
+            const taxDateInput = document.getElementById('tax_date');
+            const nextTaxDateInput = document.getElementById('next_tax_date');
             const vehicleConditionSelect = document.querySelector('select[name="is_new_vehicle"]');
 
             function formatDate(date) {
@@ -1219,8 +1221,20 @@
                 }
 
                 const routePermitDate = new Date(routePermitDateInput.value);
-                routePermitDate.setFullYear(routePermitDate.getFullYear() + 3);
+                routePermitDate.setFullYear(routePermitDate.getFullYear() + 1);
                 routePermitExpiryDateInput.value = formatDate(routePermitDate);
+            }
+
+            function calculateNextTaxDate() {
+                if (!taxDateInput || !nextTaxDateInput) return;
+                if (!taxDateInput.value) {
+                    nextTaxDateInput.value = '';
+                    return;
+                }
+
+                const taxDate = new Date(taxDateInput.value);
+                taxDate.setFullYear(taxDate.getFullYear() + 1);
+                nextTaxDateInput.value = formatDate(taxDate);
             }
 
             function filterIBCCenters() {
@@ -1298,6 +1312,7 @@
             fitnessDateInput?.addEventListener('change', calculateFitnessExpiryDate);
             insuranceDateInput?.addEventListener('change', calculateInsuranceExpiryDate);
             routePermitDateInput?.addEventListener('change', calculateRoutePermitExpiryDate);
+            taxDateInput?.addEventListener('change', calculateNextTaxDate);
             vehicleConditionSelect?.addEventListener('change', calculateFitnessExpiryDate);
             filterIBCCenters(); // Initial filter (e.g. in edit mode)
             filterPoolDrivers();
@@ -1306,6 +1321,7 @@
             calculateFitnessExpiryDate();
             calculateInsuranceExpiryDate();
             calculateRoutePermitExpiryDate();
+            calculateNextTaxDate();
         });
     </script>
 

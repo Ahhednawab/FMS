@@ -370,8 +370,8 @@ class VehicleController extends Controller
         // Tax → 1 Year
         $vehicle->next_tax_date = Carbon::parse($request->tax_date)->addYear();
 
-        // Route Permit → 3 Years
-        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYears(3);
+        // Route Permit → 1 Year
+        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYear();
 
         // Fitness → conditional (new/old vehicle)
         if ($request->is_new_vehicle == 1) {
@@ -728,6 +728,8 @@ class VehicleController extends Controller
         }
 
         $vehicle->next_inspection_date = Carbon::parse($request->inspection_date)->addMonths(8);
+        $vehicle->next_tax_date = Carbon::parse($request->tax_date)->addYear();
+        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYear();
 
         if ($request->boolean('is_new_vehicle')) {
             $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addMonths(6);
