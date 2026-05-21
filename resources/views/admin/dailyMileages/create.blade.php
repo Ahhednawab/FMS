@@ -114,13 +114,13 @@
                                 {{-- Station --}}
                                 <div class="col-md-3">
                                     <label>Station</label>
-                                    <input type="text" class="form-control" value="{{ $value['station'] }}" readonly>
+                                    <input type="text" class="form-control" value="{{ $value['station'] }}" readonly tabindex="-1">
                                 </div>
 
                                 {{-- Vehicle No --}}
                                 <div class="col-md-2">
                                     <label>Vehicle No</label>
-                                    <input type="text" class="form-control" value="{{ $value['vehicle_no'] }}" readonly>
+                                    <input type="text" class="form-control" value="{{ $value['vehicle_no'] }}" readonly tabindex="-1">
                                 </div>
 
                                 {{-- Previous KM --}}
@@ -128,7 +128,7 @@
                                     <label>Previous KM</label>
                                     <input type="number" class="form-control previous_km @error("vehicles.$vid.previous_km") is-invalid @enderror"
                                         name="vehicles[{{ $vid }}][previous_km]" value="{{ old("vehicles.$vid.previous_km", $value['previous_km']) }}"
-                                        readonly>
+                                        readonly tabindex="-1">
                                     @error("vehicles.$vid.previous_km")
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror
@@ -150,7 +150,7 @@
                                     <label>Mileage</label>
                                     <input type="number" class="form-control mileage"
                                         name="vehicles[{{ $vid }}][mileage]"
-                                        value="{{ old("vehicles.$vid.mileage") }}" readonly>
+                                        value="{{ old("vehicles.$vid.mileage") }}" readonly tabindex="-1">
                                 </div>
 
                             </div>

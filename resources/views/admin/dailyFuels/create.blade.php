@@ -124,7 +124,7 @@
                                         <div class="form-group">
                                             <strong>Vehicle No</strong>
                                             <input type="text" class="form-control" name="vehicle_no"
-                                                value="{{ $value['vehicle_no'] }}" readonly>
+                                                value="{{ $value['vehicle_no'] }}" readonly tabindex="-1">
                                         </div>
                                     </div>
 
@@ -134,7 +134,7 @@
                                             <strong>Previous KMs</strong>
                                             <input type="number" min="0" step="1"
                                                 class="form-control previous_km" name="previous_km[]"
-                                                value="{{ $value['previous_km'] }}" readonly>
+                                                value="{{ $value['previous_km'] }}" readonly tabindex="-1">
                                         </div>
                                     </div>
 
@@ -156,7 +156,7 @@
                                         <div class="form-group">
                                             <strong>Mileage KM</strong>
                                             <input type="number" min="0" step="1" class="form-control"
-                                                name="mileage[]" value="{{ old('mileage.' . $globalIndex) }}" readonly>
+                                                name="mileage[]" value="{{ old('mileage.' . $globalIndex) }}" readonly tabindex="-1">
                                         </div>
                                     </div>
 
@@ -179,7 +179,7 @@
                                             <strong>Fuel Avg. (KM/Ltr.)</strong>
                                             <input type="number" min="0" step="0.1" class="form-control"
                                                 name="fuel_average[]" value="{{ old('fuel_average.' . $globalIndex) }}"
-                                                readonly>
+                                                readonly tabindex="-1">
                                         </div>
                                     </div>
                                 </div>
@@ -300,12 +300,12 @@
                     var currentKm = $(this).find('.current_km').val();
                     var fuelTaken = $(this).find('.fuel_taken').val();
 
-                    // Check if currentKm is empty or less than or equal to previous km (optional)
+                    // Check if currentKm is empty or less than previous km (optional)
                     var previousKm = parseFloat($(this).find('.previous_km').val()) || 0;
                     var currentKmNum = parseFloat(currentKm);
 
-                    // Validate currentKm: must be a positive number greater than previous km
-                    if (!currentKm || isNaN(currentKmNum) || currentKmNum <= previousKm) {
+                    // Validate currentKm: it can equal previous km, but cannot be lower.
+                    if (!currentKm || isNaN(currentKmNum) || currentKmNum < previousKm) {
                         invalidCurrentKmVehicles.push(vehicleNo);
                     }
 
@@ -322,7 +322,7 @@
                 if (invalidCurrentKmVehicles.length > 0) {
                     e.preventDefault();
                     alert(
-                        'Please enter a valid Current KM greater than Previous KM for these vehicles before saving: \n' +
+                        'Please enter a valid Current KM greater than or equal to Previous KM for these vehicles before saving: \n' +
                         invalidCurrentKmVehicles.join(', ')
                     );
                     $('#saveBtn').prop('disabled', false).text('Save');

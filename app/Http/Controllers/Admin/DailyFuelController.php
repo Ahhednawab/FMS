@@ -200,11 +200,11 @@ class DailyFuelController extends Controller
                 $hasCurr = !(is_null($curr) || $curr === '');
                 $hasFuel = !(is_null($fuel) || $fuel === '');
 
-                // current_km must not exceed previous_km
+                // current_km can match previous_km, but cannot be lower.
                 if ($hasCurr && $prev !== null && $prev !== '') {
                     if (is_numeric($curr) && is_numeric($prev)) {
                         if ((float) $curr < (float) $prev) {
-                            $validator->errors()->add("current_km.$i", 'Current KMs cannot be greater than Previous KMs.');
+                            $validator->errors()->add("current_km.$i", 'Current KMs cannot be less than Previous KMs.');
                         }
                     }
                 }
@@ -256,6 +256,13 @@ class DailyFuelController extends Controller
 
             $prevKmFromDB = $lastReport ? $lastReport->current_km : 0;
 
+            if ((float) $currKm < (float) $prevKmFromDB) {
+                return redirect()->back()
+                    ->withErrors([
+                        "current_km.$i" => "Current KMs cannot be less than Previous KMs ($prevKmFromDB)."
+                    ])
+                    ->withInput();
+            }
 
             $exists = DailyFuelReport::where('vehicle_id', $vehicleId)
                 ->where('report_date', $request->report_date)
