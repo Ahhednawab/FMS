@@ -13,6 +13,8 @@
             padding: 0.875rem 0;
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
 
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
@@ -39,12 +41,11 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Driver Status</strong></label>
-                                <select class="custom-select select2" name="driver_status_id" id="driver_status_id">
-                                    <option value="" {{ empty($selected_driver_status_id) ? 'selected' : '' }}>ALL
-                                    </option>
+                                <select class="custom-select select2" name="driver_status_id[]" id="driver_status_id"
+                                    multiple data-placeholder="Select Driver Status">
                                     @foreach ($driver_status as $key => $value)
                                         <option value="{{ $key }}"
-                                            {{ isset($selected_driver_status_id) && (string) $selected_driver_status_id === (string) $key ? 'selected' : '' }}>
+                                            {{ in_array((int) $key, $selectedDriverStatusIds ?? [], true) ? 'selected' : '' }}>
                                             {{ $value }} </option>
                                     @endforeach
                                 </select>
@@ -53,12 +54,11 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id" id="station_id">
-                                    <option value="" {{ empty($selected_driver_status_id) ? 'selected' : '' }}>ALL
-                                    </option>
+                                <select class="custom-select select2" name="station_id[]" id="station_id" multiple
+                                    data-placeholder="Select Station">
                                     @foreach ($stations as $station)
                                         <option value="{{ $station->id }}"
-                                            {{ old('station_id') == $station->id ? 'selected' : '' }}>
+                                            {{ in_array((int) $station->id, $selectedStationIds ?? [], true) ? 'selected' : '' }}>
                                             {{ $station->area }}
                                         </option>
                                     @endforeach
@@ -250,9 +250,20 @@
     </div>
 @endsection
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             const replaceStatusId = @json($replaceStatusId);
+
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                allowClear: true,
+                closeOnSelect: false,
+                width: '100%',
+                placeholder: function() {
+                    return $(this).data('placeholder') || '--Select--';
+                }
+            });
 
             function toggleReplacementDropdown(driverIdx, selectedStatusId) {
                 const showReplacement = replaceStatusId !== null && String(selectedStatusId) === String(replaceStatusId);

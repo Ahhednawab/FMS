@@ -327,6 +327,19 @@ class DriversAttendanceController extends Controller
             ->whereNotIn('name', $excludeStatuses)
             ->orderBy('id')
             ->pluck('name', 'id');
+
+        $selectedDriverStatusIds = collect((array) $request->input('driver_status_id', []))
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->map(fn ($value) => (int) $value)
+            ->values()
+            ->all();
+
+        $selectedStationIds = collect((array) $request->input('station_id', []))
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->map(fn ($value) => (int) $value)
+            ->values()
+            ->all();
+
         $drivers = Driver::with([
             'driverStatus',
             'shiftTiming',
@@ -340,13 +353,13 @@ class DriversAttendanceController extends Controller
             ->where('drivers.is_active', 1)
             ->where('drivers.driver_type', 'regular')
 
-            ->when($request->driver_status_id, function ($q) use ($request) {
-                $q->where('drivers.driver_status_id', $request->driver_status_id);
+            ->when(! empty($selectedDriverStatusIds), function ($q) use ($selectedDriverStatusIds) {
+                $q->whereIn('drivers.driver_status_id', $selectedDriverStatusIds);
             })
 
-            ->when($request->station_id, function ($q) use ($request) {
-                $q->whereHas('vehicle', function ($query) use ($request) {
-                    $query->where('station_id', $request->station_id);
+            ->when(! empty($selectedStationIds), function ($q) use ($selectedStationIds) {
+                $q->whereHas('vehicle', function ($query) use ($selectedStationIds) {
+                    $query->whereIn('station_id', $selectedStationIds);
                 });
             })
 
@@ -362,8 +375,6 @@ class DriversAttendanceController extends Controller
             ->select('drivers.*')
             ->get();
 
-        $selected_driver_status_id = $request->driver_status_id ?? '';
-
         $poolDriverOptions = $drivers->mapWithKeys(function (Driver $driver) {
             $poolDrivers = optional($driver->vehicle)->poolDrivers
                 ?->mapWithKeys(fn (Driver $poolDriver) => [$poolDriver->id => $poolDriver->full_name])
@@ -374,7 +385,7 @@ class DriversAttendanceController extends Controller
 
         $replaceStatusId = $this->getReplaceStatusId();
 
-        return view('admin.driverAttendances.create', compact('drivers', 'driver_status', 'driver_attendance_status', 'selected_driver_status_id', 'stations', 'poolDriverOptions', 'replaceStatusId'));
+        return view('admin.driverAttendances.create', compact('drivers', 'driver_status', 'driver_attendance_status', 'selectedDriverStatusIds', 'selectedStationIds', 'stations', 'poolDriverOptions', 'replaceStatusId'));
     }
 
     public function store(Request $request)
