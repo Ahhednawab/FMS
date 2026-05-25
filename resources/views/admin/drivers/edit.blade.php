@@ -15,6 +15,12 @@
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
         rel="stylesheet" />
 
+    @php
+        $dateValue = function ($value) {
+            return $value ? \Illuminate\Support\Carbon::parse($value)->format('Y-m-d') : '';
+        };
+    @endphp
+
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
             <div class="page-title d-flex">
@@ -201,7 +207,7 @@
                                     <div class="form-group">
                                         <strong>DOB</strong>
                                         <input type="date" name="dob" class="form-control"
-                                            value="{{ old('dob', $driver->dob ?? '') }}">
+                                            value="{{ old('dob', $dateValue($driver->dob ?? null)) }}">
                                         @if ($errors->has('dob'))
                                             <label class="text-danger">{{ $errors->first('dob') }}</label>
                                         @endif
@@ -265,7 +271,7 @@
                                         <div class="form-group">
                                             <strong>CNIC Expiry Date <span class="text-danger">*</span></strong>
                                             <input type="date" name="cnic_expiry_date" class="form-control"
-                                                value="{{ old('cnic_expiry_date', $driver->cnic_expiry_date ?? '') }}">
+                                                value="{{ old('cnic_expiry_date', $dateValue($driver->cnic_expiry_date ?? null)) }}">
                                             @if ($errors->has('cnic_expiry_date'))
                                                 <label class="text-danger">{{ $errors->first('cnic_expiry_date') }}</label>
                                             @endif
@@ -305,7 +311,7 @@
                                         <div class="form-group">
                                             <strong>EOBI Start Date</strong>
                                             <input type="date" name="eobi_start_date" class="form-control"
-                                                value="{{ old('eobi_start_date', $driver->eobi_start_date ?? '') }}">
+                                                value="{{ old('eobi_start_date', $dateValue($driver->eobi_start_date ?? null)) }}">
                                             @if ($errors->has('eobi_start_date'))
                                                 <label class="text-danger">{{ $errors->first('eobi_start_date') }}</label>
                                             @endif
@@ -368,7 +374,7 @@
                                     <div class="form-group">
                                         <strong>Employment Date</strong>
                                         <input type="date" name="employment_date" class="form-control"
-                                            value="{{ old('employment_date', $driver->employment_date ?? '') }}">
+                                            value="{{ old('employment_date', $dateValue($driver->employment_date ?? null)) }}">
                                         @if ($errors->has('employment_date'))
                                             <label class="text-danger">{{ $errors->first('employment_date') }}</label>
                                         @endif
@@ -446,7 +452,7 @@
                                     <div class="form-group">
                                         <strong>License Expiry Date <span class="text-danger">*</span></strong>
                                         <input type="date" name="license_expiry_date" class="form-control"
-                                            value="{{ old('license_expiry_date', $driver->license_expiry_date ?? '') }}">
+                                            value="{{ old('license_expiry_date', $dateValue($driver->license_expiry_date ?? null)) }}">
                                         @if ($errors->has('license_expiry_date'))
                                             <label class="text-danger">{{ $errors->first('license_expiry_date') }}</label>
                                         @endif
@@ -471,7 +477,7 @@
                                     <div class="form-group">
                                         <strong>Uniform Issue Date</strong>
                                         <input type="date" name="uniform_issue_date" class="form-control"
-                                            value="{{ old('uniform_issue_date', $driver->uniform_issue_date ?? '') }}">
+                                            value="{{ old('uniform_issue_date', $dateValue($driver->uniform_issue_date ?? null)) }}">
                                         @if ($errors->has('uniform_issue_date'))
                                             <label class="text-danger">{{ $errors->first('uniform_issue_date') }}</label>
                                         @endif
@@ -483,7 +489,7 @@
                                     <div class="form-group">
                                         <strong>Sandal Issue Date</strong>
                                         <input type="date" name="sandal_issue_date" class="form-control"
-                                            value="{{ old('sandal_issue_date', $driver->sandal_issue_date ?? '') }}">
+                                            value="{{ old('sandal_issue_date', $dateValue($driver->sandal_issue_date ?? null)) }}">
                                         @if ($errors->has('sandal_issue_date'))
                                             <label class="text-danger">{{ $errors->first('sandal_issue_date') }}</label>
                                         @endif
@@ -495,7 +501,7 @@
                                     <div class="form-group">
                                         <strong>Last Date</strong>
                                         <input type="date" name="last_date" class="form-control"
-                                            value="{{ old('last_date', $driver->last_date ?? '') }}">
+                                            value="{{ old('last_date', $dateValue($driver->last_date ?? null)) }}">
                                         @if ($errors->has('last_date'))
                                             <label class="text-danger">{{ $errors->first('last_date') }}</label>
                                         @endif
@@ -539,10 +545,14 @@
 
     <script>
         $(document).ready(function() {
-            function toggleRegularDriverFields() {
+            function toggleRegularDriverFields(clearConflictingFields = false) {
                 const isPoolDriver = $('#driver_type').val() === 'pool';
                 $('.regular-driver-only').closest('.col-md-3').toggle(!isPoolDriver);
                 $('.pool-driver-station-group').toggle(isPoolDriver);
+
+                if (!clearConflictingFields) {
+                    return;
+                }
 
                 if (isPoolDriver) {
                     $('#vehicle_id').val('').trigger('change');
@@ -558,7 +568,9 @@
                 theme: 'bootstrap4'
             });
 
-            $('#driver_type').on('change', toggleRegularDriverFields);
+            $('#driver_type').on('change', function() {
+                toggleRegularDriverFields(true);
+            });
             toggleRegularDriverFields();
 
             $('#cnic_no').inputmask("99999-9999999-9");

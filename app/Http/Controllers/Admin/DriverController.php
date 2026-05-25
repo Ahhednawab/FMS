@@ -65,7 +65,6 @@ class DriverController extends Controller
             })
             ->orderBy('vehicle_no')
             ->pluck('vehicle_no', 'id');
-
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $shift_timings = ShiftTimings::select('id', 'name', 'start_time', 'end_time')
@@ -223,9 +222,21 @@ class DriverController extends Controller
                 return;
             }
 
-            if ($request->vehicle_id && $request->shift_timing_id) {
+            if ($request->vehicle_id) {
                 $vehicle = Vehicle::find($request->vehicle_id);
-                if ($vehicle && $vehicle->shift_hour_id == 2) {
+
+                if ($vehicle && $vehicle->shift_hour_id == 1) {
+                    $existingDriver = Driver::where('vehicle_id', $request->vehicle_id)
+                        ->where('is_active', 1)
+                        ->where('id', '!=', $driver->id)
+                        ->first();
+
+                    if ($existingDriver) {
+                        $validator->errors()->add('vehicle_id', 'This vehicle already has an active driver assigned.');
+                    }
+                }
+
+                if ($vehicle && $vehicle->shift_hour_id == 2 && $request->shift_timing_id) {
                     $existingDriver = Driver::where('vehicle_id', $request->vehicle_id)
                         ->where('shift_timing_id', $request->shift_timing_id)
                         ->where('is_active', 1)
@@ -448,6 +459,13 @@ class DriverController extends Controller
             })
             ->orderBy('vehicle_no')
             ->pluck('vehicle_no', 'id');
+        if ($driver->vehicle_id && ! $vehicles->has($driver->vehicle_id)) {
+            $currentVehicle = Vehicle::find($driver->vehicle_id);
+
+            if ($currentVehicle) {
+                $vehicles->put($currentVehicle->id, $currentVehicle->vehicle_no);
+            }
+        }
 
         $marital_status = MaritalStatus::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $licence_category = LicenseCategory::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
@@ -517,11 +535,7 @@ class DriverController extends Controller
             'last_date'    =>  'nullable|date',
             'address' =>  'nullable',
         ];
-        if ($request->has('vehicle_id') && $request->vehicle_id != $driver->vehicle_id) {
-            $rules['vehicle_id'] = 'nullable|unique:drivers,vehicle_id';
-        } else {
-            $rules['vehicle_id'] = 'nullable';
-        }
+        $rules['vehicle_id'] = 'nullable';
         if ($request->has('cnic_no') && $request->cnic_no != $driver->cnic_no) {
             $rules['cnic_no'] = 'required|string|size:15|unique:drivers,cnic_no';
         } else {
@@ -626,8 +640,8 @@ class DriverController extends Controller
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
         $driver->station_id             =   $request->driver_type === 'pool' ? $request->station_id : null;
-        $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->vehicle_id : null);
-        $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : (($request->driver_status_id == 1) ? $request->shift_timing_id : null);
+        $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : $request->vehicle_id;
+        $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
         $driver->cnic_expiry_date       =   $request->cnic_expiry_date;
         $driver->eobi_no                =   $request->eobi_no;

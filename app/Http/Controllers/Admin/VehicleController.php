@@ -479,15 +479,23 @@ class VehicleController extends Controller
         $ibc_center = IbcCenter::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $vendors = Vendor::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
         $insurance_companies = InsuranceCompany::where('is_active', 1)->get();
+        $vehicle->loadMissing(['poolDrivers', 'drivers']);
+        $assignedRegularDriverIds = $vehicle->drivers
+            ->pluck('id')
+            ->push($vehicle->primary_driver_id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $shift_timings = ShiftTimings::whereNotIn('id', [1, 2])->pluck('name', 'id');
-        $regularDrivers = $this->getAssignableRegularDrivers();
-        $poolDrivers = $this->getAssignableDrivers('pool', true);
+        $regularDrivers = $this->getAssignableRegularDrivers($assignedRegularDriverIds);
+        $poolDrivers = $this->getAssignableDrivers('pool', true, $vehicle->poolDrivers->pluck('id')->all());
 
         $status = [
             '1' => 'Yes',
             '2' => 'No',
         ];
-        $vehicle->loadMissing(['poolDrivers', 'drivers']);
 
         return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers'));
     }
@@ -810,10 +818,16 @@ class VehicleController extends Controller
         ]);
     }
 
-    private function getAssignableDrivers(string $driverType, bool $includeStation = false)
+    private function getAssignableDrivers(string $driverType, bool $includeStation = false, array $includeDriverIds = [])
     {
-        return Driver::where('is_active', 1)
-            ->where('driver_type', $driverType)
+        return Driver::where('driver_type', $driverType)
+            ->where(function ($query) use ($includeDriverIds) {
+                $query->where('is_active', 1);
+
+                if (! empty($includeDriverIds)) {
+                    $query->orWhereIn('id', $includeDriverIds);
+                }
+            })
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'vehicle_id', 'driver_type', 'station_id'])
             ->when($includeStation, function ($drivers) {
@@ -836,10 +850,16 @@ class VehicleController extends Controller
             });
     }
 
-    private function getAssignableRegularDrivers()
+    private function getAssignableRegularDrivers(array $includeDriverIds = [])
     {
-        return Driver::where('is_active', 1)
-            ->where('driver_type', 'regular')
+        return Driver::where('driver_type', 'regular')
+            ->where(function ($query) use ($includeDriverIds) {
+                $query->where('is_active', 1);
+
+                if (! empty($includeDriverIds)) {
+                    $query->orWhereIn('id', $includeDriverIds);
+                }
+            })
             ->orderBy('full_name')
             ->get(['id', 'full_name', 'vehicle_id', 'shift_timing_id'])
             ->map(function (Driver $driver) {
