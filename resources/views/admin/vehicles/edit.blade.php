@@ -241,7 +241,7 @@
 
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Driver 1<span style="color:red">*</span></strong>
+                                        <strong>Driver 1<span id="primary-driver-required-marker" style="color:red">*</span></strong>
                                         <select name="primary_driver_id" id="primary_driver_id"
                                             class="custom-select @error('primary_driver_id') is-invalid @enderror">
                                             <option value="">-- Select Driver --</option>
@@ -796,6 +796,8 @@
             const taxDateInput = document.getElementById('tax_date');
             const nextTaxDateInput = document.getElementById('next_tax_date');
             const vehicleConditionSelect = document.querySelector('select[name="is_new_vehicle"]');
+            const poolVehicleInputs = document.querySelectorAll('input[name="pool_vehicle"]');
+            const primaryDriverRequiredMarker = document.getElementById('primary-driver-required-marker');
 
             function formatDate(date) {
                 if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
@@ -930,9 +932,18 @@
                 }
             }
 
+            function togglePrimaryDriverRequiredMarker() {
+                if (!primaryDriverRequiredMarker) return;
+                const selectedPoolVehicle = document.querySelector('input[name="pool_vehicle"]:checked')?.value;
+                primaryDriverRequiredMarker.style.display = selectedPoolVehicle === '1' ? 'none' : '';
+            }
+
             stationSelect.addEventListener('change', function() {
                 filterIBCCenters();
                 filterPoolDrivers();
+            });
+            poolVehicleInputs.forEach(input => {
+                input.addEventListener('change', togglePrimaryDriverRequiredMarker);
             });
             shiftHourSelect?.addEventListener('change', toggleSecondaryDriverFields);
             inspectionDateInput?.addEventListener('change', calculateNextInspectionDate);
@@ -945,6 +956,7 @@
             filterIBCCenters();
             filterPoolDrivers();
             toggleSecondaryDriverFields();
+            togglePrimaryDriverRequiredMarker();
             calculateNextInspectionDate();
             calculateFitnessExpiryDate();
             calculateInsuranceExpiryDate();
