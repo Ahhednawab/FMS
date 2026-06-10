@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TrackingReportsExport;
 use App\Models\DailyMileageReport;
+use App\Models\TrackingReport;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 class TrackingController extends Controller
@@ -36,7 +39,7 @@ class TrackingController extends Controller
         $apiError = null;
 
         try {
-            $trackingData = $this->buildTrackingReport($this->fetchTrackingData($reportDate), $reportDate);
+            $trackingData = $this->getTrackingDataForDate($reportDate);
 
             if (! empty($selectedVehicles)) {
                 $trackingData = collect($trackingData)
@@ -57,8 +60,78 @@ class TrackingController extends Controller
             'trackingData' => $trackingData,
             'vehicles' => $vehicles,
             'selectedVehicles' => $selectedVehicles,
+            'selectedMonth' => Carbon::parse($reportDate)->format('Y-m'),
             'apiError' => $apiError,
         ]);
+    }
+
+    public function monthly(Request $request)
+    {
+        $monthDate = $this->resolveMonthDate($request->query('month'));
+        $selectedVehicles = collect((array) $request->query('vehicle_no', []))
+            ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $vehicles = Vehicle::query()
+            ->where('is_active', 1)
+            ->orderBy('vehicle_no')
+            ->get(['vehicle_no']);
+
+        $trackingData = [];
+        $apiError = null;
+
+        try {
+            $trackingData = $this->syncTrackingMonth($monthDate);
+
+            if (! empty($selectedVehicles)) {
+                $trackingData = collect($trackingData)
+                    ->filter(fn (array $row) => in_array($row['vehicle_filter_key'], $selectedVehicles, true))
+                    ->values()
+                    ->all();
+            }
+        } catch (Throwable $exception) {
+            $apiError = 'Unable to synchronize monthly tracking data right now.';
+            Log::error('Monthly tracking data synchronization failed.', [
+                'month' => $monthDate->format('Y-m'),
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        return view('admin.trackingData.index', [
+            'reportDate' => $monthDate->toDateString(),
+            'trackingData' => $trackingData,
+            'vehicles' => $vehicles,
+            'selectedVehicles' => $selectedVehicles,
+            'selectedMonth' => $monthDate->format('Y-m'),
+            'apiError' => $apiError,
+        ]);
+    }
+
+    public function monthlyExport(Request $request)
+    {
+        $monthDate = $this->resolveMonthDate($request->query('month'));
+        $trackingData = $this->syncTrackingMonth($monthDate);
+        $selectedVehicles = collect((array) $request->query('vehicle_no', []))
+            ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! empty($selectedVehicles)) {
+            $trackingData = collect($trackingData)
+                ->filter(fn (array $row) => in_array($row['vehicle_filter_key'], $selectedVehicles, true))
+                ->values()
+                ->all();
+        }
+
+        return Excel::download(
+            new TrackingReportsExport($trackingData),
+            'tracking-report-'.$monthDate->format('Y-m').'.xlsx'
+        );
     }
 
     private function resolveReportDate(?string $reportDate): string
@@ -67,6 +140,19 @@ class TrackingController extends Controller
             return Carbon::parse($reportDate ?: now()->toDateString())->format('Y-m-d');
         } catch (Throwable) {
             return now()->toDateString();
+        }
+    }
+
+    private function resolveMonthDate(?string $month): Carbon
+    {
+        try {
+            if (! empty($month) && preg_match('/^\d{4}-\d{2}$/', $month)) {
+                return Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            }
+
+            return Carbon::parse($month ?: now()->format('Y-m'))->startOfMonth();
+        } catch (Throwable) {
+            return now()->startOfMonth();
         }
     }
 
@@ -252,6 +338,108 @@ XML;
             ->all();
     }
 
+    private function getTrackingDataForDate(string $reportDate): array
+    {
+        $existingRecords = TrackingReport::query()
+            ->whereDate('report_date', $reportDate)
+            ->orderBy('vehicle_no')
+            ->get();
+
+        if ($existingRecords->isNotEmpty()) {
+            return $this->trackingRowsFromRecords($existingRecords);
+        }
+
+        return $this->syncTrackingDate($reportDate);
+    }
+
+    private function syncTrackingDate(string $reportDate): array
+    {
+        $trackingRows = $this->buildTrackingReport($this->fetchTrackingData($reportDate), $reportDate);
+        $this->persistTrackingRows($trackingRows);
+
+        return $this->trackingRowsForDateRange(
+            Carbon::parse($reportDate)->startOfDay(),
+            Carbon::parse($reportDate)->endOfDay()
+        );
+    }
+
+    private function syncTrackingMonth(Carbon $monthDate): array
+    {
+        $cursor = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+
+        while ($cursor->lte($monthEnd)) {
+            $this->syncTrackingDate($cursor->toDateString());
+            $cursor->addDay();
+        }
+
+        return $this->trackingRowsForDateRange($monthDate->copy()->startOfMonth(), $monthEnd);
+    }
+
+    private function persistTrackingRows(array $trackingRows): void
+    {
+        foreach ($trackingRows as $row) {
+            TrackingReport::updateOrCreate(
+                [
+                    'report_date' => $row['date'],
+                    'vehicle_no' => $row['vehicle_filter_key'],
+                ],
+                [
+                    'display_vehicle_no' => $row['vehicle'],
+                    'akpl' => $row['akpl'],
+                    'shift' => $row['shift'],
+                    'peak_kms' => $row['peak_kms'],
+                    'api_off_peak_kms' => $row['api_off_peak_kms'],
+                    'api_ams_kms' => $row['api_ams_kms'],
+                    'off_peak' => $row['off_peak'],
+                    'mis_peak_hrs' => $row['mis_peak_hrs'],
+                    'ams' => $row['ams'],
+                    'parking' => $row['parking'],
+                    'total_kms' => $row['total_kms'],
+                    'odo_kms' => $row['odo_kms'],
+                    'diff' => $row['diff'],
+                ]
+            );
+        }
+    }
+
+    private function trackingRowsForDateRange(Carbon $startDate, Carbon $endDate): array
+    {
+        $records = TrackingReport::query()
+            ->whereBetween('report_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->orderBy('report_date')
+            ->orderBy('vehicle_no')
+            ->get();
+
+        return $this->trackingRowsFromRecords($records);
+    }
+
+    private function trackingRowsFromRecords($records): array
+    {
+        return collect($records)
+            ->map(function (TrackingReport $record) {
+                return [
+                    'date' => optional($record->report_date)->format('Y-m-d'),
+                    'vehicle' => $record->display_vehicle_no ?: $record->vehicle_no,
+                    'vehicle_filter_key' => $record->vehicle_no,
+                    'akpl' => $record->akpl ?: 'N/A',
+                    'shift' => $record->shift ?: 'N/A',
+                    'peak_kms' => $this->toFloat($record->peak_kms),
+                    'api_off_peak_kms' => $this->toFloat($record->api_off_peak_kms),
+                    'api_ams_kms' => $this->toFloat($record->api_ams_kms),
+                    'off_peak' => $this->toFloat($record->off_peak),
+                    'mis_peak_hrs' => $this->toFloat($record->mis_peak_hrs),
+                    'ams' => $this->toFloat($record->ams),
+                    'parking' => $this->toFloat($record->parking),
+                    'total_kms' => $this->toFloat($record->total_kms),
+                    'odo_kms' => $this->toFloat($record->odo_kms),
+                    'diff' => $this->toFloat($record->diff),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function buildTrackingReport(array $apiRows, string $reportDate): array
     {
         $apiCollection = collect($apiRows);
@@ -301,6 +489,9 @@ XML;
                     'vehicle_filter_key' => $vehicleNo,
                     'akpl' => $vehicle?->akpl ?: 'N/A',
                     'shift' => $this->resolveShiftHoursLabel($vehicle),
+                    'peak_kms' => $peakKms,
+                    'api_off_peak_kms' => $offPeakKms,
+                    'api_ams_kms' => $ams,
                     'off_peak' => $offPeak,
                     'mis_peak_hrs' => $peakKms,
                     'ams' => $ams,

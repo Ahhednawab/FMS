@@ -51,6 +51,40 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ route('trackingData.monthly') }}" method="GET">
+                    <div class="row align-items-end">
+                        <div class="col-md-3">
+                            <label><strong>Month</strong></label>
+                            <input type="month" name="month" class="form-control"
+                                value="{{ $selectedMonth ?? now()->format('Y-m') }}"
+                                max="{{ now()->format('Y-m') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label><strong>Vehicle No</strong></label>
+                            <select name="vehicle_no[]" class="form-control select2" multiple>
+                                @foreach ($vehicles as $vehicle)
+                                    @php $vehicleNo = strtoupper(trim($vehicle->vehicle_no)); @endphp
+                                    <option value="{{ $vehicleNo }}"
+                                        {{ collect($selectedVehicles)->contains($vehicleNo) ? 'selected' : '' }}>
+                                        {{ $vehicle->vehicle_no }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">Load Monthly Report</button>
+                            <button type="submit" formaction="{{ route('trackingData.monthly.export') }}"
+                                class="btn btn-success">
+                                Export Excel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         @include('admin.trackingData.partials.results', [
             'trackingData' => $trackingData,
         ])
