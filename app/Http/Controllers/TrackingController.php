@@ -280,11 +280,20 @@ XML;
                 $vehicle = $vehicles->get($vehicleNo);
                 $dailyMileage = $vehicle ? $dailyMileageReports->get($vehicle->id) : null;
 
-                $offPeak = $this->toFloat($row['OffPeakKMs'] ?? 0);
+                $peakKms = $this->toFloat($row['PeakKMs'] ?? 0);
+                $offPeakKms = $this->toFloat($row['OffPeakKMs'] ?? 0);
                 $ams = $this->toFloat($row['AMSKMs'] ?? 0);
-                $totalKms = $this->toFloat($row['PeakKMs'] ?? 0);
                 $odoKms = $this->toFloat(optional($dailyMileage)->mileage);
                 $parking = $this->toFloat(optional($vehicle)->parking_km);
+                $isTwentyFourHourVehicle = $this->isTwentyFourHourVehicle($vehicle);
+
+                if ($isTwentyFourHourVehicle) {
+                    $offPeak = $peakKms;
+                    $totalKms = $peakKms;
+                } else {
+                    $offPeak = $peakKms + $offPeakKms;
+                    $totalKms = $ams + $parking;
+                }
 
                 return [
                     'date' => $reportDate,
@@ -293,12 +302,12 @@ XML;
                     'akpl' => $vehicle?->akpl ?: 'N/A',
                     'shift' => $this->resolveShiftHoursLabel($vehicle),
                     'off_peak' => $offPeak,
-                    'mis_peak_hrs' => $ams,
+                    'mis_peak_hrs' => $peakKms,
                     'ams' => $ams,
                     'parking' => $parking,
                     'total_kms' => $totalKms,
                     'odo_kms' => $odoKms,
-                    'diff' => $totalKms - $odoKms,
+                    'diff' => $offPeak - $odoKms,
                 ];
             })
             ->values()
@@ -324,6 +333,22 @@ XML;
         return $vehicle->shiftHours?->name
             ?: $vehicle->shiftTiming?->name
             ?: 'N/A';
+    }
+
+    private function isTwentyFourHourVehicle(?Vehicle $vehicle): bool
+    {
+        if (! $vehicle) {
+            return false;
+        }
+
+        $hours = $vehicle->shiftHours?->hours;
+        if ($hours !== null && $hours !== '') {
+            return (float) $hours >= 24;
+        }
+
+        $shiftLabel = strtolower((string) ($vehicle->shiftHours?->name ?: $vehicle->shiftTiming?->name));
+
+        return str_contains($shiftLabel, '24');
     }
 
     private function toFloat(mixed $value): float
