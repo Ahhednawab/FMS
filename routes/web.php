@@ -152,8 +152,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('dailyMileages', DailyMileageController::class);
     Route::get('/daily-mileage', [TrackingController::class, 'index'])->name('daily-mileage.index');
     Route::get('trackingData', [TrackingController::class, 'index'])->name('trackingData.index');
-    Route::get('trackingData/monthly', [TrackingController::class, 'monthly'])->name('trackingData.monthly');
     Route::get('trackingData/monthly/export', [TrackingController::class, 'monthlyExport'])->name('trackingData.monthly.export');
+    Route::get('trackingData/monthly/dates', [TrackingController::class, 'monthlyDates'])->name('trackingData.monthly.dates');
+    Route::post('trackingData/monthly/sync-date', [TrackingController::class, 'syncMonthlyDate'])->name('trackingData.monthly.syncDate');
     Route::get('fetchDailyMilages', [DailyMileageController::class, 'fetchDailyMilages'])->name('fetchDailyMilages');
     Route::get('dailyMileages/fetch-previous-mileage', [DailyMileageController::class, 'fetchPreviousMileageByVehicleAndDate'])->name('dailyMileages.fetchPreviousMileage');
 

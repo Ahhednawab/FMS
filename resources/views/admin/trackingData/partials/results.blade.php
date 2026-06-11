@@ -19,7 +19,11 @@
                 </thead>
                 <tbody>
                     @forelse ($trackingData as $row)
-                        <tr class="tracking-data-row" data-vehicle="{{ $row['vehicle_filter_key'] }}">
+                        <tr class="tracking-data-row" data-vehicle="{{ $row['vehicle_filter_key'] }}"
+                            data-off-peak="{{ $row['off_peak'] }}" data-mis-peak="{{ $row['mis_peak_hrs'] }}"
+                            data-ams="{{ $row['ams'] }}" data-parking="{{ $row['parking'] }}"
+                            data-total-kms="{{ $row['total_kms'] }}" data-odo-kms="{{ $row['odo_kms'] }}"
+                            data-diff="{{ $row['diff'] }}">
                             <td>{{ $row['date'] }}</td>
                             <td>{{ $row['vehicle'] }}</td>
                             <td>{{ $row['akpl'] }}</td>
@@ -47,6 +51,20 @@
                         </tr>
                     @endif
                 </tbody>
+                @if (!empty($trackingData))
+                    <tfoot>
+                        <tr class="font-weight-bold">
+                            <td colspan="4" class="text-right">Total</td>
+                            <td id="tracking-total-off-peak">0.0</td>
+                            <td id="tracking-total-mis-peak">0.0</td>
+                            <td id="tracking-total-ams">0.0</td>
+                            <td id="tracking-total-parking">0.0</td>
+                            <td id="tracking-total-total-kms">0.0</td>
+                            <td id="tracking-total-odo-kms">0.0</td>
+                            <td id="tracking-total-diff">0.0</td>
+                        </tr>
+                    </tfoot>
+                @endif
             </table>
         </div>
     </div>

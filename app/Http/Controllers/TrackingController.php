@@ -23,6 +23,8 @@ class TrackingController extends Controller
     public function index(Request $request)
     {
         $reportDate = $this->resolveReportDate($request->query('report_date'));
+        $selectedMonth = $this->resolveMonth($request->query('month'), $reportDate);
+        $isMonthlyMode = $selectedMonth->lt(now()->startOfMonth());
         $selectedVehicles = collect((array) $request->query('vehicle_no', []))
             ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
             ->filter()
@@ -39,7 +41,9 @@ class TrackingController extends Controller
         $apiError = null;
 
         try {
-            $trackingData = $this->getTrackingDataForDate($reportDate);
+            $trackingData = $isMonthlyMode
+                ? $this->trackingRowsForDateRange($selectedMonth->copy()->startOfMonth(), $selectedMonth->copy()->endOfMonth())
+                : $this->getTrackingDataForDate($reportDate);
 
             if (! empty($selectedVehicles)) {
                 $trackingData = collect($trackingData)
@@ -51,6 +55,7 @@ class TrackingController extends Controller
             $apiError = 'Unable to load tracking data right now.';
             Log::error('Tracking data API request failed.', [
                 'report_date' => $reportDate,
+                'month' => $selectedMonth->format('Y-m'),
                 'message' => $exception->getMessage(),
             ]);
         }
@@ -60,66 +65,27 @@ class TrackingController extends Controller
             'trackingData' => $trackingData,
             'vehicles' => $vehicles,
             'selectedVehicles' => $selectedVehicles,
-            'selectedMonth' => Carbon::parse($reportDate)->format('Y-m'),
-            'apiError' => $apiError,
-        ]);
-    }
-
-    public function monthly(Request $request)
-    {
-        $monthDate = $this->resolveMonthDate($request->query('month'));
-        $selectedVehicles = collect((array) $request->query('vehicle_no', []))
-            ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        $vehicles = Vehicle::query()
-            ->where('is_active', 1)
-            ->orderBy('vehicle_no')
-            ->get(['vehicle_no']);
-
-        $trackingData = [];
-        $apiError = null;
-
-        try {
-            $trackingData = $this->syncTrackingMonth($monthDate);
-
-            if (! empty($selectedVehicles)) {
-                $trackingData = collect($trackingData)
-                    ->filter(fn (array $row) => in_array($row['vehicle_filter_key'], $selectedVehicles, true))
-                    ->values()
-                    ->all();
-            }
-        } catch (Throwable $exception) {
-            $apiError = 'Unable to synchronize monthly tracking data right now.';
-            Log::error('Monthly tracking data synchronization failed.', [
-                'month' => $monthDate->format('Y-m'),
-                'message' => $exception->getMessage(),
-            ]);
-        }
-
-        return view('admin.trackingData.index', [
-            'reportDate' => $monthDate->toDateString(),
-            'trackingData' => $trackingData,
-            'vehicles' => $vehicles,
-            'selectedVehicles' => $selectedVehicles,
-            'selectedMonth' => $monthDate->format('Y-m'),
+            'selectedMonth' => $selectedMonth->format('Y-m'),
+            'isMonthlyMode' => $isMonthlyMode,
             'apiError' => $apiError,
         ]);
     }
 
     public function monthlyExport(Request $request)
     {
-        $monthDate = $this->resolveMonthDate($request->query('month'));
-        $trackingData = $this->syncTrackingMonth($monthDate);
+        $reportDate = $this->resolveReportDate($request->query('report_date'));
+        $selectedMonth = $this->resolveMonth($request->query('month'), $reportDate);
+        $isMonthlyMode = $selectedMonth->lt(now()->startOfMonth());
         $selectedVehicles = collect((array) $request->query('vehicle_no', []))
             ->map(fn ($vehicleNo) => $this->normalizeVehicleNo((string) $vehicleNo))
             ->filter()
             ->unique()
             ->values()
             ->all();
+
+        $trackingData = $isMonthlyMode
+            ? $this->trackingRowsForDateRange($selectedMonth->copy()->startOfMonth(), $selectedMonth->copy()->endOfMonth())
+            : $this->getTrackingDataForDate($reportDate);
 
         if (! empty($selectedVehicles)) {
             $trackingData = collect($trackingData)
@@ -130,8 +96,55 @@ class TrackingController extends Controller
 
         return Excel::download(
             new TrackingReportsExport($trackingData),
-            'tracking-report-'.$monthDate->format('Y-m').'.xlsx'
+            'tracking-report-'.($isMonthlyMode ? $selectedMonth->format('Y-m') : $reportDate).'.xlsx'
         );
+    }
+
+    public function monthlyDates(Request $request)
+    {
+        $monthDate = $this->resolveMonth($request->query('month'), now()->toDateString());
+        $monthStart = $monthDate->copy()->startOfMonth();
+        $monthEnd = $monthDate->copy()->endOfMonth();
+        $storedDates = TrackingReport::query()
+            ->whereBetween('report_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->select('report_date')
+            ->distinct()
+            ->pluck('report_date')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->flip();
+
+        $dates = [];
+        $cursor = $monthStart->copy();
+        while ($cursor->lte($monthEnd)) {
+            $date = $cursor->toDateString();
+            $dates[] = [
+                'date' => $date,
+                'exists' => $storedDates->has($date),
+            ];
+            $cursor->addDay();
+        }
+
+        return response()->json([
+            'month' => $monthDate->format('Y-m'),
+            'dates' => $dates,
+        ]);
+    }
+
+    public function syncMonthlyDate(Request $request)
+    {
+        $reportDate = $this->resolveReportDate($request->input('report_date'));
+        $existingRecords = TrackingReport::query()
+            ->whereDate('report_date', $reportDate)
+            ->exists();
+
+        if (! $existingRecords) {
+            $this->syncTrackingDate($reportDate);
+        }
+
+        return response()->json([
+            'date' => $reportDate,
+            'synced' => ! $existingRecords,
+        ]);
     }
 
     private function resolveReportDate(?string $reportDate): string
@@ -143,14 +156,14 @@ class TrackingController extends Controller
         }
     }
 
-    private function resolveMonthDate(?string $month): Carbon
+    private function resolveMonth(?string $month, string $fallbackDate): Carbon
     {
         try {
             if (! empty($month) && preg_match('/^\d{4}-\d{2}$/', $month)) {
                 return Carbon::createFromFormat('Y-m', $month)->startOfMonth();
             }
 
-            return Carbon::parse($month ?: now()->format('Y-m'))->startOfMonth();
+            return Carbon::parse($fallbackDate)->startOfMonth();
         } catch (Throwable) {
             return now()->startOfMonth();
         }
@@ -361,19 +374,6 @@ XML;
             Carbon::parse($reportDate)->startOfDay(),
             Carbon::parse($reportDate)->endOfDay()
         );
-    }
-
-    private function syncTrackingMonth(Carbon $monthDate): array
-    {
-        $cursor = $monthDate->copy()->startOfMonth();
-        $monthEnd = $monthDate->copy()->endOfMonth();
-
-        while ($cursor->lte($monthEnd)) {
-            $this->syncTrackingDate($cursor->toDateString());
-            $cursor->addDay();
-        }
-
-        return $this->trackingRowsForDateRange($monthDate->copy()->startOfMonth(), $monthEnd);
     }
 
     private function persistTrackingRows(array $trackingRows): void
