@@ -418,6 +418,14 @@ XML;
     {
         return collect($records)
             ->map(function (TrackingReport $record) {
+                $ams = $this->toFloat($record->ams);
+                $misPeakHrs = $this->toFloat($record->mis_peak_hrs);
+                $totalKms = $this->toFloat($record->total_kms);
+
+                if (! $this->isTwentyFourHourShiftLabel($record->shift) && abs($ams) < 0.001) {
+                    $totalKms = $misPeakHrs;
+                }
+
                 return [
                     'date' => optional($record->report_date)->format('Y-m-d'),
                     'vehicle' => $record->display_vehicle_no ?: $record->vehicle_no,
@@ -428,10 +436,10 @@ XML;
                     'api_off_peak_kms' => $this->toFloat($record->api_off_peak_kms),
                     'api_ams_kms' => $this->toFloat($record->api_ams_kms),
                     'off_peak' => $this->toFloat($record->off_peak),
-                    'mis_peak_hrs' => $this->toFloat($record->mis_peak_hrs),
-                    'ams' => $this->toFloat($record->ams),
+                    'mis_peak_hrs' => $misPeakHrs,
+                    'ams' => $ams,
                     'parking' => $this->toFloat($record->parking),
-                    'total_kms' => $this->toFloat($record->total_kms),
+                    'total_kms' => $totalKms,
                     'odo_kms' => $this->toFloat($record->odo_kms),
                     'diff' => $this->toFloat($record->diff),
                 ];
@@ -480,7 +488,7 @@ XML;
                     $totalKms = $peakKms;
                 } else {
                     $offPeak = $peakKms + $offPeakKms;
-                    $totalKms = $ams + $parking;
+                    $totalKms = abs($ams) < 0.001 ? $peakKms : $ams + $parking;
                 }
 
                 return [
@@ -540,6 +548,11 @@ XML;
         $shiftLabel = strtolower((string) ($vehicle->shiftHours?->name ?: $vehicle->shiftTiming?->name));
 
         return str_contains($shiftLabel, '24');
+    }
+
+    private function isTwentyFourHourShiftLabel(?string $shiftLabel): bool
+    {
+        return str_contains(strtolower((string) $shiftLabel), '24');
     }
 
     private function toFloat(mixed $value): float
