@@ -99,7 +99,8 @@ class DriverController extends Controller
 
     public function store(Request $request)
     {
-        
+        $this->normalizePoolDriverStationInput($request);
+
         // Handle draft saving
         if ($this->handleDraftSave($request, 'drivers')) {
             return redirect()->back()->with('success', 'Draft saved successfully!');
@@ -271,7 +272,7 @@ class DriverController extends Controller
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
-        $driver->station_id             =   $request->driver_type === 'pool' ? $request->station_id : null;
+        $driver->station_id             =   $request->driver_type === 'pool' ? $this->resolveStationId($request->station_id) : null;
         $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : $request->vehicle_id;
         $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
@@ -367,7 +368,6 @@ class DriverController extends Controller
 
             $driver->license_file   =   $licenseFileName;
         }
-
         $driver->save();
 
         // If this submission came from a draft and some files were not re-uploaded,
@@ -498,6 +498,8 @@ class DriverController extends Controller
 
     public function update(Request $request, Driver $driver)
     {
+        $this->normalizePoolDriverStationInput($request);
+
         $rules = [
             'full_name' =>  'nullable',
             'father_name' =>  'nullable',
@@ -546,8 +548,6 @@ class DriverController extends Controller
         } else {
             $rules['license_no'] = 'required';
         }
-
-
 
         $validator = \Validator::make(
             $request->all(),
@@ -639,7 +639,7 @@ class DriverController extends Controller
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
-        $driver->station_id             =   $request->driver_type === 'pool' ? $request->station_id : null;
+        $driver->station_id             =   $request->driver_type === 'pool' ? $this->resolveStationId($request->station_id) : null;
         $driver->vehicle_id             =   $request->driver_type === 'pool' ? null : $request->vehicle_id;
         $driver->shift_timing_id        =   $request->driver_type === 'pool' ? null : $request->shift_timing_id;
         $driver->cnic_no                =   $request->cnic_no;
@@ -739,6 +739,38 @@ class DriverController extends Controller
         $driver->save();
 
         return redirect()->route('drivers.index')->with('success', 'Drive updated successfully.');
+    }
+
+    private function normalizePoolDriverStationInput(Request $request): void
+    {
+        if ($request->input('driver_type') !== 'pool' || ! $request->filled('station_id')) {
+            return;
+        }
+
+        $stationId = $this->resolveStationId($request->input('station_id'));
+
+        if ($stationId !== null) {
+            $request->merge(['station_id' => $stationId]);
+        }
+    }
+
+    private function resolveStationId($station): ?int
+    {
+        if ($station === null || $station === '') {
+            return null;
+        }
+
+        if (is_numeric($station)) {
+            $stationId = (int) $station;
+
+            return Station::whereKey($stationId)->exists() ? $stationId : null;
+        }
+
+        $matchedStation = Station::query()
+            ->where('area', trim((string) $station))
+            ->first(['id']);
+
+        return $matchedStation?->id;
     }
 
 
