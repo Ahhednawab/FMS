@@ -848,10 +848,16 @@ class VehicleController extends Controller
     {
         return Driver::where('driver_type', $driverType)
             ->where(function ($query) use ($includeDriverIds) {
-                $query->where('is_active', 1);
+                $query->where(function ($q) {
+                    $q->where('is_active', 1)
+                        ->where('is_available', 1)
+                        ->whereDoesntHave('driverStatus', function ($sub) {
+                            $sub->where('name', 'Left');
+                        });
+                });
 
                 if (! empty($includeDriverIds)) {
-                    $query->orWhereIn('id', $includeDriverIds);
+                    $query->orWhereIn('drivers.id', $includeDriverIds);
                 }
             })
             ->orderBy('full_name')
@@ -878,12 +884,19 @@ class VehicleController extends Controller
 
     private function getAssignableRegularDrivers(array $includeDriverIds = [])
     {
-        return Driver::where('driver_type', 'regular')
+        return Driver::with('vehicle:id,vehicle_no')
+            ->where('driver_type', 'regular')
             ->where(function ($query) use ($includeDriverIds) {
-                $query->where('is_active', 1);
+                $query->where(function ($q) {
+                    $q->where('is_active', 1)
+                        ->where('is_available', 1)
+                        ->whereDoesntHave('driverStatus', function ($sub) {
+                            $sub->where('name', 'Left');
+                        });
+                });
 
                 if (! empty($includeDriverIds)) {
-                    $query->orWhereIn('id', $includeDriverIds);
+                    $query->orWhereIn('drivers.id', $includeDriverIds);
                 }
             })
             ->orderBy('full_name')
@@ -893,6 +906,7 @@ class VehicleController extends Controller
                     'id' => $driver->id,
                     'name' => $driver->full_name,
                     'vehicle_id' => $driver->vehicle_id,
+                    'vehicle_no' => $driver->vehicle?->vehicle_no,
                     'shift_timing_id' => $driver->shift_timing_id,
                 ];
             });

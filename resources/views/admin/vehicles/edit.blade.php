@@ -235,7 +235,7 @@
                                             @foreach ($regularDrivers as $driver)
                                                 <option value="{{ $driver['id'] }}"
                                                     {{ (int) old('primary_driver_id', $vehicle->primary_driver_id) === (int) $driver['id'] ? 'selected' : '' }}>
-                                                    {{ $driver['name'] }}{{ $driver['vehicle_id'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned)' : '' }}
+                                                    {{ $driver['name'] }}{{ $driver['vehicle_no'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned: ' . $driver['vehicle_no'] . ')' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -273,7 +273,7 @@
                                             @foreach ($regularDrivers as $driver)
                                                 <option value="{{ $driver['id'] }}"
                                                     {{ (int) old('secondary_driver_id', optional($secondaryAssignedDriver)->id) === (int) $driver['id'] ? 'selected' : '' }}>
-                                                    {{ $driver['name'] }}{{ $driver['vehicle_id'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned)' : '' }}
+                                                    {{ $driver['name'] }}{{ $driver['vehicle_no'] && (int) $driver['vehicle_id'] !== (int) $vehicle->id ? ' (Assigned: ' . $driver['vehicle_no'] . ')' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>

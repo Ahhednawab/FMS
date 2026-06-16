@@ -105,6 +105,7 @@
                             <th>Uniform issue date</th>
                             <th>Sandal issue date</th>
                             <th>Status</th>
+                            <th>Driver Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -147,7 +148,30 @@
                                 <td>{{ $value->license_expiry_date }}</td>
                                 <td>{{ $value->uniform_issue_date }}</td>
                                 <td>{{ $value->sandal_issue_date }}</td>
-                                <td>{{ $value->is_active ? 'Active' : 'In Active' }}</td>
+                                <td>
+                                    @if ($value->is_active)
+                                        <span class="badge badge-info">Active</span>
+                                    @else
+                                        <span class="badge badge-danger">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($value->driverStatus)
+                                        @php
+                                            $badgeColor = 'secondary';
+                                            if ($value->driverStatus->name === 'On Duty') {
+                                                $badgeColor = 'info';
+                                            } elseif ($value->driverStatus->name === 'Spare') {
+                                                $badgeColor = 'warning';
+                                            } elseif ($value->driverStatus->name === 'Left') {
+                                                $badgeColor = 'danger';
+                                            }
+                                        @endphp
+                                        <span class="badge badge-{{ $badgeColor }}">{{ $value->driverStatus->name }}</span>
+                                    @else
+                                        <span class="badge badge-light">N/A</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">

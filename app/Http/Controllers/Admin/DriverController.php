@@ -28,13 +28,8 @@ class DriverController extends Controller
     public function index()
     {
         $drivers = Driver::with(['driverStatus', 'vehicle', 'maritalStatus', 'licenseCategory', 'shiftTiming'])
-            ->where('is_active', 1)->latest()
+            ->latest()
             ->get();
-
-        // echo "<pre>";
-        // print_r($drivers[0]);
-        // echo "</pre>";
-        // return;
 
         return view('admin.drivers.index', compact('drivers'));
     }
@@ -269,6 +264,7 @@ class DriverController extends Controller
         $driver->salary                 =   $request->salary;
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
+        $driver->is_active              =   $this->resolveIsActiveFromStatus($request->driver_status_id);
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
@@ -636,6 +632,7 @@ class DriverController extends Controller
         $driver->salary                 =   $request->salary;
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
+        $driver->is_active              =   $this->resolveIsActiveFromStatus($request->driver_status_id);
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
@@ -794,5 +791,25 @@ class DriverController extends Controller
         $ids = $request->ids;
         Driver::whereIn('id', $ids)->update(['is_active' => 0]);
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Determine is_active from driver status name.
+     * Left => 0 (inactive). On Duty / Spare / any other active status => 1 (active).
+     */
+    private function resolveIsActiveFromStatus(?int $driverStatusId): int
+    {
+        if (! $driverStatusId) {
+            return 1; // default active when no status set
+        }
+
+        $status = \App\Models\DriverStatus::find($driverStatusId);
+
+        if (! $status) {
+            return 1;
+        }
+
+        // If status is "Left", mark inactive; all others are active
+        return strtolower(trim($status->name)) === 'left' ? 0 : 1;
     }
 }
