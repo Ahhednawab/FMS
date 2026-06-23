@@ -76,11 +76,11 @@
 
                     <div class="row vehicle-row mb-2" data-index="0">
                         <div class="col-md-2">
-                            <input type="number" name="vehicles[0][vehicle_qty]" class="form-control invoice-vehicle-qty" placeholder="Qty">
+                            <input type="number" step="0.01" min="0" name="vehicles[0][vehicle_qty]" class="form-control invoice-vehicle-qty" placeholder="Qty">
                         </div>
 
                         <div class="col-md-2">
-                            <input type="number" name="vehicles[0][days]" class="form-control" placeholder="Days">
+                            <input type="number" step="0.01" min="0" name="vehicles[0][days]" class="form-control" placeholder="Days">
                         </div>
 
                         <div class="col-md-3">

@@ -342,13 +342,6 @@ class VehiclesAttendanceController extends Controller
         $vehicles = Vehicle::with(['station', 'shiftHours', 'ibcCenter']);
         $poolvehicles = Vehicle::where('pool_vehicle', 1)->get();
         $vehicles = $vehicles->where('is_active', 1);
-        if (isset($request->station_id)) {
-            $vehicles = $vehicles->where('station_id', $request->station_id);
-        }
-
-        if (isset($request->vechicle_id)) {
-            $vehicles = $vehicles->where('id', $request->vechicle_id);
-        }
         $vehicles = $vehicles->orderBy(Station::select('area')->whereColumn('stations.id', 'vehicles.station_id')->limit(1));
         $vehicles = $vehicles->orderBy('vehicle_no');
         $vehicles = $vehicles->get();
@@ -359,6 +352,7 @@ class VehiclesAttendanceController extends Controller
 
             $vehicleData[] = array(
                 'vehicle_id'    =>  $vehicle->id,
+                'station_id'    =>  $vehicle->station_id,
                 'station'       =>  $vehicle->station->area,
                 'vehicle_no'    =>  $vehicle->vehicle_no,
                 'shift'         =>  $vehicle->shiftHours->name,

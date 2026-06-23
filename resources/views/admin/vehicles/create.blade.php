@@ -749,7 +749,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Next Inspection Date<span style="color:red">*</span></strong>
-                                <input type="date" id="next_inspection_date" name="next_inspection_date" readonly
+                                <input type="date" id="next_inspection_date" name="next_inspection_date"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['next_inspection_date'] ?? '') ? 'is-invalid' : '' }}
                 @error('next_inspection_date') is-invalid @enderror"
@@ -817,7 +817,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Fitness Expiry Date<span style="color:red">*</span></strong>
-                                <input type="date" id="next_fitness_date" name="next_fitness_date" readonly
+                                <input type="date" id="next_fitness_date" name="next_fitness_date"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['next_fitness_date'] ?? '') ? 'is-invalid' : '' }}
                 @error('next_fitness_date') is-invalid @enderror"
@@ -944,7 +944,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Insurance Expiry Date<span style="color:red">*</span></strong>
-                                <input type="date" id="insurance_expiry_date" name="insurance_expiry_date" readonly
+                                <input type="date" id="insurance_expiry_date" name="insurance_expiry_date"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['insurance_expiry_date'] ?? '') ? 'is-invalid' : '' }}
                 @error('insurance_expiry_date') is-invalid @enderror"
@@ -1014,7 +1014,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Route Permit Expiry Date<span style="color:red">*</span></strong>
-                                <input type="date" id="route_permit_expiry_date" name="route_permit_expiry_date" readonly
+                                <input type="date" id="route_permit_expiry_date" name="route_permit_expiry_date"
                                     class="form-control
                 {{ request()->has('draft_id') && empty($draftData['route_permit_expiry_date'] ?? '') ? 'is-invalid' : '' }}
                 @error('route_permit_expiry_date') is-invalid @enderror"
@@ -1085,7 +1085,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Next Tax Date<span style="color:red">*</span></strong>
-                                <input type="date" id="next_tax_date" name="next_tax_date" readonly
+                                <input type="date" id="next_tax_date" name="next_tax_date"
                                     class="form-control
                {{ request()->has('draft_id') && empty($draftData['next_tax_date'] ?? '') ? 'is-invalid' : '' }}
                @error('next_tax_date') is-invalid @enderror"

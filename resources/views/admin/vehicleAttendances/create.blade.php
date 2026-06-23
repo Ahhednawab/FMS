@@ -35,48 +35,39 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('vehicleAttendances.filter') }}" method="POST">
-                    @csrf
-                    <div class="row">
-                        <!-- Vehicle No -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id" id="station_id">
-                                    <option value="">ALL</option>
-                                    @foreach ($stations as $key => $value)
-                                        <option value="{{ $key }}"
-                                            {{ isset($selectedStation) && (string) $selectedStation === (string) $key ? 'selected' : '' }}>
-                                            {{ $value }} </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                <div class="row">
+                    <!-- Station -->
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label"><strong>Station</strong></label>
+                            <select class="custom-select select2" id="station_id_filter">
+                                <option value="">ALL</option>
+                                @foreach ($stations as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
                         </div>
-
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label"><strong>Vechicle no</strong></label>
-                                <select class="custom-select select2" name="vechicle_id" id="vechicle_id">
-                                    <option value="">ALL</option>
-                                    @foreach ($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}"
-                                            {{ old('vechicle_id') == $vehicle->id ? 'selected' : '' }}>
-                                            {{ $vehicle->vehicle_no }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="col-md-3 mt-4">
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('vehicleAttendances.create') }}" class="btn btn-primary">Reset</a>
-                            </div>
-                        </div>
-
                     </div>
-                </form>
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label"><strong>Vehicle No</strong></label>
+                            <select class="custom-select select2" id="vehicle_no_filter">
+                                <option value="">ALL</option>
+                                @foreach ($vehicleData as $vehicle)
+                                    <option value="{{ $vehicle['vehicle_no'] }}">{{ $vehicle['vehicle_no'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mt-4">
+                        <div class="form-group">
+                            <button type="button" id="reset-attendance-filters" class="btn btn-primary">Reset</button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -127,8 +118,10 @@
                         $globalIndex = 0;
                     @endphp
 
+                    <div id="vehicle-attendance-rows">
                     @foreach ($groupedByStation as $station => $vehicles)
-                        <div class="row">
+                        <div class="station-group">
+                        <div class="row station-header">
                             <!-- Station -->
                             <div class="col-md-12">
                                 <h5 class="mt-3 mb-2">{{ $station }}</h5>
@@ -137,7 +130,8 @@
                         </div>
 
                         @foreach ($vehicles as $i => $value)
-                            <div class="row align-items-center">
+                            <div class="row align-items-center vehicle-attendance-row">
+                                <input type="hidden" class="station_key" value="{{ $value['station_id'] }}">
                                 <div class="col-auto pr-0">
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input vehicle-checkbox"
@@ -151,8 +145,8 @@
                                 <div class="col-md-1 pl-0">
                                     <div class="form-group">
                                         <strong>Vehicle No</strong>
-                                        <input type="text" class="form-control" name="vehicle_no"
-                                            value="{{ $value['vehicle_no'] }}" readonly>
+                                        <input type="text" class="form-control vehicle-no-display" name="vehicle_no"
+                                            value="{{ $value['vehicle_no'] }}" readonly tabindex="-1">
                                     </div>
                                 </div>
 
@@ -231,7 +225,9 @@
 
                             @php $globalIndex++; @endphp
                         @endforeach
+                        </div>
                     @endforeach
+                    </div>
 
                     <div class="sticky-action-bar">
                         <div class="text-right">
@@ -249,6 +245,39 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            $('#station_id_filter, #vehicle_no_filter').select2({
+                placeholder: 'Select',
+                allowClear: true
+            });
+
+            function applyAttendanceFilters() {
+                const selectedStation = $('#station_id_filter').val();
+                const selectedVehicle = $('#vehicle_no_filter').val();
+
+                $('.vehicle-attendance-row').each(function() {
+                    const row = $(this);
+                    const rowStation = String(row.find('.station_key').val());
+                    const rowVehicle = row.find('.vehicle-no-display').val();
+
+                    const stationMatch = !selectedStation || rowStation === String(selectedStation);
+                    const vehicleMatch = !selectedVehicle || rowVehicle === selectedVehicle;
+
+                    row.toggle(stationMatch && vehicleMatch);
+                });
+
+                $('.station-group').each(function() {
+                    const group = $(this);
+                    const hasVisibleRows = group.find('.vehicle-attendance-row:visible').length > 0;
+                    group.find('.station-header').toggle(hasVisibleRows);
+                });
+            }
+
+            $('#station_id_filter, #vehicle_no_filter').on('change', applyAttendanceFilters);
+
+            $('#reset-attendance-filters').on('click', function() {
+                $('#station_id_filter').val('').trigger('change');
+                $('#vehicle_no_filter').val('').trigger('change');
+            });
 
             function removeElementOnce(arr, value) {
                 const index = arr.indexOf(value);

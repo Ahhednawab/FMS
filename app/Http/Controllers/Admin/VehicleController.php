@@ -364,29 +364,6 @@ class VehicleController extends Controller
         $vehicle->insurance_file = $insuranceFileName;
         $vehicle->route_permit_file = $routePermitFileName;
         $vehicle->tax_file = $taxFileName;
-
-        // ================================
-        // AUTO EXPIRY CALCULATION LOGIC
-        // ================================
-
-        // Insurance → 1 Year
-        $vehicle->insurance_expiry_date = Carbon::parse($request->insurance_date)->addYear();
-
-        // Inspection → 8 Months
-        $vehicle->next_inspection_date = Carbon::parse($request->inspection_date)->addMonths(8);
-
-        // Tax → 1 Year
-        $vehicle->next_tax_date = Carbon::parse($request->tax_date)->addYear();
-
-        // Route Permit → 1 Year
-        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYear();
-
-        // Fitness → conditional (new/old vehicle)
-        if ($request->is_new_vehicle == 1) {
-            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addMonths(6);
-        } else {
-            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addYear();
-        }
         $vehicle->save();
 
         // If this submission came from a draft and some files were not re-uploaded,
@@ -733,16 +710,6 @@ class VehicleController extends Controller
             $taxFileName = time().'_tax_file.'.$authority->getClientOriginalExtension();
             $authority->move($uploadPath, $taxFileName);
             $vehicle->tax_file = $taxFileName;
-        }
-
-        $vehicle->next_inspection_date = Carbon::parse($request->inspection_date)->addMonths(8);
-        $vehicle->next_tax_date = Carbon::parse($request->tax_date)->addYear();
-        $vehicle->route_permit_expiry_date = Carbon::parse($request->route_permit_date)->addYear();
-
-        if ($request->boolean('is_new_vehicle')) {
-            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addMonths(6);
-        } else {
-            $vehicle->next_fitness_date = Carbon::parse($request->fitness_date)->addYear();
         }
 
         $vehicle->save();

@@ -112,12 +112,12 @@
                     @foreach ($vehicleQty as $i => $qty)
                         <div class="row vehicle-row mb-2">
                             <div class="col-md-2">
-                                <input type="number" name="vehicles[{{ $i }}][vehicle_qty]" class="form-control invoice-vehicle-qty"
+                                <input type="number" step="0.01" min="0" name="vehicles[{{ $i }}][vehicle_qty]" class="form-control invoice-vehicle-qty"
                                     value="{{ old("vehicles.$i.vehicle_qty", $qty) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <input type="number" name="vehicles[{{ $i }}][days]" class="form-control"
+                                <input type="number" step="0.01" min="0" name="vehicles[{{ $i }}][days]" class="form-control"
                                     value="{{ old("vehicles.$i.days", $days[$i] ?? '') }}">
                             </div>
 
@@ -343,12 +343,16 @@
         <div class="row vehicle-row mb-2">
             <div class="col-md-2">
                 <input type="number"
+                       step="0.01"
+                       min="0"
                        name="vehicles[${index}][vehicle_qty]"
-                       class="form-control">
+                       class="form-control invoice-vehicle-qty">
             </div>
 
             <div class="col-md-2">
                 <input type="number"
+                       step="0.01"
+                       min="0"
                        name="vehicles[${index}][days]"
                        class="form-control">
             </div>
@@ -357,14 +361,15 @@
                 <input type="number"
                        step="0.01"
                        name="vehicles[${index}][vehicle_rent]"
-                       class="form-control">
+                       class="form-control invoice-vehicle-rent">
             </div>
 
             <div class="col-md-3">
                 <input type="number"
                        step="0.01"
                        name="vehicles[${index}][monthly_rent]"
-                       class="form-control">
+                       class="form-control invoice-monthly-rent"
+                       readonly>
             </div>
 
             <div class="col-md-2 text-center">

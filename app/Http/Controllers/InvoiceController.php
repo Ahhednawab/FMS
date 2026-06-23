@@ -122,8 +122,8 @@ class InvoiceController extends Controller
             'submission_date' => 'nullable|date',
             'po_no' => 'nullable|string|max:255',
             'vehicles' => 'required|array|min:1',
-            'vehicles.*.vehicle_qty' => 'required|integer|min:1',
-            'vehicles.*.days' => 'required|integer|min:1',
+            'vehicles.*.vehicle_qty' => 'required|numeric|min:0',
+            'vehicles.*.days' => 'required|numeric|min:0',
             'vehicles.*.vehicle_rent' => 'required|numeric|min:0',
             'vehicles.*.monthly_rent' => 'nullable|numeric|min:0',
             'sunday_gazette' => 'nullable|numeric|min:0',
@@ -169,8 +169,8 @@ class InvoiceController extends Controller
 
     private function recalculateInvoiceValues(array $validated): array
     {
-        $vehicleQty = array_map(fn ($value) => max(0, (int) $value), (array) ($validated['vehicle_qty'] ?? []));
-        $days = array_map(fn ($value) => max(0, (int) $value), (array) ($validated['days'] ?? []));
+        $vehicleQty = array_map(fn ($value) => max(0, $this->toMoney($value)), (array) ($validated['vehicle_qty'] ?? []));
+        $days = array_map(fn ($value) => max(0, $this->toMoney($value)), (array) ($validated['days'] ?? []));
         $vehicleRent = array_map(fn ($value) => $this->toMoney($value), (array) ($validated['vehicle_rent'] ?? []));
 
         $monthlyRent = [];

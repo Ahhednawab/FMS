@@ -535,7 +535,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Next Inspection Date</strong>
-                                        <input type="date" class="form-control" id="next_inspection_date" name="next_inspection_date" readonly
+                                        <input type="date" class="form-control" id="next_inspection_date" name="next_inspection_date"
                                             value="{{ old('next_inspection_date', $dateValue($vehicle->next_inspection_date ?? null)) }}">
                                         @if ($errors->has('next_inspection_date'))
                                             <label
@@ -574,7 +574,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Fitness Expiry Date</strong>
-                                        <input type="date" class="form-control" id="next_fitness_date" name="next_fitness_date" readonly
+                                        <input type="date" class="form-control" id="next_fitness_date" name="next_fitness_date"
                                             value="{{ old('next_fitness_date', $dateValue($vehicle->next_fitness_date ?? null)) }}">
                                         @if ($errors->has('next_fitness_date'))
                                             <label class="text-danger">{{ $errors->first('next_fitness_date') }}</label>
@@ -651,7 +651,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Insurance Expiry Date</strong>
-                                        <input type="date" class="form-control" id="insurance_expiry_date" name="insurance_expiry_date" readonly
+                                        <input type="date" class="form-control" id="insurance_expiry_date" name="insurance_expiry_date"
                                             value="{{ old('insurance_expiry_date', $dateValue($vehicle->insurance_expiry_date ?? null)) }}">
                                         @if ($errors->has('insurance_expiry_date'))
                                             <label
@@ -689,7 +689,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Route Permit Expiry Date</strong>
-                                        <input type="date" class="form-control" id="route_permit_expiry_date" name="route_permit_expiry_date" readonly
+                                        <input type="date" class="form-control" id="route_permit_expiry_date" name="route_permit_expiry_date"
                                             value="{{ old('route_permit_expiry_date', $dateValue($vehicle->route_permit_expiry_date ?? null)) }}">
                                         @if ($errors->has('route_permit_expiry_date'))
                                             <label
@@ -727,7 +727,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Next Tax Date</strong>
-                                        <input type="date" class="form-control" id="next_tax_date" name="next_tax_date" readonly
+                                        <input type="date" class="form-control" id="next_tax_date" name="next_tax_date"
                                             value="{{ old('next_tax_date', $dateValue($vehicle->next_tax_date ?? null)) }}">
                                         @if ($errors->has('next_tax_date'))
                                             <label class="text-danger">{{ $errors->first('next_tax_date') }}</label>
