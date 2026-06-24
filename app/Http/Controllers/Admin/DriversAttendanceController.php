@@ -307,19 +307,13 @@ class DriversAttendanceController extends Controller
 
     public function create(Request $request)
     {
+        $stations = Station::where('is_active', 1)
+            ->orderBy('area')
+            ->get();
 
-        $stations = Station::where('is_active', 1)->get();
-        $driver_status = DriverStatus::whereIn('id', function ($q) {
-            $q->select('driver_status_id')
-                ->from('drivers')
-                ->where('is_active', 1)
-                ->whereNotNull('driver_status_id');
-        })
+        $driver_status = DriverStatus::where('is_active', 1)
             ->orderBy('name')
             ->pluck('name', 'id');
-
-
-
 
         $excludeStatuses = ['Under maintanance', 'Inspection'];
 
@@ -328,21 +322,10 @@ class DriversAttendanceController extends Controller
             ->orderBy('id')
             ->pluck('name', 'id');
 
-        $selectedDriverStatusIds = collect((array) $request->input('driver_status_id', []))
-            ->filter(fn ($value) => $value !== null && $value !== '')
-            ->map(fn ($value) => (int) $value)
-            ->values()
-            ->all();
-
-        $selectedStationIds = collect((array) $request->input('station_id', []))
-            ->filter(fn ($value) => $value !== null && $value !== '')
-            ->map(fn ($value) => (int) $value)
-            ->values()
-            ->all();
-
         $drivers = Driver::with([
             'driverStatus',
             'shiftTiming',
+            'vehicle.station',
             'vehicle.poolDrivers' => function ($query) {
                 $query->where('drivers.is_active', 1)
                     ->where('drivers.is_available', 1)
@@ -351,24 +334,15 @@ class DriversAttendanceController extends Controller
             },
         ])
             ->where('drivers.is_active', 1)
-            ->where('drivers.driver_type', 'regular')
-
-            ->when(! empty($selectedDriverStatusIds), function ($q) use ($selectedDriverStatusIds) {
-                $q->whereIn('drivers.driver_status_id', $selectedDriverStatusIds);
+            ->where('drivers.is_available', 1)
+            ->whereHas('driverStatus', function ($query) {
+                $query->whereRaw('LOWER(TRIM(name)) <> ?', ['left']);
             })
-
-            ->when(! empty($selectedStationIds), function ($q) use ($selectedStationIds) {
-                $q->whereHas('vehicle', function ($query) use ($selectedStationIds) {
-                    $query->whereIn('station_id', $selectedStationIds);
-                });
-            })
-
-            ->leftJoin('driver_status', 'driver_status.id', '=', 'drivers.driver_status_id')
-
+            ->whereIn('drivers.driver_type', ['regular', 'pool'])
             ->orderByRaw("
                 CASE
-                    WHEN driver_status.name = 'Left' THEN 1
-                    ELSE 0
+                    WHEN drivers.driver_type = 'regular' THEN 0
+                    ELSE 1
                 END
             ")
             ->orderBy('drivers.full_name', 'ASC')
@@ -385,7 +359,7 @@ class DriversAttendanceController extends Controller
 
         $replaceStatusId = $this->getReplaceStatusId();
 
-        return view('admin.driverAttendances.create', compact('drivers', 'driver_status', 'driver_attendance_status', 'selectedDriverStatusIds', 'selectedStationIds', 'stations', 'poolDriverOptions', 'replaceStatusId'));
+        return view('admin.driverAttendances.create', compact('drivers', 'driver_status', 'stations', 'driver_attendance_status', 'poolDriverOptions', 'replaceStatusId'));
     }
 
     public function store(Request $request)

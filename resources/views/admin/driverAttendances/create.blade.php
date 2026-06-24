@@ -34,45 +34,46 @@
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('driverAttendances.filter') }}" method="POST">
-                    @csrf
-                    <div class="row">
-                        <!-- Vehicle No -->
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label"><strong>Driver Status</strong></label>
-                                <select class="custom-select select2" name="driver_status_id[]" id="driver_status_id"
-                                    multiple data-placeholder="Select Driver Status">
-                                    @foreach ($driver_status as $key => $value)
-                                        <option value="{{ $key }}"
-                                            {{ in_array((int) $key, $selectedDriverStatusIds ?? [], true) ? 'selected' : '' }}>
-                                            {{ $value }} </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id[]" id="station_id" multiple
-                                    data-placeholder="Select Station">
-                                    @foreach ($stations as $station)
-                                        <option value="{{ $station->id }}"
-                                            {{ in_array((int) $station->id, $selectedStationIds ?? [], true) ? 'selected' : '' }}>
-                                            {{ $station->area }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mt-4">
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="{{ route('driverAttendances.create') }}" class="btn btn-primary">Reset</a>
-                            </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label"><strong>Driver Name</strong></label>
+                            <select class="custom-select select2" id="driver_name_filter">
+                                <option value="">All</option>
+                                @foreach ($drivers as $driver)
+                                    <option value="{{ $driver->id }}">{{ $driver->full_name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </form>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label"><strong>Driver Status</strong></label>
+                            <select class="custom-select select2" id="driver_status_filter" multiple
+                                data-placeholder="Select Driver Status">
+                                @foreach ($driver_status as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-label"><strong>Station</strong></label>
+                            <select class="custom-select select2" id="station_filter" multiple
+                                data-placeholder="Select Station">
+                                @foreach ($stations as $station)
+                                    <option value="{{ $station->id }}">{{ $station->area }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-1 mt-4">
+                        <div class="form-group">
+                            <button type="button" id="reset-driver-filters" class="btn btn-primary">Reset</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card">
@@ -144,7 +145,11 @@
                         </div>
                     </div>
                     @foreach ($drivers as $i => $driver)
-                        <div class="row align-items-center mb-3">
+                        <div class="row align-items-center mb-3 driver-attendance-row"
+                            data-driver-id="{{ $driver->id }}"
+                            data-driver-status-id="{{ $driver->driver_status_id }}"
+                            data-station-id="{{ $driver->vehicle?->station_id ?? $driver->station_id ?? '' }}"
+                            data-driver-name="{{ strtolower($driver->full_name) }}">
                             <!-- Checkbox -->
                             <div class="col-auto pr-0 d-flex align-items-center" style="margin-bottom: 29px;">
                                 <div class="form-check">
@@ -157,7 +162,8 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <input type="text" class="form-control" name="full_name[]"
-                                        value="{{ $driver->full_name }}" readonly>
+                                        value="{{ $driver->full_name }}{{ $driver->driver_type === 'pool' ? ' (Pool)' : ' (Regular)' }}"
+                                        readonly>
                                 </div>
                             </div>
                             <!-- CNIC -->
@@ -265,6 +271,33 @@
                 }
             });
 
+            function applyDriverFilters() {
+                const selectedDriver = $('#driver_name_filter').val();
+                const selectedStatuses = ($('#driver_status_filter').val() || []).map(String);
+                const selectedStations = ($('#station_filter').val() || []).map(String);
+
+                $('.driver-attendance-row').each(function() {
+                    const row = $(this);
+                    const rowDriverId = String(row.data('driver-id'));
+                    const rowStatusId = String(row.data('driver-status-id') || '');
+                    const rowStationId = String(row.data('station-id') || '');
+                    const matchesDriver = !selectedDriver || rowDriverId === String(selectedDriver);
+                    const matchesStatus = !selectedStatuses.length || selectedStatuses.includes(rowStatusId);
+                    const matchesStation = !selectedStations.length || selectedStations.includes(rowStationId);
+
+                    row.toggle(matchesDriver && matchesStatus && matchesStation);
+                });
+            }
+
+            $('#driver_name_filter').on('change', applyDriverFilters);
+            $('#driver_status_filter, #station_filter').on('change', applyDriverFilters);
+
+            $('#reset-driver-filters').on('click', function() {
+                $('#driver_name_filter').val('').trigger('change');
+                $('#driver_status_filter').val(null).trigger('change');
+                $('#station_filter').val(null).trigger('change');
+            });
+
             function toggleReplacementDropdown(driverIdx, selectedStatusId) {
                 const showReplacement = replaceStatusId !== null && String(selectedStatusId) === String(replaceStatusId);
                 const $wrapper = $(`.replacement-driver-wrapper[data-driver-idx='${driverIdx}']`);
@@ -329,6 +362,8 @@
             $('select[name="status[]"]').each(function() {
                 toggleReplacementDropdown($(this).data('driver-idx'), $(this).val());
             });
+
+            applyDriverFilters();
         });
     </script>
 @endpush

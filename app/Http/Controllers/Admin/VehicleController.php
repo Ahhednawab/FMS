@@ -43,6 +43,7 @@ class VehicleController extends Controller
             'fabricationVendor',
             'shiftHours',
             'shiftTiming',
+            'drivers.driverStatus',
             'primaryDriver',
             'currentDriver',
             'poolDrivers',
@@ -813,21 +814,7 @@ class VehicleController extends Controller
 
     private function getAssignableDrivers(string $driverType, bool $includeStation = false, array $includeDriverIds = [])
     {
-        return Driver::where('driver_type', $driverType)
-            ->where(function ($query) use ($includeDriverIds) {
-                $query->where(function ($q) {
-                    $q->where('is_active', 1)
-                        ->where('is_available', 1)
-                        ->whereDoesntHave('driverStatus', function ($sub) {
-                            $sub->where('name', 'Left');
-                        });
-                });
-
-                if (! empty($includeDriverIds)) {
-                    $query->orWhereIn('drivers.id', $includeDriverIds);
-                }
-            })
-            ->orderBy('full_name')
+        return $this->eligibleDriverQuery($driverType, $includeDriverIds)
             ->get(['id', 'full_name', 'vehicle_id', 'driver_type', 'station_id'])
             ->when($includeStation, function ($drivers) {
                 return $drivers->map(function (Driver $driver) {
@@ -839,44 +826,63 @@ class VehicleController extends Controller
                 });
             }, function ($drivers) {
                 return $drivers->mapWithKeys(function (Driver $driver) {
-                $label = $driver->full_name;
-                if ($driver->vehicle_id && $driver->driver_type === 'regular') {
-                    $label .= ' (Assigned)';
-                }
+                    $label = $driver->full_name;
+                    if ($driver->vehicle_id && $driver->driver_type === 'regular') {
+                        $label .= ' (Assigned: ' . $driver->vehicle?->vehicle_no . ')';
+                    }
 
-                return [$driver->id => $label];
+                    return [$driver->id => $label];
                 });
             });
     }
 
     private function getAssignableRegularDrivers(array $includeDriverIds = [])
     {
-        return Driver::with('vehicle:id,vehicle_no')
-            ->where('driver_type', 'regular')
-            ->where(function ($query) use ($includeDriverIds) {
-                $query->where(function ($q) {
-                    $q->where('is_active', 1)
-                        ->where('is_available', 1)
-                        ->whereDoesntHave('driverStatus', function ($sub) {
-                            $sub->where('name', 'Left');
-                        });
-                });
-
-                if (! empty($includeDriverIds)) {
-                    $query->orWhereIn('drivers.id', $includeDriverIds);
-                }
-            })
-            ->orderBy('full_name')
+        return $this->eligibleDriverQuery('regular', $includeDriverIds)
             ->get(['id', 'full_name', 'vehicle_id', 'shift_timing_id'])
             ->map(function (Driver $driver) {
                 return [
                     'id' => $driver->id,
                     'name' => $driver->full_name,
+                    'label' => $this->formatDriverLabel($driver),
                     'vehicle_id' => $driver->vehicle_id,
                     'vehicle_no' => $driver->vehicle?->vehicle_no,
                     'shift_timing_id' => $driver->shift_timing_id,
                 ];
             });
+    }
+
+    private function eligibleDriverQuery(string $driverType, array $includeDriverIds = [])
+    {
+        return Driver::query()
+            ->with('vehicle:id,vehicle_no')
+            ->where('driver_type', $driverType)
+            ->where(function ($query) use ($includeDriverIds) {
+                $query->where(function ($q) {
+                    $q->where('is_active', 1)
+                        ->where('is_available', 1)
+                        ->whereHas('driverStatus', function ($sub) {
+                            $sub->whereRaw('LOWER(TRIM(name)) <> ?', ['left']);
+                        });
+                });
+
+                if (! empty($includeDriverIds)) {
+                    $query->orWhereIn('drivers.id', $includeDriverIds);
+            }
+            })
+            ->orderBy('full_name')
+            ;
+    }
+
+    private function formatDriverLabel(Driver $driver): string
+    {
+        $label = $driver->full_name;
+
+        if ($driver->vehicle?->vehicle_no) {
+            $label .= ' (Assigned: ' . $driver->vehicle->vehicle_no . ')';
+        }
+
+        return $label;
     }
 
     private function isTwentyFourHourShift($shiftHourId): bool

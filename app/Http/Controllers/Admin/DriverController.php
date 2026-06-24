@@ -265,6 +265,7 @@ class DriverController extends Controller
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
         $driver->is_active              =   $this->resolveIsActiveFromStatus($request->driver_status_id);
+        $driver->is_available           =   $this->resolveIsAvailableFromStatus($request->driver_status_id);
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
@@ -633,6 +634,7 @@ class DriverController extends Controller
         $driver->account_no             =   $request->account_no;
         $driver->driver_status_id       =   $request->driver_status_id;
         $driver->is_active              =   $this->resolveIsActiveFromStatus($request->driver_status_id);
+        $driver->is_available           =   $this->resolveIsAvailableFromStatus($request->driver_status_id);
         $driver->driver_type            =   $request->driver_type ?? 'regular';
         $driver->marital_status_id      =   $request->marital_status_id;
         $driver->dob                    =   $request->dob;
@@ -810,6 +812,25 @@ class DriverController extends Controller
         }
 
         // If status is "Left", mark inactive; all others are active
+        return strtolower(trim($status->name)) === 'left' ? 0 : 1;
+    }
+
+    /**
+     * Keep driver availability aligned with the employment status.
+     * Left => unavailable; other statuses remain available by default.
+     */
+    private function resolveIsAvailableFromStatus(?int $driverStatusId): int
+    {
+        if (! $driverStatusId) {
+            return 1;
+        }
+
+        $status = \App\Models\DriverStatus::find($driverStatusId);
+
+        if (! $status) {
+            return 1;
+        }
+
         return strtolower(trim($status->name)) === 'left' ? 0 : 1;
     }
 }

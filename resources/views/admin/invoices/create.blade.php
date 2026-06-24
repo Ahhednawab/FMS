@@ -76,20 +76,20 @@
 
                     <div class="row vehicle-row mb-2" data-index="0">
                         <div class="col-md-2">
-                            <input type="number" step="0.01" min="0" name="vehicles[0][vehicle_qty]" class="form-control invoice-vehicle-qty" placeholder="Qty">
+                            <input type="number" step="any" min="0" name="vehicles[0][vehicle_qty]" class="form-control invoice-vehicle-qty" placeholder="Qty">
                         </div>
 
                         <div class="col-md-2">
-                            <input type="number" step="0.01" min="0" name="vehicles[0][days]" class="form-control" placeholder="Days">
+                            <input type="number" step="any" min="0" name="vehicles[0][days]" class="form-control" placeholder="Days">
                         </div>
 
                         <div class="col-md-3">
-                            <input type="number" step="0.01" name="vehicles[0][vehicle_rent]" class="form-control invoice-vehicle-rent"
+                            <input type="number" step="any" name="vehicles[0][vehicle_rent]" class="form-control invoice-vehicle-rent"
                                 placeholder="Vehicle Rent">
                         </div>
 
                         <div class="col-md-3">
-                            <input type="number" step="0.01" name="vehicles[0][monthly_rent]" class="form-control invoice-monthly-rent"
+                            <input type="number" step="any" name="vehicles[0][monthly_rent]" class="form-control invoice-monthly-rent"
                                 readonly
                                 placeholder="Monthly Rent">
                         </div>
@@ -275,6 +275,9 @@
                 newRow.querySelectorAll('input').forEach(input => {
                     input.value = '';
                     input.name = input.name.replace(/\[\d+\]/, `[${rowIndex}]`);
+                    if (input.type === 'number') {
+                        input.step = 'any';
+                    }
                 });
 
                 newRow.querySelector('.add-row').outerHTML =
@@ -294,10 +297,10 @@
         });
 
         document.addEventListener('input', function(e) {
-            if (e.target.matches('.invoice-vehicle-qty, .invoice-vehicle-rent, .invoice-sunday-gazette, .invoice-control-room, .invoice-agreed-deduction, .invoice-payment-received')) {
-                recalculateInvoice();
-            }
-        });
+                if (e.target.matches('.invoice-vehicle-qty, .invoice-vehicle-rent, .invoice-sunday-gazette, .invoice-control-room, .invoice-agreed-deduction, .invoice-payment-received')) {
+                    recalculateInvoice();
+                }
+            });
 
         recalculateInvoice();
     </script>

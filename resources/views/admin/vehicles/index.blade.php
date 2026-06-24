@@ -225,6 +225,8 @@
                             <th>AKPL</th>
                             <th>Shift</th>
                             <th>Shift Timing</th>
+                            <th>Vehicle Status</th>
+                            <th>Assigned Drivers</th>
                             <th>Vehicle Type</th>
                             <th>Fabricator</th>
                             <th>Station</th>
@@ -265,6 +267,44 @@
                                 </td>
                                 <td>
                                     {{ $value->shiftTiming?->name ?? 'N/A' }}
+                                </td>
+                                <td>
+                                    @if ($value->is_active)
+                                        <span class="badge badge-success">Active</span>
+                                    @else
+                                        <span class="badge badge-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @php
+                                        $assignedDrivers = $value->drivers->sortBy(function ($driver) {
+                                            return sprintf(
+                                                '%03d-%s',
+                                                (int) ($driver->shift_timing_id ?? 999),
+                                                strtolower((string) ($driver->full_name ?? ''))
+                                            );
+                                        });
+                                    @endphp
+                                    @if ($assignedDrivers->isNotEmpty())
+                                        @foreach ($assignedDrivers as $assignedDriver)
+                                            @php
+                                                $driverStatusName = $assignedDriver->driverStatus?->name ?? 'N/A';
+                                                $driverStatusKey = strtolower(trim((string) $driverStatusName));
+                                                $driverStatusBadge = match ($driverStatusKey) {
+                                                    'on duty' => 'success',
+                                                    'spare' => 'info',
+                                                    'left' => 'danger',
+                                                    default => 'secondary',
+                                                };
+                                            @endphp
+                                            <div class="mb-1">
+                                                <span class="font-weight-semibold">{{ $assignedDriver->full_name }}</span>
+                                                <span class="badge badge-{{ $driverStatusBadge }} ml-1">{{ $driverStatusName }}</span>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        N/A
+                                    @endif
                                 </td>
                                 <td>{{ $value->vehicleType->name }}</td>
 

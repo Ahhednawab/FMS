@@ -336,7 +336,7 @@
                                     @foreach ($regularDrivers as $driver)
                                         <option value="{{ $driver['id'] }}"
                                             {{ (int) ($draftData['primary_driver_id'] ?? old('primary_driver_id')) === (int) $driver['id'] ? 'selected' : '' }}>
-                                            {{ $driver['name'] }}{{ $driver['vehicle_no'] ? ' (Assigned: ' . $driver['vehicle_no'] . ')' : '' }}
+                                            {{ $driver['label'] }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -374,7 +374,7 @@
                                     @foreach ($regularDrivers as $driver)
                                         <option value="{{ $driver['id'] }}"
                                             {{ (int) ($draftData['secondary_driver_id'] ?? old('secondary_driver_id')) === (int) $driver['id'] ? 'selected' : '' }}>
-                                            {{ $driver['name'] }}{{ $driver['vehicle_no'] ? ' (Assigned: ' . $driver['vehicle_no'] . ')' : '' }}
+                                            {{ $driver['label'] }}
                                         </option>
                                     @endforeach
                                 </select>
