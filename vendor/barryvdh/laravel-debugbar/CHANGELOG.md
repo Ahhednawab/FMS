@@ -1,5 +1,56 @@
 # Changelog
 
+## v3.16.3 - 2025-12-26
+
+### What's Changed
+
+* Update symfony/finder version constraint to include 8 by @barryvdh in https://github.com/barryvdh/laravel-debugbar/pull/1830
+* Allow Symfony v8 by @jnoordsij in https://github.com/barryvdh/laravel-debugbar/pull/1827
+* Add error_level config option to filter error handler reporting (#1373) by @elliota43 in https://github.com/barryvdh/laravel-debugbar/pull/1825
+* Add support for Cursor, Windsurf, and additional editor configurations by @nguyentranchung in https://github.com/barryvdh/laravel-debugbar/pull/1823
+* Don't create <a> tags with the onclick attribute by @PeterMead in https://github.com/barryvdh/laravel-debugbar/pull/1820
+* docs: Add conditional check for Debugbar alias registration by @erhanurgun in https://github.com/barryvdh/laravel-debugbar/pull/1829
+
+### New Contributors
+
+* @elliota43 made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1825
+* @nguyentranchung made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1823
+* @PeterMead made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1820
+* @erhanurgun made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1829
+
+**Full Changelog**: https://github.com/barryvdh/laravel-debugbar/compare/v3.16.2...v3.16.3
+
+## v3.16.2 - 2025-12-16
+
+### What's Changed
+
+* Remove default null value env by @Erulezz in https://github.com/barryvdh/laravel-debugbar/pull/1815
+* Remove --ignore-platform-req=php+ on integration test setup by @erikn69 in https://github.com/barryvdh/laravel-debugbar/pull/1814
+* Remove calls to PHP 8.5-deprecated `setAccessible` by @jnoordsij in https://github.com/barryvdh/laravel-debugbar/pull/1822
+
+### New Contributors
+
+* @Erulezz made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1815
+
+**Full Changelog**: https://github.com/barryvdh/laravel-debugbar/compare/v3.16.1...v3.16.2
+
+## v3.16.1 - 2025-11-19
+
+### What's Changed
+
+* Slow threshold highlight on queries by @erikn69 in https://github.com/barryvdh/laravel-debugbar/pull/1805
+* (fix) trim last line breaks on logs by @angeljqv in https://github.com/barryvdh/laravel-debugbar/pull/1806
+* fix: Typo by @aurac in https://github.com/barryvdh/laravel-debugbar/pull/1810
+* Test on PHP 8.5 by @jnoordsij in https://github.com/barryvdh/laravel-debugbar/pull/1811
+* Add '_boost*' to debugbar exceptions by @barryvdh in https://github.com/barryvdh/laravel-debugbar/pull/1818
+* Dropped Laravel 9 support
+
+### New Contributors
+
+* @aurac made their first contribution in https://github.com/barryvdh/laravel-debugbar/pull/1810
+
+**Full Changelog**: https://github.com/barryvdh/laravel-debugbar/compare/v3.16.0...v3.16.1
+
 ## v3.16.0 - 2025-07-21
 
 ### What's Changed

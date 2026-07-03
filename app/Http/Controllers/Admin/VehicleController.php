@@ -839,7 +839,7 @@ class VehicleController extends Controller
     private function getAssignableRegularDrivers(array $includeDriverIds = [])
     {
         return $this->eligibleDriverQuery('regular', $includeDriverIds)
-            ->get(['id', 'full_name', 'vehicle_id', 'shift_timing_id'])
+            ->get(['id', 'full_name', 'vehicle_id', 'shift_timing_id', 'cnic_no'])
             ->map(function (Driver $driver) {
                 return [
                     'id' => $driver->id,
@@ -848,6 +848,7 @@ class VehicleController extends Controller
                     'vehicle_id' => $driver->vehicle_id,
                     'vehicle_no' => $driver->vehicle?->vehicle_no,
                     'shift_timing_id' => $driver->shift_timing_id,
+                    'cnic_no' => $driver->cnic_no,
                 ];
             });
     }
@@ -877,10 +878,10 @@ class VehicleController extends Controller
     private function formatDriverLabel(Driver $driver): string
     {
         $label = $driver->full_name;
+        $vehicleNo = $driver->vehicle?->vehicle_no ?: 'N/A';
+        $nicNumber = $driver->cnic_no ?: 'N/A';
 
-        if ($driver->vehicle?->vehicle_no) {
-            $label .= ' (Assigned: ' . $driver->vehicle->vehicle_no . ')';
-        }
+        $label .= ' (Assigned: ' . $vehicleNo . ', NIC: ' . $nicNumber . ')';
 
         return $label;
     }

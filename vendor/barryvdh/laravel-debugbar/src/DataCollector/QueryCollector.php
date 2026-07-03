@@ -38,6 +38,7 @@ class QueryCollector extends PDOCollector
         '/vendor/laravel/framework/src/Illuminate/Collections',
         '/vendor/october/rain',
         '/vendor/barryvdh/laravel-debugbar',
+        '/vendor/fruitcake/laravel-debugbar',
     ];
 
     /**
@@ -399,7 +400,6 @@ class QueryCollector extends PDOCollector
         } else {
             $reflection = new \ReflectionClass($finder);
             $property = $reflection->getProperty('views');
-            $property->setAccessible(true);
             $this->reflection['viewfinderViews'] = $property;
         }
 

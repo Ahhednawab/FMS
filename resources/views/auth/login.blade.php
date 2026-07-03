@@ -24,7 +24,11 @@
 			<div class="container">
 				<div class="row align-items-center justify-content-center">
 					<div class="col-md-7 text-center">
-						<img src="{{ asset('assets/images/meezotech_logo.png') }}" alt="Logo" width="400">
+						<div class="d-flex justify-content-center align-items-center flex-nowrap" style="gap: 16px; overflow-x: auto;">
+							<img src="{{ asset('assets/images/meezotech_logo.png') }}" alt="Meezotech Logo" style="width: 200px; max-width: 100%; height: auto; flex: 0 0 auto;">
+							{{-- <span class="font-weight-bold d-flex align-items-center justify-content-center" style="font-size: 2rem; line-height: 1; color: #1f1f1f; flex: 0 0 auto;">/</span> --}}
+							<img src="{{ asset('assets/images/logo_white.png') }}" alt="Formula One Logo" style="width: 200px; max-width: 100%; height: auto; flex: 0 0 auto;">
+						</div>
 						<br><br><br>
 						<h5>Login to <strong>Fleet Management System</strong></h5>
 

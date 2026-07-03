@@ -19,20 +19,29 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label>DP No</label>
-                        <input type="text" name="dp_no" class="form-control"
+                        <input type="text" name="dp_no" class="form-control @error('dp_no') is-invalid @enderror"
                             value="{{ old('dp_no', $invoice->dp_no) }}">
+                        @error('dp_no')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
                         <label>Invoice No</label>
-                        <input type="text" name="invoice_no" class="form-control"
+                        <input type="text" name="invoice_no" class="form-control @error('invoice_no') is-invalid @enderror"
                             value="{{ old('invoice_no', $invoice->invoice_no) }}">
+                        @error('invoice_no')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
                         <label>PO No</label>
-                        <input type="text" name="po_no" class="form-control"
+                        <input type="text" name="po_no" class="form-control @error('po_no') is-invalid @enderror"
                             value="{{ old('po_no', $invoice->po_no) }}">
+                        @error('po_no')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -47,7 +56,7 @@
                             @endforeach
                         </select>
                         @error('clearance_indication')
-                            <label class="text-danger">{{ $message }}</label>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -57,26 +66,38 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label>Invoice Month</label>
-                        <input type="date" name="invoice_month" class="form-control"
+                        <input type="date" name="invoice_month" class="form-control @error('invoice_month') is-invalid @enderror"
                             value="{{ old('invoice_month', optional($invoice->invoice_month)->format('Y-m-d')) }}">
+                        @error('invoice_month')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-3 mb-3">
                         <label>Invoice Date</label>
-                        <input type="date" name="invoice_date" class="form-control"
+                        <input type="date" name="invoice_date" class="form-control @error('invoice_date') is-invalid @enderror"
                             value="{{ old('invoice_date', optional($invoice->invoice_date)->format('Y-m-d')) }}">
+                        @error('invoice_date')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-3 mb-3">
                         <label>Submission Date</label>
-                        <input type="date" name="submission_date" class="form-control"
+                        <input type="date" name="submission_date" class="form-control @error('submission_date') is-invalid @enderror"
                             value="{{ old('submission_date', optional($invoice->submission_date)->format('Y-m-d')) }}">
+                        @error('submission_date')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-3 mb-3">
                         <label>Due Date</label>
-                        <input type="date" name="due_date" class="form-control"
+                        <input type="date" name="due_date" class="form-control @error('due_date') is-invalid @enderror"
                             value="{{ old('due_date', optional($invoice->due_date)->format('Y-m-d')) }}">
+                        @error('due_date')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -95,43 +116,72 @@
                 <div id="vehicle-wrapper">
                     @php
                         // 🔒 Always normalize to arrays
-                        $vehicleQty = (array) ($invoice->vehicle_qty ?? []);
-                        $days = (array) ($invoice->days ?? []);
-                        $vehicleRent = (array) ($invoice->vehicle_rent ?? []);
-                        $monthlyRent = (array) ($invoice->monthly_rent ?? []);
+                        $vehicleRows = old('vehicles');
+                        if (!is_array($vehicleRows) || count($vehicleRows) === 0) {
+                            $vehicleQty = (array) ($invoice->vehicle_qty ?? []);
+                            $days = (array) ($invoice->days ?? []);
+                            $vehicleRent = (array) ($invoice->vehicle_rent ?? []);
+                            $monthlyRent = (array) ($invoice->monthly_rent ?? []);
+                            $vehicleRows = [];
 
-                        // If empty, add one row
-                        if (count($vehicleQty) === 0) {
-                            $vehicleQty = [''];
-                            $days = [''];
-                            $vehicleRent = [''];
-                            $monthlyRent = [''];
+                            foreach ($vehicleQty as $i => $qty) {
+                                $vehicleRows[] = [
+                                    'vehicle_qty' => $qty,
+                                    'days' => $days[$i] ?? '',
+                                    'vehicle_rent' => $vehicleRent[$i] ?? '',
+                                    'monthly_rent' => $monthlyRent[$i] ?? '',
+                                ];
+                            }
+                        }
+
+                        if (count($vehicleRows) === 0) {
+                            $vehicleRows = [[
+                                'vehicle_qty' => '',
+                                'days' => '',
+                                'vehicle_rent' => '',
+                                'monthly_rent' => '',
+                            ]];
                         }
                     @endphp
 
-                    @foreach ($vehicleQty as $i => $qty)
+                    @foreach ($vehicleRows as $i => $vehicleRow)
+                        @php $vehicleRow = is_array($vehicleRow) ? $vehicleRow : []; @endphp
                         <div class="row vehicle-row mb-2">
                             <div class="col-md-2">
-                                <input type="number" step="any" min="0" name="vehicles[{{ $i }}][vehicle_qty]" class="form-control invoice-vehicle-qty"
-                                    value="{{ old("vehicles.$i.vehicle_qty", $qty) }}">
+                                <input type="number" step="any" min="0" name="vehicles[{{ $i }}][vehicle_qty]"
+                                    class="form-control invoice-vehicle-qty @error("vehicles.$i.vehicle_qty") is-invalid @enderror"
+                                    value="{{ old("vehicles.$i.vehicle_qty", $vehicleRow['vehicle_qty'] ?? '') }}">
+                                @error("vehicles.$i.vehicle_qty")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-2">
-                                <input type="number" step="any" min="0" name="vehicles[{{ $i }}][days]" class="form-control"
-                                    value="{{ old("vehicles.$i.days", $days[$i] ?? '') }}">
+                                <input type="number" step="any" min="0" name="vehicles[{{ $i }}][days]"
+                                    class="form-control @error("vehicles.$i.days") is-invalid @enderror"
+                                    value="{{ old("vehicles.$i.days", $vehicleRow['days'] ?? '') }}">
+                                @error("vehicles.$i.days")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-3">
                                 <input type="number" step="any" name="vehicles[{{ $i }}][vehicle_rent]"
-                                    class="form-control invoice-vehicle-rent"
-                                    value="{{ old("vehicles.$i.vehicle_rent", $vehicleRent[$i] ?? '') }}">
+                                    class="form-control invoice-vehicle-rent @error("vehicles.$i.vehicle_rent") is-invalid @enderror"
+                                    value="{{ old("vehicles.$i.vehicle_rent", $vehicleRow['vehicle_rent'] ?? '') }}">
+                                @error("vehicles.$i.vehicle_rent")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-3">
                                 <input type="number" step="any" name="vehicles[{{ $i }}][monthly_rent]"
-                                    class="form-control invoice-monthly-rent"
+                                    class="form-control invoice-monthly-rent @error("vehicles.$i.monthly_rent") is-invalid @enderror"
                                     readonly
-                                    value="{{ old("vehicles.$i.monthly_rent", $monthlyRent[$i] ?? '') }}">
+                                    value="{{ old("vehicles.$i.monthly_rent", $vehicleRow['monthly_rent'] ?? '') }}">
+                                @error("vehicles.$i.monthly_rent")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-2 text-center">
@@ -151,14 +201,22 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label>Sunday Gazette</label>
-                        <input type="number" step="0.01" name="sunday_gazette" class="form-control invoice-sunday-gazette"
+                        <input type="number" step="0.01" name="sunday_gazette"
+                            class="form-control invoice-sunday-gazette @error('sunday_gazette') is-invalid @enderror"
                             value="{{ old('sunday_gazette', $invoice->sunday_gazette) }}">
+                        @error('sunday_gazette')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
                         <label>Control Room Charges</label>
-                        <input type="number" step="0.01" name="control_room_charges" class="form-control invoice-control-room"
+                        <input type="number" step="0.01" name="control_room_charges"
+                            class="form-control invoice-control-room @error('control_room_charges') is-invalid @enderror"
                             value="{{ old('control_room_charges', $invoice->control_room_charges) }}">
+                        @error('control_room_charges')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -207,8 +265,12 @@
 
                     <div class="col-md-3 mb-3">
                         <label>Agreed Deduction</label>
-                        <input type="number" step="0.01" name="agreed_deduction" class="form-control invoice-agreed-deduction"
+                        <input type="number" step="0.01" name="agreed_deduction"
+                            class="form-control invoice-agreed-deduction @error('agreed_deduction') is-invalid @enderror"
                             value="{{ old('agreed_deduction', $invoice->agreed_deduction) }}">
+                        @error('agreed_deduction')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-3 mb-3">
@@ -221,8 +283,11 @@
                         <label>Payment Received</label>
                         <input type="number" step="0.01"
                             name="payment_received"
-                            class="form-control invoice-payment-received"
+                            class="form-control invoice-payment-received @error('payment_received') is-invalid @enderror"
                             value="{{ old('payment_received', $invoice->payment_received) }}">
+                        @error('payment_received')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
 
@@ -238,8 +303,11 @@
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label>Amount Received Date</label>
-                        <input type="date" name="cheque_rec_date" class="form-control"
+                        <input type="date" name="cheque_rec_date" class="form-control @error('cheque_rec_date') is-invalid @enderror"
                             value="{{ old('cheque_rec_date', optional($invoice->cheque_rec_date)->format('Y-m-d')) }}">
+                        @error('cheque_rec_date')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     {{-- <div class="col-md-3 mb-3">
@@ -250,8 +318,12 @@
 
                     <div class="col-md-3 mb-3">
                         <label>Payment Difference</label>
-                        <input type="number" name="payment_difference_in_days" class="form-control"
+                        <input type="number" name="payment_difference_in_days"
+                            class="form-control @error('payment_difference_in_days') is-invalid @enderror"
                             value="{{ old('payment_difference_in_days', $invoice->payment_difference_in_days) }}">
+                        @error('payment_difference_in_days')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-md-3 mb-3">
@@ -296,10 +368,10 @@
 
                     const qty = toNumber(qtyInput?.value);
                     const rent = toNumber(rentInput?.value);
-                    const monthlyRent = roundMoney(qty * rent);
+                    const monthlyRent = qty * rent;
 
                     if (monthlyRentInput) {
-                        monthlyRentInput.value = monthlyRent.toFixed(2);
+                        monthlyRentInput.value = String(monthlyRent);
                     }
 
                     totalMonthlyRent += monthlyRent;
@@ -318,14 +390,14 @@
                 const netPayable = roundMoney(inclusiveTotal - withholdingTax - taxValue - agreedDeduction);
                 const diff = roundMoney(netPayable - paymentReceived);
 
-                document.querySelector('.invoice-total-claim').value = totalClaim.toFixed(2);
-                document.querySelector('.invoice-sales-tax').value = salesTax.toFixed(2);
-                document.querySelector('.invoice-inclusive-total').value = inclusiveTotal.toFixed(2);
-                document.querySelector('.invoice-tax-value').value = taxValue.toFixed(2);
-                document.querySelector('.invoice-withholding-tax').value = withholdingTax.toFixed(2);
-                document.querySelector('.invoice-net-payable').value = netPayable.toFixed(2);
-                document.querySelector('.invoice-amount-receivable').value = netPayable.toFixed(2);
-                document.querySelector('.invoice-diff').value = diff.toFixed(2);
+                document.querySelector('.invoice-total-claim').value = String(totalClaim);
+                document.querySelector('.invoice-sales-tax').value = String(salesTax);
+                document.querySelector('.invoice-inclusive-total').value = String(inclusiveTotal);
+                document.querySelector('.invoice-tax-value').value = String(taxValue);
+                document.querySelector('.invoice-withholding-tax').value = String(withholdingTax);
+                document.querySelector('.invoice-net-payable').value = String(netPayable);
+                document.querySelector('.invoice-amount-receivable').value = String(netPayable);
+                document.querySelector('.invoice-diff').value = String(diff);
             }
 
             document.addEventListener('click', function(e) {

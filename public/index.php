@@ -3,6 +3,8 @@
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 define('LARAVEL_START', microtime(true));
 
 /*
@@ -32,7 +34,7 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 */
 
 require __DIR__.'/../vendor/autoload.php';
-
+// die('AUTOLOAD OK');
 /*
 |--------------------------------------------------------------------------
 | Run The Application

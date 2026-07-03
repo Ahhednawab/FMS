@@ -329,7 +329,8 @@
 
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Driver 1<span id="primary-driver-required-marker" style="color:red">*</span></strong>
+                                <strong>Driver 1<span id="primary-driver-required-marker"
+                                        style="color:red">*</span></strong>
                                 <select name="primary_driver_id" id="primary_driver_id"
                                     class="custom-select @error('primary_driver_id') is-invalid @enderror">
                                     <option value="">-- Select Driver --</option>
@@ -415,7 +416,8 @@
                                 @php
                                     $selectedPoolDrivers = $draftData['pool_driver_ids'] ?? old('pool_driver_ids', []);
                                 @endphp
-                                <select name="pool_driver_ids[]" id="pool_driver_ids" class="form-control" multiple size="4">
+                                <select name="pool_driver_ids[]" id="pool_driver_ids" class="form-control" multiple
+                                    size="4">
                                     @foreach ($poolDrivers as $driver)
                                         <option value="{{ $driver['id'] }}" data-station="{{ $driver['station_id'] }}"
                                             {{ in_array((string) $driver['id'], array_map('strval', (array) $selectedPoolDrivers), true) ? 'selected' : '' }}>
@@ -435,9 +437,14 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <strong>New Vehicle?<span style="color:red">*</span></strong>
-                                <select name="is_new_vehicle" class="custom-select @error('is_new_vehicle') is-invalid @enderror">
-                                    <option value="0" {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle', '0')) === '0' ? 'selected' : '' }}>No</option>
-                                    <option value="1" {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle')) === '1' ? 'selected' : '' }}>Yes</option>
+                                <select name="is_new_vehicle"
+                                    class="custom-select @error('is_new_vehicle') is-invalid @enderror">
+                                    <option value="0"
+                                        {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle', '0')) === '0' ? 'selected' : '' }}>
+                                        No</option>
+                                    <option value="1"
+                                        {{ (string) ($draftData['is_new_vehicle'] ?? old('is_new_vehicle')) === '1' ? 'selected' : '' }}>
+                                        Yes</option>
                                 </select>
                                 @error('is_new_vehicle')
                                     <label class="text-danger">{{ $message }}</label>
@@ -1267,7 +1274,8 @@
                 const selectedStation = stationSelect.value;
 
                 Array.from(poolDriverSelect.options).forEach(option => {
-                    const matches = !selectedStation || option.getAttribute('data-station') === selectedStation;
+                    const matches = !selectedStation || option.getAttribute('data-station') ===
+                        selectedStation;
                     option.hidden = !matches;
 
                     if (!matches) {
@@ -1278,16 +1286,17 @@
 
             function isTwentyFourHourShift() {
                 if (!shiftHourSelect) return false;
-                const selectedText = shiftHourSelect.options[shiftHourSelect.selectedIndex]?.text?.toLowerCase() || '';
+                const selectedText = shiftHourSelect.options[shiftHourSelect.selectedIndex]?.text?.toLowerCase() ||
+                    '';
                 return selectedText.includes('24');
             }
 
             function toggleSecondaryDriverFields() {
                 const showSecondaryDriver = isTwentyFourHourShift();
                 if (assignedDriverHint) {
-                    assignedDriverHint.textContent = showSecondaryDriver
-                        ? 'Maximum 2 drivers allowed for 24-hour vehicles.'
-                        : 'Only 1 driver allowed for 12-hour vehicles.';
+                    assignedDriverHint.textContent = showSecondaryDriver ?
+                        'Maximum 2 drivers allowed for 24-hour vehicles.' :
+                        'Only 1 driver allowed for 12-hour vehicles.';
                 }
 
                 secondaryDriverBlocks.forEach(block => {

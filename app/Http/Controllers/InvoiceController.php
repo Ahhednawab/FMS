@@ -169,27 +169,33 @@ class InvoiceController extends Controller
 
     private function recalculateInvoiceValues(array $validated): array
     {
-        $vehicleQty = array_map(fn ($value) => max(0, $this->toMoney($value)), (array) ($validated['vehicle_qty'] ?? []));
-        $days = array_map(fn ($value) => max(0, $this->toMoney($value)), (array) ($validated['days'] ?? []));
-        $vehicleRent = array_map(fn ($value) => $this->toMoney($value), (array) ($validated['vehicle_rent'] ?? []));
+        $vehicleQty = array_map(fn ($value) => $this->normalizeDecimalValue($value), (array) ($validated['vehicle_qty'] ?? []));
+        $days = array_map(fn ($value) => $this->normalizeDecimalValue($value), (array) ($validated['days'] ?? []));
+        $vehicleRent = array_map(fn ($value) => $this->normalizeDecimalValue($value), (array) ($validated['vehicle_rent'] ?? []));
+        $vehicleQtyNumbers = array_map(fn ($value) => max(0, $this->toFloat($value)), $vehicleQty);
+        $vehicleRentNumbers = array_map(fn ($value) => $this->toFloat($value), $vehicleRent);
 
         $monthlyRent = [];
-        foreach ($vehicleQty as $index => $qty) {
-            $monthlyRent[] = round($qty * ($vehicleRent[$index] ?? 0), 2);
+        foreach ($vehicleQtyNumbers as $index => $qty) {
+            $monthlyRent[] = $qty * ($vehicleRentNumbers[$index] ?? 0);
         }
 
-        $sundayGazette = $this->toMoney($validated['sunday_gazette'] ?? 0);
-        $controlRoomCharges = $this->toMoney($validated['control_room_charges'] ?? 0);
-        $agreedDeduction = $this->toMoney($validated['agreed_deduction'] ?? 0);
-        $paymentReceived = $this->toMoney($validated['payment_received'] ?? 0);
+        $sundayGazette = $this->normalizeDecimalValue($validated['sunday_gazette'] ?? 0);
+        $controlRoomCharges = $this->normalizeDecimalValue($validated['control_room_charges'] ?? 0);
+        $agreedDeduction = $this->normalizeDecimalValue($validated['agreed_deduction'] ?? 0);
+        $paymentReceived = $this->normalizeDecimalValue($validated['payment_received'] ?? 0);
+        $sundayGazetteNumber = $this->toFloat($sundayGazette);
+        $controlRoomChargesNumber = $this->toFloat($controlRoomCharges);
+        $agreedDeductionNumber = $this->toFloat($agreedDeduction);
+        $paymentReceivedNumber = $this->toFloat($paymentReceived);
 
-        $totalMonthlyRent = round(array_sum($monthlyRent), 2);
-        $totalClaim = round($totalMonthlyRent + $sundayGazette + $controlRoomCharges, 2);
-        $salesTax = round($totalClaim * self::SALES_TAX_RATE, 2);
-        $inclusiveTotal = round($totalClaim + $salesTax, 2);
-        $taxValue = round($totalClaim * self::TAX_VALUE_RATE, 2);
-        $withholdingTax = round($inclusiveTotal * self::WITHHOLDING_RATE, 2);
-        $netPayable = round($inclusiveTotal - $withholdingTax - $taxValue - $agreedDeduction, 2);
+        $totalMonthlyRent = array_sum($monthlyRent);
+        $totalClaim = $totalMonthlyRent + $sundayGazetteNumber + $controlRoomChargesNumber;
+        $salesTax = $totalClaim * self::SALES_TAX_RATE;
+        $inclusiveTotal = $totalClaim + $salesTax;
+        $taxValue = $totalClaim * self::TAX_VALUE_RATE;
+        $withholdingTax = $inclusiveTotal * self::WITHHOLDING_RATE;
+        $netPayable = $inclusiveTotal - $withholdingTax - $taxValue - $agreedDeductionNumber;
 
         $validated['vehicle_qty'] = $vehicleQty;
         $validated['days'] = $days;
@@ -206,7 +212,7 @@ class InvoiceController extends Controller
         $validated['agreed_deduction'] = $agreedDeduction;
         $validated['cheque_value'] = $netPayable;
         $validated['payment_received'] = $paymentReceived;
-        $validated['diff'] = round($netPayable - $paymentReceived, 2);
+        $validated['diff'] = $netPayable - $paymentReceivedNumber;
 
         return $validated;
     }
@@ -219,12 +225,21 @@ class InvoiceController extends Controller
         ];
     }
 
-    private function toMoney(mixed $value): float
+    private function normalizeDecimalValue(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '0';
+        }
+
+        return (string) $value;
+    }
+
+    private function toFloat(mixed $value): float
     {
         if ($value === null || $value === '') {
             return 0.0;
         }
 
-        return round((float) $value, 2);
+        return (float) $value;
     }
 }
