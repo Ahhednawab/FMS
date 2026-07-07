@@ -228,6 +228,14 @@
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
                             style="{{ request()->routeIs('brands.*') || request()->routeIs('categories.*') ? 'display:block;' : '' }}">
+                            @if (auth()->user()->hasPermission('products'))
+                                <li class="nav-item">
+                                    <a href="{{ route('productList.index') }}"
+                                        class="nav-link {{ request()->routeIs('productList.*') ? 'active' : '' }}">
+                                        Products List
+                                    </a>
+                                </li>
+                            @endif
                             @if (auth()->user()->hasPermission('brands'))
                                 <li class="nav-item"><a href="{{ route('brands.index') }}"
                                         class="nav-link {{ request()->routeIs('brands.*') ? 'active' : '' }}">Brand
@@ -343,14 +351,7 @@
                                     </a>
                                 </li>
                             @endif
-                            @if (auth()->user()->hasPermission('products'))
-                                <li class="nav-item">
-                                    <a href="{{ route('productList.index') }}"
-                                        class="nav-link {{ request()->routeIs('productList.*') ? 'active' : '' }}">
-                                        Products List
-                                    </a>
-                                </li>
-                            @endif
+                            
                             @if (auth()->user()->hasPermission('master_warehouse_inventory'))
                                 <li class="nav-item">
                                     <a href="{{ route('master_warehouse_inventory.index') }}"
@@ -359,30 +360,30 @@
                                     </a>
                                 </li>
                             @endif
-                            @if (auth()->user()->hasPermission('purchases'))
+                            {{-- @if (auth()->user()->hasPermission('purchases'))
                                 <li class="nav-item">
                                     <a href="{{ route('purchases.index') }}"
                                         class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
                                         Purchases
                                     </a>
                                 </li>
-                            @endif
-                            @if (auth()->user()->hasPermission('suppliers'))
+                            @endif --}}
+                            {{-- @if (auth()->user()->hasPermission('suppliers'))
                                 <li class="nav-item">
                                     <a href="{{ route('suppliers.index') }}"
                                         class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                                         Suppliers
                                     </a>
                                 </li>
-                            @endif
-                            @if (auth()->user()->hasPermission('issues'))
+                            @endif --}}
+                            {{-- @if (auth()->user()->hasPermission('issues'))
                                 <li class="nav-item">
                                     <a href="{{ route('issues.index') }}"
                                         class="nav-link {{ request()->routeIs('issues.*') ? 'active' : '' }}">
                                         Issues
                                     </a>
                                 </li>
-                            @endif
+                            @endif --}}
                         </ul>
                     </li>
 
