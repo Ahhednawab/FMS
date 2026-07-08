@@ -225,6 +225,10 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
 
     // Vehicle Maintenance
+    Route::get('vehicleMaintenances/vehicle/{vehicle}/details', [VehicleMaintenanceController::class, 'vehicleDetails'])
+        ->name('vehicleMaintenances.vehicleDetails');
+    Route::get('vehicleMaintenances/warehouse/{warehouse}/products', [VehicleMaintenanceController::class, 'warehouseProducts'])
+        ->name('vehicleMaintenances.warehouseProducts');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 
@@ -374,6 +378,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     Route::resource('bankPayments', BankPaymentController::class);
 
     // Vehicle Maintenance
+    Route::get('vehicleMaintenances/vehicle/{vehicle}/details', [VehicleMaintenanceController::class, 'vehicleDetails'])
+        ->name('vehicleMaintenances.vehicleDetails');
+    Route::get('vehicleMaintenances/warehouse/{warehouse}/products', [VehicleMaintenanceController::class, 'warehouseProducts'])
+        ->name('vehicleMaintenances.warehouseProducts');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 

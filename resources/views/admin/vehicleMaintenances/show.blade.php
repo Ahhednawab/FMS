@@ -3,143 +3,73 @@
 @section('title', 'Vehicle Maintenance Detail')
 
 @section('content')
-    <!-- Page header -->
     <div class="page-header page-header-light">
         <div class="page-header-content header-elements-lg-inline">
             <div class="page-title d-flex">
-                <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Vehicle Maintenance
-                        Detail</span></h4>
-                <a href="#" class="header-elements-toggle text-body d-lg-none"><i class="icon-more"></i></a>
+                <h4><i class="icon-arrow-left52 mr-2"></i> <span class="font-weight-semibold">Vehicle Maintenance Detail</span></h4>
             </div>
             <div class="header-elements d-none">
-                <div class="d-flex justify-content-center">
-                    <a href="{{ route('vehicleMaintenances.index') }}" class="btn btn-primary"><span>View Vehicle
-                            Maintenance <i class="icon-list ml-2"></i></span></a>
-                </div>
+                <a href="{{ route('vehicleMaintenances.index') }}" class="btn btn-primary">
+                    View Vehicle Maintenance <i class="icon-list ml-2"></i>
+                </a>
             </div>
         </div>
     </div>
-    <!-- /page header -->
 
-    <!-- Content area -->
     <div class="content">
         <div class="card">
             <div class="card-body">
-                <div class="container mt-3">
+                <div class="row">
+                    <div class="col-md-3 mb-3"><strong>Date</strong><p>{{ optional($vehicleMaintenance->service_date)->format('d M Y') }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Vehicle Number</strong><p>{{ $vehicleMaintenance->vehicle?->vehicle_no ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Vehicle Make</strong><p>{{ $vehicleMaintenance->vehicle_make ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Vehicle Model</strong><p>{{ $vehicleMaintenance->model ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Current Mileage</strong><p>{{ $vehicleMaintenance->odometer_reading ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Maintenance Type</strong><p>{{ ucwords(str_replace('_', ' ', $vehicleMaintenance->maintenance_type)) }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Work Done</strong><p>{{ $vehicleMaintenance->workDone?->name ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Warehouse</strong><p>{{ $vehicleMaintenance->warehouse?->name ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Workshop</strong><p>{{ $vehicleMaintenance->workshop?->name ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Labor / Service Charges</strong><p>Rs. {{ number_format($vehicleMaintenance->labor_cost, 2) }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Amount</strong><p>Rs. {{ number_format($vehicleMaintenance->service_cost, 2) }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Created By</strong><p>{{ $vehicleMaintenance->createdBy?->name ?? 'N/A' }}</p></div>
+                </div>
 
-                    <div class="row">
-                        <!-- Maintenance ID -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Maintenance ID</h5>
-                                <p>{{ $vehicleMaintenance->maintenance_id }}</p>
-                            </div>
-                        </div>
+                <h5 class="mt-3">Parts Used</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity Used</th>
+                                <th>Unit Price</th>
+                                <th>Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($vehicleMaintenance->maintenanceParts->groupBy('product_id') as $rows)
+                                <tr>
+                                    <td>{{ $rows->first()->product?->name ?? 'N/A' }}</td>
+                                    <td>{{ $rows->sum('quantity') }}</td>
+                                    <td>Rs. {{ number_format($rows->first()->unit_price, 2) }}</td>
+                                    <td>Rs. {{ number_format($rows->sum('total_price'), 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted">No parts used.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-                        <!-- Vehicle No -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Vehicle No</h5>
-                                <p>{{ $vehicleMaintenance->vehicle->vehicle_no }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Model -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Model</h5>
-                                <p>{{ $vehicleMaintenance->model }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Odometer Reading -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Odometer Reading</h5>
-                                <p>{{ $vehicleMaintenance->odometer_reading }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <!-- Fuel Type -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Fuel Type</h5>
-                                <p>{{ $vehicleMaintenance->fuelType->fuel_type }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Maintenance Category -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Maintenance Category</h5>
-                                <p>{{ $vehicleMaintenance->maintenanceCategory->category }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Service Date -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Service Date</h5>
-                                <p>{{ \Carbon\Carbon::parse($vehicleMaintenance->service_date)->format('d-M-Y') }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Service Provider -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Service Provider</h5>
-                                <p>{{ $vehicleMaintenance->serviceProvider->name }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <!-- Parts Replaced -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Parts Replaced</h5>
-                                <p>{{ $vehicleMaintenance->parts->name }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Cost of Service -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Cost of Service</h5>
-                                <p>{{ $vehicleMaintenance->service_cost }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Service Description -->
-                        <div class="col-md-3 text-center">
-                            <div class="card">
-                                <h5 class="m-0">Service Description</h5>
-                                <p>{{ $vehicleMaintenance->service_description }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-12">
-                        <label for=""></label>
-                        <div class="text-right">
-                            <a href="{{ route('vehicleMaintenances.edit', $vehicleMaintenance->id) }}"
-                                class="btn btn-warning">Edit</a>
-                            <a href="{{ route('vehicleMaintenances.index') }}" class="btn btn-secondary">Back</a>
-                            <form action="{{ route('vehicleMaintenances.destroy', $vehicleMaintenance->id) }}"
-                                method="POST" style="display:inline-block;"
-                                onsubmit="return confirm('Are you sure you want to delete this Vehicle Maintenance?');">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger">Delete</button>
-                            </form>
-                        </div>
-                        <br>
-                    </div>
+                <div class="text-right mt-3">
+                    <a href="{{ route('vehicleMaintenances.edit', $vehicleMaintenance->id) }}" class="btn btn-warning">Edit</a>
+                    <a href="{{ route('vehicleMaintenances.index') }}" class="btn btn-secondary">Back</a>
+                    <form action="{{ route('vehicleMaintenances.destroy', $vehicleMaintenance->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this Vehicle Maintenance?');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-danger">Delete</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    <!-- /content area -->
 @endsection

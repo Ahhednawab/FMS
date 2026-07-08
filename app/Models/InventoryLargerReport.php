@@ -10,10 +10,13 @@ class InventoryLargerReport extends Model
     protected $fillable = [
         'report_date',
         'product_name',
+        'product_id',
+        'warehouse_id',
         'warehouse',
         'category',
         'location',
         'transaction_type',
+        'supplier_id',
         'supplier',
         'order_quantity',
         'order_price',
