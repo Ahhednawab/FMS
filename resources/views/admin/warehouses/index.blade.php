@@ -47,13 +47,43 @@
             </div>
         @endif
 
+        {{-- Master Warehouse Status Banner --}}
+        @if ($masterWarehouse)
+            <div class="alert alert-success d-flex align-items-center justify-content-between" role="alert"
+                style="border-left: 4px solid #28a745;">
+                <div>
+                    <i class="icon-shield-check mr-2" style="font-size:1.1rem;"></i>
+                    <strong>Master Warehouse:</strong>
+                    <span class="ml-1 badge badge-success" style="font-size:0.85rem;">{{ $masterWarehouse->name }}</span>
+                    <small class="text-muted ml-2">(Serial: {{ $masterWarehouse->serial_no }})</small>
+                    <span class="ml-2 text-muted small">— All new inventory is received here first.</span>
+                </div>
+                <a href="{{ route('warehouses.show', $masterWarehouse->id) }}" class="btn btn-sm btn-outline-success">
+                    View Master
+                </a>
+            </div>
+        @else
+            <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert"
+                style="border-left: 4px solid #ffc107;">
+                <div>
+                    <i class="icon-warning2 mr-2"></i>
+                    <strong>No Master Warehouse configured.</strong>
+                    <span class="ml-1 text-muted small">Use the "Set as Master" action on any warehouse below, or create a new warehouse and mark it as Master.</span>
+                </div>
+                <a href="{{ route('warehouses.create') }}" class="btn btn-sm btn-warning">
+                    Create Master Warehouse
+                </a>
+            </div>
+        @endif
+
         <div class="card">
             <div class="card-body">
                 <table class="table datatable-colvis-basic">
                     <thead>
                         <tr>
-                            <th>Serial no</th>
+                            <th>Serial No</th>
                             <th>Warehouse Name</th>
+                            <th>Role</th>
                             <th>Warehouse Manager</th>
                             <th>Station</th>
                             <th class="text-center">Action</th>
@@ -63,9 +93,23 @@
                         @foreach ($warehouses as $key => $value)
                             <tr>
                                 <td>{{ $value->serial_no }}</td>
-                                <td>{{ $value->name }}</td>
-                                <td>{{ $value->manager->name }}</td>
-                                <td>{{ $value->station->area }}</td>
+                                <td>
+                                    {{ $value->name }}
+                                    @if ($value->is_master)
+                                        <i class="icon-star-full2 text-warning ml-1" title="Master Warehouse"></i>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($value->is_master)
+                                        <span class="badge badge-success">
+                                            <i class="icon-star-full2 mr-1"></i> Master Warehouse
+                                        </span>
+                                    @else
+                                        <span class="badge badge-secondary">Sub-Warehouse</span>
+                                    @endif
+                                </td>
+                                <td>{{ $value->manager?->name ?? 'N/A' }}</td>
+                                <td>{{ $value->station?->area ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     <div class="list-icons">
                                         <div class="dropdown">
@@ -79,6 +123,21 @@
                                                 <a href="{{ route('warehouses.edit', $value->id) }}" class="dropdown-item">
                                                     <i class="icon-pencil7"></i> Edit
                                                 </a>
+
+                                                {{-- Quick Set as Master (only shown for sub-warehouses) --}}
+                                                @if (!$value->is_master)
+                                                    <div class="dropdown-divider"></div>
+                                                    <form action="{{ route('warehouses.setMaster', $value->id) }}"
+                                                        method="POST"
+                                                        onsubmit="return confirm('Set \'{{ $value->name }}\' as the Master Warehouse?\n\nThe current master will become a Sub-Warehouse.');">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item text-success">
+                                                            <i class="icon-star-full2"></i> Set as Master Warehouse
+                                                        </button>
+                                                    </form>
+                                                    <div class="dropdown-divider"></div>
+                                                @endif
+
                                                 <form action="{{ route('warehouses.destroy', $value->id) }}" method="POST"
                                                     onsubmit="return confirm('Are you sure?');">
                                                     @csrf

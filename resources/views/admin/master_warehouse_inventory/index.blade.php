@@ -11,9 +11,38 @@
             </div>
         @endif
 
-        <a href="{{ route('master_warehouse_inventory.create') }}" class="btn btn-primary mb-3">
-            Add New Inventory
-        </a>
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{-- Master Warehouse Banner --}}
+        @if (isset($masterWarehouse) && $masterWarehouse)
+            <div class="alert alert-success d-flex align-items-center justify-content-between mb-3"
+                style="border-left: 4px solid #28a745;">
+                <div>
+                    <i class="icon-shield-check mr-2"></i>
+                    <strong>Master Warehouse:</strong>
+                    <span class="badge badge-success ml-1">{{ $masterWarehouse->name }}</span>
+                    <small class="text-muted ml-2">— Stock is distributed from here to Sub-Warehouses.</small>
+                </div>
+                <a href="{{ route('master_warehouse_inventory.create') }}" class="btn btn-sm btn-success">
+                    <i class="icon-plus3 mr-1"></i> Add Inventory
+                </a>
+            </div>
+        @else
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3"
+                style="border-left: 4px solid #ffc107;">
+                <div>
+                    <i class="icon-warning2 mr-2"></i>
+                    <strong>No Master Warehouse configured.</strong>
+                    <small class="text-muted ml-1">Set a Master Warehouse before adding inventory.</small>
+                </div>
+                <a href="{{ route('warehouses.index') }}" class="btn btn-sm btn-warning">Manage Warehouses</a>
+            </div>
+        @endif
 
         <div class="card shadow">
             <div class="card-body p-0">
@@ -26,7 +55,7 @@
                             <th>Unit Price</th>
                             <th>Total Price</th>
                             <th>Available Qty</th>
-                            <th class="text-center">Assign Stock</th>
+                            <th class="text-center">Assign to Sub-Warehouse</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,7 +83,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @if ($item->quantity > 0)
+                                    @if ($item->quantity > 0 && isset($masterWarehouse) && $masterWarehouse && count($warehouses) > 0)
                                         <form class="assign-form d-flex gap-2" data-inventory-id="{{ $item->id }}">
                                             @csrf
                                             <select name="qty" class="form-select form-select-sm mx-1"
@@ -65,8 +94,9 @@
                                                 @endfor
                                             </select>
 
+                                            {{-- ✅ FIX: Uses Warehouse::subWarehouses() data from controller --}}
                                             <select name="warehouse_id" class="form-select form-select-sm mx-1" required>
-                                                <option value="">Warehouse</option>
+                                                <option value="">Sub-Warehouse</option>
                                                 @foreach ($warehouses as $warehouse)
                                                     <option value="{{ $warehouse->id }}">
                                                         {{ $warehouse->name }}
@@ -78,16 +108,18 @@
                                                 Assign
                                             </button>
                                         </form>
-                                    @else
+                                    @elseif($item->quantity <= 0)
                                         <span class="text-muted">No stock</span>
+                                    @elseif(!isset($masterWarehouse) || !$masterWarehouse)
+                                        <span class="text-warning small">No Master Warehouse</span>
+                                    @elseif(count($warehouses) === 0)
+                                        <span class="text-muted small">No Sub-Warehouses</span>
                                     @endif
-
-
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">No inventory records found.</td>
+                                <td colspan="7" class="text-center py-4 text-muted">No inventory records found.</td>
                             </tr>
                         @endforelse
                         <tr>
@@ -124,14 +156,14 @@
                         Swal.fire({
                             icon: 'warning',
                             title: 'Incomplete!',
-                            text: 'Please select quantity and warehouse',
+                            text: 'Please select quantity and a Sub-Warehouse',
                             confirmButtonColor: '#3085d6'
                         });
                         return;
                     }
                     const confirmResult = await Swal.fire({
                         title: 'Assign Stock?',
-                        text: `Assign ${qty} unit(s) to selected warehouse?`,
+                        text: `Assign ${qty} unit(s) from Master Warehouse to selected Sub-Warehouse?`,
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#28a745',
@@ -155,7 +187,7 @@
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
                                         ?.getAttribute('content') ||
-                                        '{{ csrf_token() }}', // fallback if meta missing
+                                        '{{ csrf_token() }}',
                                     'Accept': 'application/json'
                                 },
                                 body: JSON.stringify({

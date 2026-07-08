@@ -15,10 +15,12 @@ class Warehouse extends Model
         'type',
         'manager_id',
         'station_id',
+        'is_master',
         'is_active',
     ];
 
     protected $casts = [
+        'is_master' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -31,6 +33,16 @@ class Warehouse extends Model
     public function station()
     {
         return $this->belongsTo(Station::class, 'station_id');
+    }
+
+    public function scopeMaster($query)
+    {
+        return $query->where('is_master', true)->where('is_active', true);
+    }
+
+    public function scopeSubWarehouses($query)
+    {
+        return $query->where('is_master', false)->where('is_active', true);
     }
 
     public function country()

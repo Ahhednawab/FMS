@@ -11,6 +11,7 @@ use App\Traits\DraftTrait;
 use Illuminate\Http\Request;
 use App\Models\WarehouseType;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseController extends Controller
 {
@@ -26,7 +27,8 @@ class WarehouseController extends Controller
     {
         $role_slug = $request->get('roleSlug');
         $warehouses = Warehouse::with(['manager', 'station'])->where('is_active', 1)->latest()->get();
-        return view('admin.warehouses.index', compact('warehouses', 'role_slug'));
+        $masterWarehouse = $warehouses->firstWhere('is_master', true);
+        return view('admin.warehouses.index', compact('warehouses', 'role_slug', 'masterWarehouse'));
     }
 
     public function create(Request $request)
@@ -38,17 +40,11 @@ class WarehouseController extends Controller
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
 
-        $warehouse = Warehouse::where('type', 'master')->get();
-
-        if (count($warehouse) > 0) {
-            $types = ["sub"];
-        } else {
-            $types = ["master", "sub"];
-        };
+        $masterWarehouse = Warehouse::master()->first();
 
         $draftInfo = $this->getDraftDataForView($request, 'warehouses');
 
-        return view('admin.warehouses.create', compact('serial_no', 'managers', 'stations', 'types', 'role_slug') + $draftInfo);
+        return view('admin.warehouses.create', compact('serial_no', 'managers', 'stations', 'masterWarehouse', 'role_slug') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -61,28 +57,37 @@ class WarehouseController extends Controller
 
         $valid = $request->validate([
             'name'        => 'required|string|max:255',
-            'type'        => 'required|in:master,sub',
+            'is_master'   => 'nullable|boolean',
             'manager_id'  => 'required|exists:users,id',
             'station_id'  => 'required|exists:stations,id',
         ], [
             'name.required'       => 'Warehouse name is required.',
-            'type.required'       => 'Warehouse type is required.',
             'manager_id.required' => 'Please select a manager.',
             'station_id.required' => 'Please select a station.',
             'manager_id.exists'   => 'Selected manager is invalid.',
             'station_id.exists'   => 'Selected station is invalid.',
         ]);
 
-        // dd($valid);
+        DB::transaction(function () use ($request) {
+            $isMaster = $request->boolean('is_master');
 
-        $warehouse = Warehouse::create([
-            'serial_no'   => (new Warehouse)->generateSerialNo(), // Auto-generated
-            'name'        => $request->name,
-            'type'        => $request->type,
-            'manager_id'  => $request->manager_id,
-            'station_id'  => $request->station_id,
-            'is_active'   => true,
-        ]);
+            if ($isMaster) {
+                Warehouse::where('is_master', true)->update([
+                    'is_master' => false,
+                    'type' => 'sub',
+                ]);
+            }
+
+            Warehouse::create([
+                'serial_no'   => (new Warehouse)->generateSerialNo(),
+                'name'        => $request->name,
+                'type'        => $isMaster ? 'master' : 'sub',
+                'manager_id'  => $request->manager_id,
+                'station_id'  => $request->station_id,
+                'is_master'   => $isMaster,
+                'is_active'   => true,
+            ]);
+        });
 
         // Delete draft after successful save
         $this->deleteDraftAfterSuccess($request, 'warehouses');
@@ -103,20 +108,15 @@ class WarehouseController extends Controller
 
     public function edit(Request $request, Warehouse $warehouse)
     {
-        $$role_slug = auth()->user()->role->slug;
+        $role_slug = auth()->user()->role->slug;
 
 
         $managers = User::where('is_active', 1)->where('designation_id', 3)->where('is_active', 1)->orderBy('name', 'ASC')->pluck('name', 'id');
         $stations = Station::where('is_active', 1)->orderBy('area', 'ASC')->pluck('area', 'id');
 
-        $warehouses = Warehouse::where('type', 'master')->get();
+        $masterWarehouse = Warehouse::master()->where('id', '!=', $warehouse->id)->first();
 
-        if (count($warehouses) > 0) {
-            $types = ["sub"];
-        } else {
-            $types = ["master", "sub"];
-        };
-        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers', 'role_slug', 'types'));
+        return view('admin.warehouses.edit', compact('warehouse', 'stations', 'managers', 'role_slug', 'masterWarehouse'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
@@ -128,13 +128,12 @@ class WarehouseController extends Controller
             $request->all(),
             [
                 'name'          =>  'required|string|max:255',
-                'type'        => 'required|in:master,sub',
+                'is_master'     => 'nullable|boolean',
                 'manager_id'    =>  'required',
                 'station_id'    =>  'required',
             ],
             [
                 'name.required'         =>  'Warehouse Name is required',
-                'type.required'       => 'Warehouse type is required.',
                 'manager_id.required'   =>  'Warehouse Manager is required',
                 'station_id.required'   =>  'Station is required',
             ]
@@ -144,18 +143,32 @@ class WarehouseController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $warehouse->name        =   $request->name;
-        $warehouse->type        = $request->type;
-        $warehouse->manager_id  =   $request->manager_id;
-        $warehouse->station_id  =   $request->station_id;
-        $warehouse->save();
+        DB::transaction(function () use ($request, $warehouse) {
+            $isMaster = $request->boolean('is_master');
+
+            if ($isMaster) {
+                Warehouse::where('id', '!=', $warehouse->id)
+                    ->where('is_master', true)
+                    ->update([
+                        'is_master' => false,
+                        'type' => 'sub',
+                    ]);
+            }
+
+            $warehouse->name        = $request->name;
+            $warehouse->type        = $isMaster ? 'master' : 'sub';
+            $warehouse->manager_id  = $request->manager_id;
+            $warehouse->station_id  = $request->station_id;
+            $warehouse->is_master   = $isMaster;
+            $warehouse->save();
+        });
 
         return redirect()->route('warehouses.index')->with('success', 'Warehouse updated successfully.');
     }
 
     public function destroy(Request $request, Warehouse $warehouse)
     {
-        $$role_slug = auth()->user()->role->slug;
+        $role_slug = auth()->user()->role->slug;
 
 
         $warehouse->is_active = 0;
@@ -163,4 +176,34 @@ class WarehouseController extends Controller
 
         return redirect()->route('warehouses.index')->with('delete_msg', 'Warehouse deleted successfully.');
     }
+
+    /**
+     * Quick-toggle: set a warehouse as Master directly from the index list.
+     * Uses the same atomic logic as store() / update() to ensure only one master exists.
+     */
+    public function setMaster(Request $request, Warehouse $warehouse)
+    {
+        if (!auth()->user()->hasPermission('warehouses')) {
+            abort(403, 'You do not have permission to perform this action.');
+        }
+
+        DB::transaction(function () use ($warehouse) {
+            // Unset any existing master
+            Warehouse::where('is_master', true)
+                ->where('id', '!=', $warehouse->id)
+                ->update([
+                    'is_master' => false,
+                    'type'      => 'sub',
+                ]);
+
+            // Set this warehouse as master
+            $warehouse->is_master = true;
+            $warehouse->type      = 'master';
+            $warehouse->save();
+        });
+
+        return redirect()->route('warehouses.index')
+            ->with('success', "'{$warehouse->name}' has been set as the Master Warehouse.");
+    }
 }
+

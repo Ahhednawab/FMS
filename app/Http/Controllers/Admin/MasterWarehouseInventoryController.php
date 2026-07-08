@@ -23,17 +23,17 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
 
-
-
         $inventory = MasterWarehouseInventory::with('product')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $warehouses = Warehouses::where('is_active', true)->where('type', 'sub')
-            ->orderBy('name')
-            ->get();
+        // ✅ FIX: Use the correct Warehouse model with scopeSubWarehouses()
+        // The old code used Warehouses (legacy model) which queries a different table/columns.
+        $warehouses = Warehouse::subWarehouses()->orderBy('name')->get();
 
-        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses'));
+        // Pass the current master warehouse so the view can show it
+        $masterWarehouse = Warehouse::master()->first();
+        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses', 'masterWarehouse'));
     }
 
     public function create(Request $request)
@@ -45,7 +45,10 @@ class MasterWarehouseInventoryController extends Controller
 
         $products = ProductList::all();
 
-        return view('admin.master_warehouse_inventory.create', compact('products', 'role_slug'));
+        // Pass the master warehouse so the view can show a warning if none is set
+        $masterWarehouse = Warehouse::master()->first();
+
+        return view('admin.master_warehouse_inventory.create', compact('products', 'role_slug', 'masterWarehouse'));
     }
 
     public function store(Request $request)
@@ -54,13 +57,20 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
 
+        // ✅ Guard: inventory must always go to the Master Warehouse first
+        $masterWarehouse = Warehouse::master()->first();
+        if (!$masterWarehouse) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'No Master Warehouse is configured. Please set a Master Warehouse before adding inventory.');
+        }
 
         // Validate the input data
         $validated = $request->validate([
-            'product_id' => 'required|exists:products_list,id',
+            'product_id'  => 'required|exists:products_list,id',
             'expiry_date' => 'nullable|date',
-            'quantity' => 'required|integer|min:1',
-            'price' => 'required|decimal:0,2',
+            'quantity'    => 'required|integer|min:1',
+            'price'       => 'required|decimal:0,2',
         ]);
 
         // Set default supplier_id if not provided
@@ -71,10 +81,14 @@ class MasterWarehouseInventoryController extends Controller
             $validated['batch_number'] = MasterWarehouseInventory::GetBatchNumber();
         }
 
-        // Create a new inventory record
-        MasterWarehouseInventory::create($validated);  // Save new inventory item
+        // ✅ Auto-inject the Master Warehouse ID — inventory always goes to master first
+        $validated['warehouse_id'] = $masterWarehouse->id;
 
-        return redirect()->route('master_warehouse_inventory.index')->with('success', 'Inventory item added successfully!');
+        // Create a new inventory record
+        MasterWarehouseInventory::create($validated);
+
+        return redirect()->route('master_warehouse_inventory.index')
+            ->with('success', 'Inventory item added successfully to Master Warehouse: ' . $masterWarehouse->name);
     }
 
 
@@ -89,24 +103,45 @@ class MasterWarehouseInventoryController extends Controller
         if (!auth()->user()->hasPermission('master_warehouse_inventory')) {
             abort(403, 'You do not have permission to access this page.');
         }
+
+        // ✅ Guard: assignments must originate from the Master Warehouse
+        $masterWarehouse = Warehouse::master()->first();
+        if (!$masterWarehouse) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No Master Warehouse is configured. Stock cannot be transferred.'
+            ], 422);
+        }
+
         $validator = \Validator::make(
             $request->all(),
             [
-                'warehouse_id'         => 'required|exists:warehouses,id',
-                'quantity'            => 'required|integer|min:1'
+                'warehouse_id' => 'required|exists:warehouses,id',
+                'quantity'     => 'required|integer|min:1'
             ]
         );
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
             return redirect()->back()->withErrors($validator)->withInput();
         }
+
+        // Validate the target warehouse is NOT the master (can't assign to itself)
+        if ((int) $request->warehouse_id === $masterWarehouse->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot transfer stock to the Master Warehouse itself. Please select a Sub-Warehouse.'
+            ], 422);
+        }
+
         $master = MasterWarehouseInventory::with('product')->findOrFail($request->master_inventory_id);
+
         if ((int)$request->quantity > $master->quantity) {
             return response()->json([
                 'success' => false,
-                'message' => 'Not enough stock! Only ' . $master->quantity . ' available.'
+                'message' => 'Not enough stock! Only ' . $master->quantity . ' available in Master Warehouse.'
             ], 400);
         }
+
         // Create assignment record
         WarehouseAssignment::create([
             'master_inventory_id' => $master->id,
@@ -122,11 +157,12 @@ class MasterWarehouseInventoryController extends Controller
         $master->decrement('quantity', $request->quantity);
 
         return response()->json([
-            'success' => true,
-            'message' => "Assigned {$request->quantity} × {$master->product->name} to warehouse!",
+            'success'      => true,
+            'message'      => "Assigned {$request->quantity} × {$master->product->name} to warehouse!",
             'new_quantity' => $master->quantity
         ]);
     }
+
     public function assigned(Request $request)
     {
         if (!auth()->user()->hasPermission('assigned_inventory')) {
@@ -246,12 +282,12 @@ class MasterWarehouseInventoryController extends Controller
                 $jobCartAssignment->increment('quantity', $request->quantity);
             } else {
                 JobCartAssignment::create([
-                    'job_cart_id'      => $request->jobcart_id, // new column
-                    'assigned_by'     => auth()->id(),
-                    'assigned_to'     => auth()->id(), // technician
-                    'inventory_id'    => $request->inventory_id,
-                    'product_id'      => $request->product_id,
-                    'quantity'        => $request->quantity,
+                    'job_cart_id'  => $request->jobcart_id,
+                    'assigned_by'  => auth()->id(),
+                    'assigned_to'  => auth()->id(), // technician
+                    'inventory_id' => $request->inventory_id,
+                    'product_id'   => $request->product_id,
+                    'quantity'     => $request->quantity,
                 ]);
             }
         });

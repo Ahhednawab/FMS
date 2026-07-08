@@ -62,21 +62,24 @@
                                     </div>
                                 </div>
 
-                                <!-- Warehouse Type -->
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Type</strong>
-                                        <select name="type" class="form-control warehouse-type">
-                                            <option value="">--Select--</option>
-                                            @foreach ($types as $type)
-                                                <option value="{{ $type }}">
-                                                    {{ $type }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('type')
-                                            <label class="text-danger">{{ $message }}</label>
-                                        @enderror
+                                        <strong>Warehouse Role</strong>
+                                        <div class="form-check mt-2">
+                                            <input type="hidden" name="is_master" value="0">
+                                            <input type="checkbox" name="is_master" id="is_master" value="1"
+                                                class="form-check-input warehouse-master-toggle"
+                                                {{ old('is_master', $warehouse->is_master) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_master">
+                                                Set as Master Warehouse
+                                            </label>
+                                        </div>
+                                        @if ($masterWarehouse)
+                                            <small class="form-text text-muted">
+                                                Current Master: {{ $masterWarehouse->name }}. Selecting this will make the
+                                                previous Master a Sub-Warehouse.
+                                            </small>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -141,7 +144,7 @@
     <script>
         $(document).ready(function() {
 
-            let selectedType = "{{ old('type', $warehouse->type) }}";
+            let selectedType = "{{ old('is_master', $warehouse->is_master) ? 'master' : 'sub' }}";
             let selectedManager = "{{ old('manager_id', $warehouse->manager_id) }}";
 
             function loadManagers(type, selectedManagerId = null) {
@@ -184,8 +187,8 @@
             }
 
             // Load on type change
-            $('.warehouse-type').on('change', function() {
-                loadManagers($(this).val());
+            $('.warehouse-master-toggle').on('change', function() {
+                loadManagers($(this).is(':checked') ? 'master' : 'sub');
             });
 
             // Load managers on edit page load

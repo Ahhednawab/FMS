@@ -56,17 +56,21 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Type</strong>
-                                        <select name="type" id="type" class="form-control warehouse-type">
-                                            <option selected value="">--Select--</option>
-                                            @foreach ($types as $value)
-                                                <option value="{{ $value }}">
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @if ($errors->has('type'))
-                                            <label class="text-danger">{{ $errors->first('type') }}</label>
+                                        <strong>Warehouse Role</strong>
+                                        <div class="form-check mt-2">
+                                            <input type="hidden" name="is_master" value="0">
+                                            <input type="checkbox" name="is_master" id="is_master" value="1"
+                                                class="form-check-input warehouse-master-toggle"
+                                                {{ ($draftData['is_master'] ?? old('is_master')) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_master">
+                                                Set as Master Warehouse
+                                            </label>
+                                        </div>
+                                        @if ($masterWarehouse)
+                                            <small class="form-text text-muted">
+                                                Current Master: {{ $masterWarehouse->name }}. Selecting this will make the
+                                                previous Master a Sub-Warehouse.
+                                            </small>
                                         @endif
                                     </div>
                                 </div>
@@ -132,6 +136,10 @@
             const countrySelect = document.getElementById('country_id');
             const citySelect = document.getElementById('city_id');
 
+            if (!countrySelect || !citySelect) {
+                return;
+            }
+
             function filterCities() {
                 const selectedCountry = countrySelect.value;
                 [...citySelect.options].forEach(option => {
@@ -151,8 +159,7 @@
     <script>
         $(document).ready(function() {
 
-            $('.warehouse-type').on('change', function() {
-                let type = $(this).val();
+            function loadManagers(type) {
                 let managerSelect = $('#manager_id');
 
                 managerSelect.html('<option value="">Loading...</option>');
@@ -194,8 +201,13 @@
                         managerSelect.html('<option value="">Server error</option>');
                     }
                 });
+            }
+
+            $('.warehouse-master-toggle').on('change', function() {
+                loadManagers($(this).is(':checked') ? 'master' : 'sub');
             });
 
+            loadManagers($('.warehouse-master-toggle').is(':checked') ? 'master' : 'sub');
         });
     </script>
 @endpush

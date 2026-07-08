@@ -172,7 +172,9 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
     Route::post('/warehouses/create', [WarehousesController::class, 'createWarehouse'])->name('warehouses.create');
     Route::post('/warehouses/request-inventory', [WarehousesController::class, 'requestInventory'])->name('warehouses.request_inventory');
     Route::post('/warehouses/issue-inventory', [WarehousesController::class, 'issueInventory'])->name('warehouses.issue_inventory');
+    Route::post('/warehouses/{warehouse}/set-master', [WarehouseController::class, 'setMaster'])->name('warehouses.setMaster');
     Route::resource('warehouses', WarehouseController::class);
+
 
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');

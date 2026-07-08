@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white">
+                    <div class=" text-white" style="background-color: #1b3244;padding-left: 10px;padding-bottom: 10px;">
                         <h3 class="card-title mb-0">
                             <i class="fas fa-exchange-alt"></i> Assigned Inventory History
                         </h3>
