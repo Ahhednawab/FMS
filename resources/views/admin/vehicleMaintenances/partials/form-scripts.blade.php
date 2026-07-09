@@ -83,24 +83,53 @@
             });
         }
 
+        function clearMileage(message = '') {
+            $('#current_mileage').val('');
+            $('#mileage-message').text(message);
+        }
+
+        function fetchDailyMileage() {
+            const vehicleId = $('#vehicle_id').val();
+            const serviceDate = $('#service_date').val();
+
+            if (!vehicleId || !serviceDate) {
+                clearMileage('');
+                return;
+            }
+
+            clearMileage('');
+            $.get(`{{ url('vehicleMaintenances/vehicle') }}/${vehicleId}/daily-mileage`, {
+                service_date: serviceDate
+            }).done(function(data) {
+                $('#current_mileage').val(data.mileage ?? '');
+                $('#mileage-message').text('');
+            }).fail(function(xhr) {
+                const message = xhr.responseJSON?.message || 'No mileage record found for the selected date.';
+                clearMileage(message);
+            });
+        }
+
         $('#vehicle_id').on('change', function() {
             const vehicleId = $(this).val();
             if (!vehicleId) {
-                $('#vehicle_make, #vehicle_model, #current_mileage').val('');
+                $('#vehicle_make, #vehicle_model').val('');
+                clearMileage('');
                 return;
             }
 
             $.get(`{{ url('vehicleMaintenances/vehicle') }}/${vehicleId}/details`, function(data) {
                 $('#vehicle_make').val(data.make || '');
                 $('#vehicle_model').val(data.model || '');
-                $('#current_mileage').val(data.current_mileage || 0);
 
                 if (data.warehouse_id) {
                     $('#warehouse_id').val(data.warehouse_id).trigger('change');
                 }
             });
+
+            fetchDailyMileage();
         });
 
+        $('#service_date').on('change', fetchDailyMileage);
         $('#warehouse_id').on('change', loadWarehouseProducts);
         $('#add-part-row').on('click', function() { addPartRow(); });
         $('#labor_cost').on('input', calculateAmount);

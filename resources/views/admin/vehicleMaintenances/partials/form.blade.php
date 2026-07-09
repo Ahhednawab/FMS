@@ -7,7 +7,7 @@
     <div class="col-md-3">
         <div class="form-group">
             <label>Date</label>
-            <input type="date" name="service_date" class="form-control"
+            <input type="date" name="service_date" id="service_date" class="form-control"
                 value="{{ old('service_date', optional($maintenance?->service_date)->format('Y-m-d')) }}" required>
         </div>
     </div>
@@ -43,9 +43,13 @@
 <div class="row">
     <div class="col-md-3">
         <div class="form-group">
-            <label>Current Mileage</label>
+            <label>Mileage</label>
             <input type="text" id="current_mileage" class="form-control"
                 value="{{ old('odometer_reading', $maintenance?->odometer_reading) }}" readonly>
+            <small id="mileage-message" class="text-danger"></small>
+            @error('odometer_reading')
+                <small class="text-danger d-block">{{ $message }}</small>
+            @enderror
         </div>
     </div>
     <div class="col-md-3">

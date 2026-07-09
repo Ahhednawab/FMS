@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DailyMileageReport;
 use App\Models\InventoryLargerReport;
 use App\Models\Product;
 use App\Models\ProductList;
@@ -14,9 +15,11 @@ use App\Models\Warehouse;
 use App\Models\WarehouseAssignment;
 use App\Models\Workshop;
 use App\Services\VehicleMaintenanceScheduleService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class VehicleMaintenanceController extends Controller
 {
@@ -63,6 +66,13 @@ class VehicleMaintenanceController extends Controller
 
         DB::transaction(function () use ($validated, $request) {
             $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+            $dailyMileage = $this->dailyMileageFor($vehicle->id, $validated['service_date']);
+            if (!$dailyMileage) {
+                throw ValidationException::withMessages([
+                    'odometer_reading' => 'No mileage record found for the selected date.',
+                ]);
+            }
+
             $workDone = VehicleMaintenanceWorkDone::firstOrCreate([
                 'name' => trim($validated['work_done']),
             ], [
@@ -74,7 +84,7 @@ class VehicleMaintenanceController extends Controller
                 'vehicle_id' => $vehicle->id,
                 'vehicle_make' => $vehicle->make,
                 'model' => $vehicle->model,
-                'odometer_reading' => (int) $this->vehicleMileage($vehicle),
+                'odometer_reading' => (int) $dailyMileage->mileage,
                 'service_date' => $validated['service_date'],
                 'maintenance_type' => $validated['maintenance_type'],
                 'work_done_id' => $workDone->id,
@@ -117,6 +127,13 @@ class VehicleMaintenanceController extends Controller
 
         DB::transaction(function () use ($validated, $vehicleMaintenance) {
             $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
+            $dailyMileage = $this->dailyMileageFor($vehicle->id, $validated['service_date']);
+            if (!$dailyMileage) {
+                throw ValidationException::withMessages([
+                    'odometer_reading' => 'No mileage record found for the selected date.',
+                ]);
+            }
+
             $workDone = VehicleMaintenanceWorkDone::firstOrCreate([
                 'name' => trim($validated['work_done']),
             ], [
@@ -129,7 +146,7 @@ class VehicleMaintenanceController extends Controller
                 'vehicle_id' => $vehicle->id,
                 'vehicle_make' => $vehicle->make,
                 'model' => $vehicle->model,
-                'odometer_reading' => (int) $this->vehicleMileage($vehicle),
+                'odometer_reading' => (int) $dailyMileage->mileage,
                 'service_date' => $validated['service_date'],
                 'maintenance_type' => $validated['maintenance_type'],
                 'work_done_id' => $workDone->id,
@@ -174,8 +191,28 @@ class VehicleMaintenanceController extends Controller
         return response()->json([
             'make' => $vehicle->make,
             'model' => $vehicle->model,
-            'current_mileage' => $this->vehicleMileage($vehicle),
             'warehouse_id' => $warehouse?->id,
+        ]);
+    }
+
+    public function dailyMileage(Vehicle $vehicle, Request $request)
+    {
+        $validated = $request->validate([
+            'service_date' => 'required|date',
+        ]);
+
+        $dailyMileage = $this->dailyMileageFor($vehicle->id, $validated['service_date']);
+
+        if (!$dailyMileage) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No mileage record found for the selected date.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'mileage' => $dailyMileage->mileage,
         ]);
     }
 
@@ -399,8 +436,13 @@ class VehicleMaintenanceController extends Controller
         return Workshop::where('is_active', 1)->orderBy('name')->pluck('name', 'id');
     }
 
-    private function vehicleMileage(Vehicle $vehicle): int|float|string|null
+    private function dailyMileageFor(int $vehicleId, string $serviceDate): ?DailyMileageReport
     {
-        return $vehicle->parking_km ?? 0;
+        return DailyMileageReport::query()
+            ->where('vehicle_id', $vehicleId)
+            ->where('is_active', 1)
+            ->whereDate('report_date', Carbon::parse($serviceDate)->toDateString())
+            ->orderByDesc('id')
+            ->first();
     }
 }
