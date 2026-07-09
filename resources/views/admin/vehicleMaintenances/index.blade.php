@@ -23,7 +23,7 @@
             <div id="alert-message" class="alert alert-danger">{{ $message }}</div>
         @endif
 
-        <div class="card mb-3">
+        <div class="card mb-3 maintenance-filter-card">
             <div class="card-body">
                 <form method="GET" action="{{ route('vehicleMaintenances.index') }}">
                     <div class="row">
@@ -137,9 +137,9 @@
                         <div class="col-md-6 form-group text-right">
                             <button type="submit" class="btn btn-primary">Search</button>
                             <a href="{{ route('vehicleMaintenances.index') }}" class="btn btn-light">Clear Filters</a>
-                            <button type="button" id="excelBtn" class="btn btn-success">Excel</button>
+                            {{-- <button type="button" id="excelBtn" class="btn btn-success">Excel</button>
                             <button type="button" id="pdfBtn" class="btn btn-danger">PDF</button>
-                            <button type="button" id="printBtn" class="btn btn-secondary">Print</button>
+                            <button type="button" id="printBtn" class="btn btn-secondary">Print</button> --}}
                         </div>
                     </div>
                 </form>
@@ -149,7 +149,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover datatable-colvis-basic">
+                    <table class="table table-sm table-hover datatable-colvis-basic">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -243,4 +243,52 @@
             }, 3000);
         });
     </script>
+    <style>
+    .datatable-colvis-basic {
+        font-size: 12px;
+    }
+
+    .datatable-colvis-basic th,
+    .datatable-colvis-basic td {
+        padding: 6px 8px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .datatable-colvis-basic td div {
+        margin-bottom: 2px;
+    }
+
+    .datatable-colvis-basic th {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .maintenance-filter-card label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.maintenance-filter-card .form-control,
+.maintenance-filter-card .select2-container--default .select2-selection--single {
+    height: 34px;
+    min-height: 34px;
+    font-size: 12px;
+}
+
+.maintenance-filter-card .select2-container--default .select2-selection--single {
+    padding-top: 2px;
+}
+
+.maintenance-filter-card .form-group {
+    margin-bottom: 10px;
+}
+
+.maintenance-filter-card .btn {
+    height: 34px;
+    font-size: 12px;
+    padding: 6px 12px;
+}
+</style>
 @endsection
