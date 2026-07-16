@@ -34,6 +34,15 @@
                     <div class="col-md-3 mb-3"><strong>Created By</strong><p>{{ $vehicleMaintenance->createdBy?->name ?? 'N/A' }}</p></div>
                 </div>
 
+                @if(!empty($vehicleMaintenance->remarks))
+                    <div class="row mt-3">
+                        <div class="col-md-12 mb-3">
+                            <strong>Remarks</strong>
+                            <p>{{ $vehicleMaintenance->remarks }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 <h5 class="mt-3">Parts Used</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered">

@@ -29,6 +29,7 @@
                             ->map(function ($rows) {
                                 return [
                                     'product_id' => $rows->first()->product_id,
+                                    'product_name' => $rows->first()->product?->name ?? 'Unknown Product',
                                     'quantity' => $rows->sum('quantity'),
                                     'unit_price' => $rows->first()->unit_price,
                                 ];

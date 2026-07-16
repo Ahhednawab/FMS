@@ -8,12 +8,20 @@
             return (Number(value) || 0).toFixed(2);
         }
 
-        function productOptions(selectedId = '') {
+        function productOptions(part = {}) {
             let options = '<option value="">--Select--</option>';
+            let found = false;
+            
             warehouseProducts.forEach(function(product) {
-                const selected = String(product.id) === String(selectedId) ? 'selected' : '';
+                const selected = String(product.id) === String(part.product_id) ? 'selected' : '';
+                if (selected) found = true;
                 options += `<option value="${product.id}" data-price="${product.unit_price}" data-stock="${product.available_quantity}" ${selected}>${product.name} (${product.available_quantity} available)</option>`;
             });
+            
+            if (part.product_id && !found) {
+                options += `<option value="${part.product_id}" data-price="${part.unit_price}" data-stock="0" selected>${part.product_name || 'Unknown Product'} (0 available - Previously Used)</option>`;
+            }
+            
             return options;
         }
 
@@ -42,7 +50,7 @@
                 <tr>
                     <td>
                         <select class="form-control part-product" data-field="product_id" required>
-                            ${productOptions(part.product_id)}
+                            ${productOptions(part)}
                         </select>
                         <small class="text-muted stock-label"></small>
                     </td>
@@ -53,7 +61,7 @@
                 </tr>
             `);
             $('#parts-table tbody').append(row);
-            row.find('.part-product').select2({ width: '100%' }).trigger('change');
+            row.find('.part-product').select2({ width: '100%' }).trigger('change', [true]);
             reindexRows();
             calculateAmount();
         }
@@ -109,7 +117,7 @@
             });
         }
 
-        $('#vehicle_id').on('change', function() {
+        $('#vehicle_id').on('change', function(e, isInitialLoad = false) {
             const vehicleId = $(this).val();
             if (!vehicleId) {
                 $('#vehicle_make, #vehicle_model').val('');
@@ -121,7 +129,7 @@
                 $('#vehicle_make').val(data.make || '');
                 $('#vehicle_model').val(data.model || '');
 
-                if (data.warehouse_id) {
+                if (data.warehouse_id && !isInitialLoad) {
                     $('#warehouse_id').val(data.warehouse_id).trigger('change');
                 }
             });
@@ -134,10 +142,12 @@
         $('#add-part-row').on('click', function() { addPartRow(); });
         $('#labor_cost').on('input', calculateAmount);
 
-        $('#parts-table').on('change', '.part-product', function() {
+        $('#parts-table').on('change', '.part-product', function(e, isInit = false) {
             const option = $(this).find(':selected');
             const row = $(this).closest('tr');
-            row.find('.part-unit-price').val(money(option.data('price')));
+            if (!isInit && option.val()) {
+                row.find('.part-unit-price').val(money(option.data('price')));
+            }
             row.find('.stock-label').text(option.val() ? `${option.data('stock')} available` : '');
             calculateAmount();
         });
@@ -153,7 +163,7 @@
             loadWarehouseProducts();
         }
         if ($('#vehicle_id').val()) {
-            $('#vehicle_id').trigger('change');
+            $('#vehicle_id').trigger('change', [true]);
         }
     });
 </script>

@@ -93,6 +93,7 @@ class VehicleMaintenanceController extends Controller
                 'labor_cost' => $validated['labor_cost'] ?? 0,
                 'service_cost' => 0,
                 'service_description' => $workDone->name,
+                'remarks' => $validated['remarks'] ?? null,
                 'created_by' => auth()->id(),
                 'is_active' => 1,
             ]);
@@ -154,6 +155,7 @@ class VehicleMaintenanceController extends Controller
                 'workshop_id' => $validated['workshop_id'],
                 'labor_cost' => $validated['labor_cost'] ?? 0,
                 'service_description' => $workDone->name,
+                'remarks' => $validated['remarks'] ?? null,
             ]);
 
             $total = $this->deductParts($vehicleMaintenance, $validated['warehouse_id'], $validated['parts']);
@@ -245,6 +247,7 @@ class VehicleMaintenanceController extends Controller
             'warehouse_id' => 'required|exists:warehouses,id',
             'workshop_id' => 'required|exists:workshops,id',
             'labor_cost' => 'nullable|numeric|min:0',
+            'remarks' => 'nullable|string',
             'parts' => 'required|array|min:1',
             'parts.*.product_id' => 'required|exists:products_list,id',
             'parts.*.quantity' => 'required|integer|min:1',

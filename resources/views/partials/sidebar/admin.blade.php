@@ -420,9 +420,9 @@
         </li> --}}
 
                 @if (auth()->user()->hasPermission('accident_details') || auth()->user()->hasPermission('accident_reports'))
-                    <li
+                    {{-- <li
                         class="nav-item nav-item-submenu
-    {{ request()->routeIs('accidentDetails.*') || request()->routeIs('accidentReports.*') ? 'nav-item-open' : '' }}">
+                        {{ request()->routeIs('accidentDetails.*') || request()->routeIs('accidentReports.*') ? 'nav-item-open' : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accidents</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
@@ -445,7 +445,7 @@
                                 @endif
                             @endif
                         </ul>
-                    </li>
+                    </li> --}}
                 @endif
                 @if (false)
                     @if (auth()->user()->hasPermission('client_invoices') ||
@@ -505,11 +505,11 @@
                                         class="nav-link {{ request()->routeIs('vehicleMaintenances.*') ? 'active' : '' }}">Vehicle
                                         Maintenance</a></li>
                             @endif
-                            @if (auth()->user()->hasPermission('vehicle_maintenance_reports'))
+                            {{-- @if (auth()->user()->hasPermission('vehicle_maintenance_reports'))
                                 <li class="nav-item"><a href="{{ route('vehicleMaintenanceReports.index') }}"
                                         class="nav-link {{ request()->routeIs('vehicleMaintenanceReports.*') ? 'active' : '' }}">Vehicle
                                         Maintenance Report</a></li>
-                            @endif
+                            @endif --}}
                         </ul>
                     </li>
                 @endif

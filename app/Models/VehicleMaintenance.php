@@ -28,6 +28,7 @@ class VehicleMaintenance extends Model
         'labor_cost',
         'service_cost',
         'service_description',
+        'remarks',
         'created_by',
         'is_active',
     ];
