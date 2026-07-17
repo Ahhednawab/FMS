@@ -76,6 +76,15 @@
                             </div>
                         </div>
 
+                        @if(in_array($vehicleAttendance->status, [5, 6]) && $vehicleAttendance->pool)
+                        <div class="col-md-3 text-center">
+                            <div class="card">
+                                <h5 class="m-0">Pool Vehicle (Replacement)</h5>
+                                <p>{{ $vehicleAttendance->pool->vehicle_no }}</p>
+                            </div>
+                        </div>
+                        @endif
+
                     </div>
 
                     <div class="col-md-12">

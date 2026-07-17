@@ -91,6 +91,22 @@
                                     </div>
                                 </div>
 
+                                <!-- Pool Vehicle (conditionally displayed) -->
+                                <div id="additionalOptions" class="col-md-2" style="display: none;">
+                                    <div class="form-group">
+                                        <strong>Pool Vehicle</strong>
+                                        <select class="custom-select select2" name="pool_id" id="pool_id">
+                                            <option value="">Select</option>
+                                            @foreach ($poolvehicles as $poolVehicle)
+                                                <option value="{{ $poolVehicle->id }}"
+                                                    {{ old('pool_id', $vehicleAttendance->pool_id) == $poolVehicle->id ? 'selected' : '' }}>
+                                                    {{ $poolVehicle->vehicle_no }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div class="row">
@@ -110,3 +126,31 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Initialize select2
+            $('#pool_id').select2({
+                placeholder: 'Select',
+                allowClear: true
+            });
+
+            const attendanceStatusSelect = document.querySelector('select[name="status"]');
+            const additionalOptionsDiv = document.getElementById('additionalOptions');
+
+            function toggleAdditionalOptions() {
+                const selectedValue = attendanceStatusSelect.value;
+                if (selectedValue === '5' || selectedValue === '6') {
+                    additionalOptionsDiv.style.display = 'block';
+                } else {
+                    additionalOptionsDiv.style.display = 'none';
+                    $('#pool_id').val('').trigger('change');
+                }
+            }
+
+            attendanceStatusSelect.addEventListener('change', toggleAdditionalOptions);
+            toggleAdditionalOptions(); // Initial check
+        });
+    </script>
+@endpush

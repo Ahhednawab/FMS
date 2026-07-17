@@ -481,18 +481,26 @@ class VehiclesAttendanceController extends Controller
             ->orderBy('id')
             ->pluck('name', 'id');
 
-        return view('admin.vehicleAttendances.edit', compact('vehicleAttendance', 'attendanceStatus'));
+        $poolvehicles = Vehicle::where('pool_vehicle', 1)->where('is_active', 1)->get();
+
+        return view('admin.vehicleAttendances.edit', compact('vehicleAttendance', 'attendanceStatus', 'poolvehicles'));
     }
 
     public function update(Request $request, VehiclesAttendance $vehicleAttendance)
     {
         $validated = $request->validate([
-            'date'   => ['required', 'date', 'before_or_equal:today'],
-            'status' => ['required', 'exists:attendance_status,id'],
+            'date'    => ['required', 'date', 'before_or_equal:today'],
+            'status'  => ['required', 'exists:attendance_status,id'],
+            'pool_id' => ['nullable', 'exists:vehicles,id'],
         ]);
 
         $date = $validated['date'];
         $status = $validated['status'];
+        $poolId = $validated['pool_id'] ?? null;
+
+        if (!in_array($status, [5, 6])) { // 5 and 6 are typically "Under Maintenance"
+            $poolId = null;
+        }
 
         $exists = VehiclesAttendance::where('vehicle_id', $vehicleAttendance->vehicle_id)
             ->where('date', $date)
@@ -508,8 +516,9 @@ class VehiclesAttendanceController extends Controller
         }
 
         $vehicleAttendance->update([
-            'date'   => $date,
-            'status' => $status,
+            'date'    => $date,
+            'status'  => $status,
+            'pool_id' => $poolId,
         ]);
 
         return redirect()->route('vehicleAttendances.index')
