@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Alert;
 use App\Models\DailyMileageReport;
 use App\Models\InventoryLargerReport;
+use App\Models\MaintenanceAlert;
 use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\Vehicle;
@@ -52,11 +54,12 @@ class VehicleMaintenanceController extends Controller
     {
         return view('admin.vehicleMaintenances.create', [
             'maintenance_id' => VehicleMaintenance::GetMaintenanceId(),
-            'vehicles' => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
-            'warehouses' => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
-            'workshops' => $this->workshopOptions(),
-            'workDones' => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'vehicles'       => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
+            'warehouses'     => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'workshops'      => $this->workshopOptions(),
+            'workDones'      => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'maintenanceTypes' => $this->maintenanceTypes(),
+            'alerts'         => Alert::orderBy('title')->get(['id', 'title', 'threshold']),
         ]);
     }
 
@@ -80,28 +83,34 @@ class VehicleMaintenanceController extends Controller
             ]);
 
             $maintenance = VehicleMaintenance::create([
-                'maintenance_id' => $request->maintenance_id ?: VehicleMaintenance::GetMaintenanceId(),
-                'vehicle_id' => $vehicle->id,
-                'vehicle_make' => $vehicle->make,
-                'model' => $vehicle->model,
-                'odometer_reading' => (int) $dailyMileage->mileage,
-                'service_date' => $validated['service_date'],
-                'maintenance_type' => $validated['maintenance_type'],
-                'work_done_id' => $workDone->id,
-                'warehouse_id' => $validated['warehouse_id'],
-                'workshop_id' => $validated['workshop_id'],
-                'labor_cost' => $validated['labor_cost'] ?? 0,
-                'service_cost' => 0,
+                'maintenance_id'      => $request->maintenance_id ?: VehicleMaintenance::GetMaintenanceId(),
+                'vehicle_id'          => $vehicle->id,
+                'vehicle_make'        => $vehicle->make,
+                'model'               => $vehicle->model,
+                'odometer_reading'    => (int) $dailyMileage->mileage,
+                'service_date'        => $validated['service_date'],
+                'maintenance_type'    => $validated['maintenance_type'],
+                'work_done_id'        => $workDone->id,
+                'warehouse_id'        => $validated['warehouse_id'],
+                'workshop_id'         => $validated['workshop_id'],
+                'labor_cost'          => $validated['labor_cost'] ?? 0,
+                'service_cost'        => 0,
                 'service_description' => $workDone->name,
-                'remarks' => $validated['remarks'] ?? null,
-                'created_by' => auth()->id(),
-                'is_active' => 1,
+                'remarks'             => $validated['remarks'] ?? null,
+                'alert_id'            => $validated['alert_id'] ?? null,
+                'threshold_km'        => $validated['threshold_km'] ?? null,
+                'alert_before_km'     => $validated['alert_before_km'] ?? null,
+                'created_by'          => auth()->id(),
+                'is_active'           => 1,
             ]);
 
             $total = $this->deductParts($maintenance, $validated['warehouse_id'], $validated['parts']);
             $maintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
+
+            // Create / resolve dashboard maintenance alert
+            $this->syncMaintenanceAlert($maintenance, (int) $dailyMileage->current_km);
         });
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance created successfully.');
@@ -113,12 +122,13 @@ class VehicleMaintenanceController extends Controller
 
         return view('admin.vehicleMaintenances.edit', [
             'vehicleMaintenance' => $vehicleMaintenance,
-            'maintenance_id' => $vehicleMaintenance->maintenance_id,
-            'vehicles' => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
-            'warehouses' => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
-            'workshops' => $this->workshopOptions(),
-            'workDones' => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
-            'maintenanceTypes' => $this->maintenanceTypes(),
+            'maintenance_id'     => $vehicleMaintenance->maintenance_id,
+            'vehicles'           => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
+            'warehouses'         => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'workshops'          => $this->workshopOptions(),
+            'workDones'          => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'maintenanceTypes'   => $this->maintenanceTypes(),
+            'alerts'             => Alert::orderBy('title')->get(['id', 'title', 'threshold']),
         ]);
     }
 
@@ -144,24 +154,30 @@ class VehicleMaintenanceController extends Controller
             $this->restoreParts($vehicleMaintenance);
 
             $vehicleMaintenance->update([
-                'vehicle_id' => $vehicle->id,
-                'vehicle_make' => $vehicle->make,
-                'model' => $vehicle->model,
-                'odometer_reading' => (int) $dailyMileage->mileage,
-                'service_date' => $validated['service_date'],
-                'maintenance_type' => $validated['maintenance_type'],
-                'work_done_id' => $workDone->id,
-                'warehouse_id' => $validated['warehouse_id'],
-                'workshop_id' => $validated['workshop_id'],
-                'labor_cost' => $validated['labor_cost'] ?? 0,
+                'vehicle_id'          => $vehicle->id,
+                'vehicle_make'        => $vehicle->make,
+                'model'               => $vehicle->model,
+                'odometer_reading'    => (int) $dailyMileage->mileage,
+                'service_date'        => $validated['service_date'],
+                'maintenance_type'    => $validated['maintenance_type'],
+                'work_done_id'        => $workDone->id,
+                'warehouse_id'        => $validated['warehouse_id'],
+                'workshop_id'         => $validated['workshop_id'],
+                'labor_cost'          => $validated['labor_cost'] ?? 0,
                 'service_description' => $workDone->name,
-                'remarks' => $validated['remarks'] ?? null,
+                'remarks'             => $validated['remarks'] ?? null,
+                'alert_id'            => $validated['alert_id'] ?? null,
+                'threshold_km'        => $validated['threshold_km'] ?? null,
+                'alert_before_km'     => $validated['alert_before_km'] ?? null,
             ]);
 
             $total = $this->deductParts($vehicleMaintenance, $validated['warehouse_id'], $validated['parts']);
             $vehicleMaintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
+
+            // Sync dashboard maintenance alert
+            $this->syncMaintenanceAlert($vehicleMaintenance, (int) $dailyMileage->current_km);
         });
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance updated successfully.');
@@ -191,9 +207,21 @@ class VehicleMaintenanceController extends Controller
             ->first();
 
         return response()->json([
-            'make' => $vehicle->make,
-            'model' => $vehicle->model,
+            'make'         => $vehicle->make,
+            'model'        => $vehicle->model,
             'warehouse_id' => $warehouse?->id,
+        ]);
+    }
+
+    /**
+     * Return alert title + threshold for a given alert ID (used by form JS).
+     */
+    public function alertDetails(Alert $alert)
+    {
+        return response()->json([
+            'id'        => $alert->id,
+            'title'     => $alert->title,
+            'threshold' => $alert->threshold,
         ]);
     }
 
@@ -240,17 +268,20 @@ class VehicleMaintenanceController extends Controller
     private function validateMaintenance(Request $request): array
     {
         return $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'service_date' => 'required|date',
+            'vehicle_id'       => 'required|exists:vehicles,id',
+            'service_date'     => 'required|date',
             'maintenance_type' => 'required|in:' . implode(',', array_keys($this->maintenanceTypes())),
-            'work_done' => 'required|string|max:255',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'workshop_id' => 'required|exists:workshops,id',
-            'labor_cost' => 'nullable|numeric|min:0',
-            'remarks' => 'nullable|string',
-            'parts' => 'required|array|min:1',
+            'work_done'        => 'required|string|max:255',
+            'warehouse_id'     => 'required|exists:warehouses,id',
+            'workshop_id'      => 'required|exists:workshops,id',
+            'labor_cost'       => 'nullable|numeric|min:0',
+            'remarks'          => 'nullable|string',
+            'alert_id'         => 'nullable|exists:alerts,id',
+            'threshold_km'     => 'nullable|integer|min:0',
+            'alert_before_km'  => 'nullable|integer|min:0',
+            'parts'            => 'required|array|min:1',
             'parts.*.product_id' => 'required|exists:products_list,id',
-            'parts.*.quantity' => 'required|integer|min:1',
+            'parts.*.quantity'   => 'required|integer|min:1',
             'parts.*.unit_price' => 'required|numeric|min:0',
         ]);
     }
@@ -448,4 +479,57 @@ class VehicleMaintenanceController extends Controller
             ->orderByDesc('id')
             ->first();
     }
+
+    /**
+     * Create or update a MaintenanceAlert record based on the saved maintenance record.
+     * - If alert_before_km is configured and current_km >= alert_before_km → create/update alert (not resolved).
+     * - If current_km < alert_before_km                                    → mark any existing alert as resolved.
+     * - If no alert is configured on the maintenance record                → resolve any lingering alert.
+     */
+    private function syncMaintenanceAlert(VehicleMaintenance $maintenance, int $currentKm): void
+    {
+        if (!$maintenance->alert_id || !$maintenance->alert_before_km) {
+            // No alert configured — resolve any existing unresolved alert for this vehicle+alert combo
+            if ($maintenance->alert_id) {
+                MaintenanceAlert::where('vehicle_id', $maintenance->vehicle_id)
+                    ->where('alert_id', $maintenance->alert_id)
+                    ->where('is_resolved', false)
+                    ->update(['is_resolved' => true]);
+            }
+            return;
+        }
+
+        $existing = MaintenanceAlert::where('vehicle_id', $maintenance->vehicle_id)
+            ->where('alert_id', $maintenance->alert_id)
+            ->where('is_resolved', false)
+            ->first();
+
+        if ($currentKm >= $maintenance->alert_before_km) {
+            // Threshold reached — upsert the alert
+            if ($existing) {
+                $existing->update([
+                    'vehicle_maintenance_id' => $maintenance->id,
+                    'threshold_km'           => $maintenance->threshold_km,
+                    'alert_before_km'        => $maintenance->alert_before_km,
+                    'current_km'             => $currentKm,
+                ]);
+            } else {
+                MaintenanceAlert::create([
+                    'vehicle_maintenance_id' => $maintenance->id,
+                    'vehicle_id'             => $maintenance->vehicle_id,
+                    'alert_id'               => $maintenance->alert_id,
+                    'threshold_km'           => $maintenance->threshold_km,
+                    'alert_before_km'        => $maintenance->alert_before_km,
+                    'current_km'             => $currentKm,
+                    'is_resolved'            => false,
+                ]);
+            }
+        } else {
+            // Below threshold — resolve if existed
+            if ($existing) {
+                $existing->update(['is_resolved' => true]);
+            }
+        }
+    }
 }
+

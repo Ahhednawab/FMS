@@ -125,6 +125,44 @@
     </div>
 </div>
 
+<!-- Alert Integration Row -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label>Alert <small class="text-muted">(Optional)</small></label>
+            <select name="alert_id" id="alert_id" class="form-control select2">
+                <option value="">--Select Alert--</option>
+                @foreach ($alerts as $alert)
+                    <option value="{{ $alert->id }}"
+                        data-threshold="{{ $alert->threshold }}"
+                        {{ old('alert_id', $maintenance?->alert_id) == $alert->id ? 'selected' : '' }}>
+                        {{ $alert->title }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label>Threshold (KM) <small class="text-muted">(Auto-filled)</small></label>
+            <input type="number" name="threshold_km" id="threshold_km" class="form-control"
+                value="{{ old('threshold_km', $maintenance?->threshold_km) }}"
+                placeholder="Auto-populated from alert" readonly>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label>Alert Before (KM)</label>
+            <input type="number" name="alert_before_km" id="alert_before_km" class="form-control"
+                value="{{ old('alert_before_km', $maintenance?->alert_before_km) }}"
+                min="0" placeholder="e.g. 4000">
+            <small class="text-muted">Trigger alert this many KM before the threshold.</small>
+        </div>
+    </div>
+</div>
+
 <!-- Remarks Section -->
 <div class="row">
     <div class="col-md-12">

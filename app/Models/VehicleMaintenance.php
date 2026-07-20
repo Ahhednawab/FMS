@@ -29,6 +29,9 @@ class VehicleMaintenance extends Model
         'service_cost',
         'service_description',
         'remarks',
+        'alert_id',
+        'threshold_km',
+        'alert_before_km',
         'created_by',
         'is_active',
     ];
@@ -42,6 +45,11 @@ class VehicleMaintenance extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function alert()
+    {
+        return $this->belongsTo(Alert::class);
     }
 
     public function fuelType()

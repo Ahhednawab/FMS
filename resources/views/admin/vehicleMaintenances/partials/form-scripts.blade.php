@@ -165,5 +165,22 @@
         if ($('#vehicle_id').val()) {
             $('#vehicle_id').trigger('change', [true]);
         }
+
+        // ── Alert Integration ──────────────────────────────────────────────
+        // When an alert is selected, auto-populate the read-only Threshold (KM) field.
+        function applyAlertThreshold() {
+            const selected = $('#alert_id').find(':selected');
+            const threshold = selected.data('threshold');
+            if (selected.val() && threshold !== undefined) {
+                $('#threshold_km').val(threshold);
+            } else {
+                $('#threshold_km').val('');
+            }
+        }
+
+        $('#alert_id').on('change', applyAlertThreshold);
+
+        // Seed threshold on page load (edit mode — alert already selected)
+        applyAlertThreshold();
     });
 </script>

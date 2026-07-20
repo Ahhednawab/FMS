@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Warehouse;
 use App\Models\Driver;
+use App\Models\MaintenanceAlert;
 use Illuminate\Http\Request;
 use App\Services\Dashboard\ExpiredDriversDashboardService;
 use App\Services\Dashboard\ExpiredVehiclesDashboardService;
@@ -49,6 +50,12 @@ class DashboardController extends Controller
             $driverReasonList = $expiredDriversService->reasonList();
             $vehicleReasonList = $expiredVehiclesService->reasonList();
 
+            // Active (unresolved) maintenance alerts for the dashboard
+            $maintenanceAlerts = MaintenanceAlert::with(['vehicle', 'alert'])
+                ->where('is_resolved', false)
+                ->latest()
+                ->get();
+
             return view('dashboard', compact(
                 'vehicles',
                 'drivers',
@@ -57,7 +64,8 @@ class DashboardController extends Controller
                 'expiredDrivers',
                 'expiredVehicles',
                 'driverReasonList',
-                'vehicleReasonList'
+                'vehicleReasonList',
+                'maintenanceAlerts'
             ));
         } else if (strtolower(auth()->user()->role->slug) == "master-warehouse") {
 
