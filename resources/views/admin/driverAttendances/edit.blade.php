@@ -46,7 +46,7 @@
                                     <div class="form-group">
                                         <strong>Date</strong>
                                         <input type="date" class="form-control" name="date"
-                                            value="{{ old('date', $driverAttendance->date ?? '') }}"
+                                            value="{{ old('date', isset($driverAttendance) ? $driverAttendance->date->format('Y-m-d') : date('Y-m-d')) }}"
                                             max="{{ date('Y-m-d') }}">
                                         @if ($errors->has('date'))
                                             <label class="text-danger">{{ $errors->first('date') }}</label>

@@ -196,6 +196,18 @@ class DriversAttendanceController extends Controller
                     $row = $rowsByDate->get($dayMeta['date']);
                     $statusKey = $row['status_key'] ?? 'no_record';
 
+                    if ($statusKey !== 'no_record') {
+                        return array_merge($dayMeta, [
+                            'code' => match ($statusKey) {
+                                'present', 'replace' => 'P',
+                                'absent' => 'A',
+                                'off' => 'Off',
+                                default => '',
+                            },
+                            'is_absent' => $statusKey === 'absent',
+                        ]);
+                    }
+
                     if ($dayMeta['is_sunday']) {
                         return array_merge($dayMeta, [
                             'code' => 'Off',
@@ -204,12 +216,8 @@ class DriversAttendanceController extends Controller
                     }
 
                     return array_merge($dayMeta, [
-                        'code' => match ($statusKey) {
-                            'present', 'replace' => 'P',
-                            'absent' => 'A',
-                            default => '',
-                        },
-                        'is_absent' => $statusKey === 'absent',
+                        'code' => '',
+                        'is_absent' => false,
                     ]);
                 }),
                 'present_count' => $presentCount,
@@ -315,10 +323,10 @@ class DriversAttendanceController extends Controller
             ->orderBy('name')
             ->pluck('name', 'id');
 
-        $excludeStatuses = ['Under maintanance', 'Inspection'];
+        $includeStatuses = ['Present', 'Absent', 'OFF'];
 
         $driver_attendance_status = AttendanceStatus::where('is_active', 1)
-            ->whereNotIn('name', $excludeStatuses)
+            ->whereIn('name', $includeStatuses)
             ->orderBy('id')
             ->pluck('name', 'id');
 
@@ -476,7 +484,11 @@ class DriversAttendanceController extends Controller
 
     public function edit(DriversAttendance $driverAttendance)
     {
-        $driver_attendance_status = AttendanceStatus::where('is_active', 1)->orderBy('id')->pluck('name', 'id');
+        $includeStatuses = ['Present', 'Absent', 'OFF'];
+        $driver_attendance_status = AttendanceStatus::where('is_active', 1)
+            ->whereIn('name', $includeStatuses)
+            ->orderBy('id')
+            ->pluck('name', 'id');
         $replaceStatusId = $this->getReplaceStatusId();
 
         $driverAttendance->load([
@@ -839,12 +851,21 @@ class DriversAttendanceController extends Controller
             $attendance = $attendanceRecords->get($dateKey);
             $statusName = strtolower(trim((string) optional(optional($attendance)->attendanceStatus)->name));
             $statusKey = $statusName !== '' ? $statusName : 'no_record';
+            
+            $statusLabel = $attendance?->attendanceStatus?->name ?? 'No Record';
+            
+            if ($statusKey === 'no_record' && $cursor->isSunday()) {
+                $statusLabel = 'Off';
+                // keeping statusKey as no_record might break other counts if we want it to literally be counted as off? 
+                // Let's keep it off for consistency in the individual driver export.
+                $statusKey = 'off';
+            }
 
             $calendarRows->push([
                 'date' => $dateKey,
                 'day_name' => $cursor->format('l'),
                 'vehicle' => $attendance?->vehicle?->vehicle_no ?? $driver->vehicle?->vehicle_no ?? 'N/A',
-                'status_label' => $attendance?->attendanceStatus?->name ?? 'No Record',
+                'status_label' => $statusLabel,
                 'status_key' => $statusKey,
                 'is_replacement' => (bool) ($attendance?->is_replacement ?? false),
                 'original_driver' => $attendance?->originalDriver?->full_name,
