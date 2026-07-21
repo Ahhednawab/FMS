@@ -111,9 +111,11 @@
             }).done(function(data) {
                 $('#current_mileage').val(data.mileage ?? '');
                 $('#mileage-message').text('');
+                calculateAlertMileages();
             }).fail(function(xhr) {
                 const message = xhr.responseJSON?.message || 'No mileage record found for the selected date.';
                 clearMileage(message);
+                calculateAlertMileages();
             });
         }
 
@@ -176,9 +178,31 @@
             } else {
                 $('#threshold_km').val('');
             }
+            calculateAlertMileages();
+        }
+
+        function calculateAlertMileages() {
+            const currentKm = parseInt($('#current_mileage').val()) || 0;
+            const thresholdKm = parseInt($('#threshold_km').val()) || 0;
+            const alertBeforeKm = parseInt($('#alert_before_km').val()) || 0;
+
+            if (currentKm > 0 && thresholdKm > 0) {
+                const nextDue = currentKm + thresholdKm;
+                $('#next_due_mileage').val(nextDue);
+
+                if (alertBeforeKm > 0) {
+                    $('#alert_start_mileage').val(nextDue - alertBeforeKm);
+                } else {
+                    $('#alert_start_mileage').val('');
+                }
+            } else {
+                $('#next_due_mileage').val('');
+                $('#alert_start_mileage').val('');
+            }
         }
 
         $('#alert_id').on('change', applyAlertThreshold);
+        $('#alert_before_km').on('input', calculateAlertMileages);
 
         // Seed threshold on page load (edit mode — alert already selected)
         applyAlertThreshold();

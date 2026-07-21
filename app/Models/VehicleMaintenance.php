@@ -32,6 +32,8 @@ class VehicleMaintenance extends Model
         'alert_id',
         'threshold_km',
         'alert_before_km',
+        'next_due_mileage',
+        'alert_start_mileage',
         'created_by',
         'is_active',
     ];

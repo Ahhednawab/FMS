@@ -58,11 +58,26 @@ class VehicleMaintenanceScheduleService
         }
 
         $lastServiceKm = (int) $vehicleMaintenance->odometer_reading;
+
+        // Prefer the alert-driven threshold/alert-before values when the user
+        // explicitly linked an alert on this maintenance record.
+        $intervalKm   = $vehicleMaintenance->threshold_km
+            ? (int) $vehicleMaintenance->threshold_km
+            : (int) $schedule->service_interval_km;
+
+        $alertBeforeKm = $vehicleMaintenance->alert_before_km !== null
+            ? (int) $vehicleMaintenance->alert_before_km
+            : (int) $schedule->alert_before_km;
+
+        $nextDueKm = $lastServiceKm + $intervalKm;
+
         $schedule->update([
-            'last_service_km' => $lastServiceKm,
-            'last_service_date' => $vehicleMaintenance->service_date,
-            'next_due_km' => $lastServiceKm + (int) $schedule->service_interval_km,
-            'last_alerted_at' => null,
+            'last_service_km'    => $lastServiceKm,
+            'last_service_date'  => $vehicleMaintenance->service_date,
+            'service_interval_km'=> $intervalKm,
+            'alert_before_km'    => $alertBeforeKm,
+            'next_due_km'        => $nextDueKm,
+            'last_alerted_at'    => null,  // reset so alert fires fresh next cycle
         ]);
     }
 }

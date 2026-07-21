@@ -157,8 +157,26 @@
             <label>Alert Before (KM)</label>
             <input type="number" name="alert_before_km" id="alert_before_km" class="form-control"
                 value="{{ old('alert_before_km', $maintenance?->alert_before_km) }}"
-                min="0" placeholder="e.g. 4000">
+                min="0" placeholder="e.g. 500">
             <small class="text-muted">Trigger alert this many KM before the threshold.</small>
+        </div>
+    </div>
+</div>
+
+<!-- Computed Alert Mileages Row -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Next Due Mileage (KM) <small class="text-muted">(Auto-calculated)</small></label>
+            <input type="number" name="next_due_mileage" id="next_due_mileage" class="form-control"
+                value="{{ old('next_due_mileage', $maintenance?->next_due_mileage) }}" readonly>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label>Alert Start Mileage (KM) <small class="text-muted">(Auto-calculated)</small></label>
+            <input type="number" name="alert_start_mileage" id="alert_start_mileage" class="form-control"
+                value="{{ old('alert_start_mileage', $maintenance?->alert_start_mileage) }}" readonly>
         </div>
     </div>
 </div>

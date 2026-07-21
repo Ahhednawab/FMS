@@ -82,12 +82,18 @@ class VehicleMaintenanceController extends Controller
                 'is_active' => true,
             ]);
 
+            $baseMileage  = (int) $dailyMileage->current_km;
+            $thresholdKm  = isset($validated['threshold_km']) ? (int) $validated['threshold_km'] : null;
+            $alertBefore  = isset($validated['alert_before_km']) ? (int) $validated['alert_before_km'] : null;
+            $nextDue      = ($thresholdKm !== null) ? $baseMileage + $thresholdKm : null;
+            $alertStart   = ($nextDue !== null && $alertBefore !== null) ? $nextDue - $alertBefore : null;
+
             $maintenance = VehicleMaintenance::create([
                 'maintenance_id'      => $request->maintenance_id ?: VehicleMaintenance::GetMaintenanceId(),
                 'vehicle_id'          => $vehicle->id,
                 'vehicle_make'        => $vehicle->make,
                 'model'               => $vehicle->model,
-                'odometer_reading'    => (int) $dailyMileage->mileage,
+                'odometer_reading'    => $baseMileage,
                 'service_date'        => $validated['service_date'],
                 'maintenance_type'    => $validated['maintenance_type'],
                 'work_done_id'        => $workDone->id,
@@ -98,8 +104,10 @@ class VehicleMaintenanceController extends Controller
                 'service_description' => $workDone->name,
                 'remarks'             => $validated['remarks'] ?? null,
                 'alert_id'            => $validated['alert_id'] ?? null,
-                'threshold_km'        => $validated['threshold_km'] ?? null,
-                'alert_before_km'     => $validated['alert_before_km'] ?? null,
+                'threshold_km'        => $thresholdKm,
+                'alert_before_km'     => $alertBefore,
+                'next_due_mileage'    => $nextDue,
+                'alert_start_mileage' => $alertStart,
                 'created_by'          => auth()->id(),
                 'is_active'           => 1,
             ]);
@@ -108,9 +116,6 @@ class VehicleMaintenanceController extends Controller
             $maintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
-
-            // Create / resolve dashboard maintenance alert
-            $this->syncMaintenanceAlert($maintenance, (int) $dailyMileage->current_km);
         });
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance created successfully.');
@@ -151,13 +156,19 @@ class VehicleMaintenanceController extends Controller
                 'is_active' => true,
             ]);
 
+            $baseMileage  = (int) $dailyMileage->current_km;
+            $thresholdKm  = isset($validated['threshold_km']) ? (int) $validated['threshold_km'] : null;
+            $alertBefore  = isset($validated['alert_before_km']) ? (int) $validated['alert_before_km'] : null;
+            $nextDue      = ($thresholdKm !== null) ? $baseMileage + $thresholdKm : null;
+            $alertStart   = ($nextDue !== null && $alertBefore !== null) ? $nextDue - $alertBefore : null;
+
             $this->restoreParts($vehicleMaintenance);
 
             $vehicleMaintenance->update([
                 'vehicle_id'          => $vehicle->id,
                 'vehicle_make'        => $vehicle->make,
                 'model'               => $vehicle->model,
-                'odometer_reading'    => (int) $dailyMileage->mileage,
+                'odometer_reading'    => $baseMileage,
                 'service_date'        => $validated['service_date'],
                 'maintenance_type'    => $validated['maintenance_type'],
                 'work_done_id'        => $workDone->id,
@@ -167,17 +178,16 @@ class VehicleMaintenanceController extends Controller
                 'service_description' => $workDone->name,
                 'remarks'             => $validated['remarks'] ?? null,
                 'alert_id'            => $validated['alert_id'] ?? null,
-                'threshold_km'        => $validated['threshold_km'] ?? null,
-                'alert_before_km'     => $validated['alert_before_km'] ?? null,
+                'threshold_km'        => $thresholdKm,
+                'alert_before_km'     => $alertBefore,
+                'next_due_mileage'    => $nextDue,
+                'alert_start_mileage' => $alertStart,
             ]);
 
             $total = $this->deductParts($vehicleMaintenance, $validated['warehouse_id'], $validated['parts']);
             $vehicleMaintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
-
-            // Sync dashboard maintenance alert
-            $this->syncMaintenanceAlert($vehicleMaintenance, (int) $dailyMileage->current_km);
         });
 
         return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance updated successfully.');
@@ -242,7 +252,7 @@ class VehicleMaintenanceController extends Controller
 
         return response()->json([
             'success' => true,
-            'mileage' => $dailyMileage->mileage,
+            'mileage' => $dailyMileage->current_km,
         ]);
     }
 

@@ -70,51 +70,6 @@
         <!-- Main Content -->
         <div class="content" style="overflow-y: auto; max-height: calc(100vh - 200px);">
 
-            <!-- ── Maintenance Alerts ─────────────────────────────────── -->
-            @if (!empty($maintenanceAlerts) && $maintenanceAlerts->isNotEmpty())
-                <div class="card border-warning mb-3" style="border-left: 4px solid #f0ad4e;">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2"
-                         style="background: #fff8f0;">
-                        <h6 class="mb-0 font-weight-semibold text-warning">
-                            <i class="icon-warning22 mr-1"></i>
-                            Maintenance Alerts
-                            <span class="badge badge-warning ml-1">{{ $maintenanceAlerts->count() }}</span>
-                        </h6>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Vehicle</th>
-                                    <th>Alert</th>
-                                    <th>Alert Before (KM)</th>
-                                    <th>Threshold (KM)</th>
-                                    <th>Current KM at Trigger</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($maintenanceAlerts as $ma)
-                                    <tr>
-                                        <td>{{ $ma->vehicle?->vehicle_no ?? 'N/A' }}</td>
-                                        <td>{{ $ma->alert?->title ?? 'N/A' }}</td>
-                                        <td>{{ number_format($ma->alert_before_km) }} km</td>
-                                        <td>{{ number_format($ma->threshold_km) }} km</td>
-                                        <td>{{ number_format($ma->current_km) }} km</td>
-                                        <td>
-                                            <a href="{{ route('vehicleMaintenances.create') }}"
-                                               class="btn btn-xs btn-warning">
-                                                Schedule Maintenance
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            @endif
-            <!-- /Maintenance Alerts ───────────────────────────────────── -->
 
             <!-- Summary Cards -->
             @if (auth()->user()->hasPermission('vehicle_attendances') || auth()->user()->hasPermission('driver_attendances'))
