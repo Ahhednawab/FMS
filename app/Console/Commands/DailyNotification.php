@@ -129,6 +129,44 @@ class DailyNotification extends Command
             }
         }
 
+        // Smart Maintenance Alerts
+        $latestMaintenances = \Illuminate\Support\Facades\DB::table('vehicle_maintenances')
+            ->select('vehicle_id', 'alert_id', \Illuminate\Support\Facades\DB::raw('MAX(id) as max_id'))
+            ->whereNotNull('alert_start_mileage')
+            ->where('is_active', 1)
+            ->where('is_alert_triggered', 0)
+            ->groupBy('vehicle_id', 'alert_id')
+            ->get();
+
+        $maintenanceIds = $latestMaintenances->pluck('max_id');
+
+        $smartMaintenances = \App\Models\VehicleMaintenance::with(['vehicle', 'alert'])
+            ->whereIn('id', $maintenanceIds)
+            ->get();
+
+        foreach ($smartMaintenances as $maintenance) {
+            $currentKm = \App\Models\DailyMileageReport::where('vehicle_id', $maintenance->vehicle_id)
+                ->orderByDesc('report_date')
+                ->value('current_km');
+
+            if ($currentKm === null) {
+                continue;
+            }
+
+            if ($currentKm >= $maintenance->alert_start_mileage) {
+                $alertTitle = $maintenance->alert ? $maintenance->alert->title : 'Smart Maintenance Alert';
+                
+                $this->createNotification(
+                    $alertTitle,
+                    "Vehicle {$maintenance->vehicle->vehicle_no} has reached the {$alertTitle} alert mileage ({$maintenance->alert_start_mileage} KM). Current mileage is {$currentKm} KM. Maintenance is due. Please schedule maintenance.",
+                    \App\Models\Notification::TYPE_MAINTENANCE,
+                    $maintenance->vehicle_id
+                );
+
+                $maintenance->update(['is_alert_triggered' => 1]);
+            }
+        }
+
         $drivers = Driver::where('is_active', 1)->get();
 
         foreach ($drivers as $driver) {

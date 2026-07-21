@@ -50,12 +50,6 @@ class DashboardController extends Controller
             $driverReasonList = $expiredDriversService->reasonList();
             $vehicleReasonList = $expiredVehiclesService->reasonList();
 
-            // Active (unresolved) maintenance alerts for the dashboard
-            $maintenanceAlerts = MaintenanceAlert::with(['vehicle', 'alert'])
-                ->where('is_resolved', false)
-                ->latest()
-                ->get();
-
             return view('dashboard', compact(
                 'vehicles',
                 'drivers',
@@ -64,8 +58,7 @@ class DashboardController extends Controller
                 'expiredDrivers',
                 'expiredVehicles',
                 'driverReasonList',
-                'vehicleReasonList',
-                'maintenanceAlerts'
+                'vehicleReasonList'
             ));
         } else if (strtolower(auth()->user()->role->slug) == "master-warehouse") {
 
