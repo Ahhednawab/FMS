@@ -178,6 +178,8 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');
+    Route::post('/assigned-inventory/low-stock-limit', [MasterWarehouseInventoryController::class, 'updateLowStockLimit'])
+        ->name('assigned_inventory.lowStockLimit');
 
 
     Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
@@ -429,6 +431,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     // Add this line with your other admin routes
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');
+    Route::post('/assigned-inventory/low-stock-limit', [MasterWarehouseInventoryController::class, 'updateLowStockLimit'])
+        ->name('assigned_inventory.lowStockLimit');
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
@@ -450,6 +454,8 @@ Route::prefix('master-warehouse')->name('master-warehouse.')->middleware('auth',
 
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');
+    Route::post('/assigned-inventory/low-stock-limit', [MasterWarehouseInventoryController::class, 'updateLowStockLimit'])
+        ->name('assigned_inventory.lowStockLimit');
 
     //masterwarehouse route
     Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');
@@ -487,6 +493,8 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
     Route::get('dashboard', [MasterwarehouseController::class, 'index'])->name('index');
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');
+    Route::post('/assigned-inventory/low-stock-limit', [MasterWarehouseInventoryController::class, 'updateLowStockLimit'])
+        ->name('assigned_inventory.lowStockLimit');
     Route::get('/master_warehouse_inventory/request_inventory', [MasterWarehouseInventoryController::class, 'requestInventory'])->name('master_warehouse_inventory.request_inventory');
 
     // Route::post(
@@ -512,6 +520,8 @@ Route::prefix('sub-warehouse')->name('sub-warehouse.')->middleware('auth', 'role
 
     Route::get('/assigned-inventory', [MasterWarehouseInventoryController::class, 'assigned'])
         ->name('assigned_inventory.index');
+    Route::post('/assigned-inventory/low-stock-limit', [MasterWarehouseInventoryController::class, 'updateLowStockLimit'])
+        ->name('assigned_inventory.lowStockLimit');
 
     //masterwarehouse route
     Route::get('/master-warehouse-inventory', [MasterWarehouseInventoryController::class, 'index'])->name('master_warehouse_inventory.index');

@@ -174,7 +174,10 @@ class MasterWarehouseInventoryController extends Controller
             $assignments = WarehouseAssignment::with(['masterInventory.product.unit', 'warehouse'])
                 ->orderBy('assigned_at', 'desc')
                 ->paginate(10);
-            return view('admin.master_warehouse_inventory.assigned', compact('assignments'));
+
+            $stockSummary = $this->assignedStockSummary();
+
+            return view('admin.master_warehouse_inventory.assigned', compact('assignments', 'stockSummary'));
         } else {
 
             $subwarehouse = Warehouse::where('manager_id', auth()->user()->id)->get();
@@ -200,6 +203,74 @@ class MasterWarehouseInventoryController extends Controller
         }
 
         return view('admin.master_warehouse_inventory.assigned', compact('assignments'));
+    }
+
+    /**
+     * Save the Low Stock Limit for a product (from the Assigned Inventory page).
+     */
+    public function updateLowStockLimit(Request $request)
+    {
+        if (!auth()->user()->hasPermission('assigned_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
+        $validated = $request->validate([
+            'product_id'      => 'required|exists:products_list,id',
+            'low_stock_limit' => 'nullable|numeric|min:0',
+        ]);
+
+        ProductList::where('id', $validated['product_id'])
+            ->update(['low_stock_limit' => $validated['low_stock_limit'] !== null && $validated['low_stock_limit'] !== '' ? $validated['low_stock_limit'] : null]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Current stock per product across all sub-warehouse assignments,
+     * with its low-stock status.
+     *
+     * Status rules: 0 → out, <= half the limit → critical,
+     * <= limit → low, otherwise ok (no limit set → ok).
+     */
+    private function assignedStockSummary()
+    {
+        return WarehouseAssignment::query()
+            ->join('master_warehouse_inventory as mwi', 'warehouse_assignments.master_inventory_id', '=', 'mwi.id')
+            ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
+            ->leftJoin('units', 'pl.unit_id', '=', 'units.id')
+            ->groupBy('mwi.product_id', 'pl.name', 'pl.low_stock_limit', 'units.name')
+            ->orderBy('pl.name')
+            ->get([
+                'mwi.product_id as id',
+                'pl.name',
+                'pl.low_stock_limit',
+                DB::raw('units.name as unit_name'),
+                DB::raw('SUM(warehouse_assignments.quantity) as current_stock'),
+            ])
+            ->map(function ($row) {
+                $row->current_stock = (float) $row->current_stock;
+                $row->low_stock_limit = $row->low_stock_limit !== null ? (float) $row->low_stock_limit : null;
+                $row->status = $this->stockStatus($row->current_stock, $row->low_stock_limit);
+
+                return $row;
+            });
+    }
+
+    private function stockStatus(float $stock, ?float $limit): string
+    {
+        if ($stock <= 0) {
+            return 'out';
+        }
+
+        if ($limit === null || $limit <= 0) {
+            return 'ok';
+        }
+
+        if ($stock <= $limit / 2) {
+            return 'critical';
+        }
+
+        return $stock <= $limit ? 'low' : 'ok';
     }
 
     public function requestInventory()

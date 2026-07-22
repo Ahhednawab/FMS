@@ -14,6 +14,11 @@ class ProductList extends Model
         'product_category_id',
         'brand_id',
         'unit_id',
+        'low_stock_limit',
+    ];
+
+    protected $casts = [
+        'low_stock_limit' => 'float',
     ];
 
     public function productCategory()
