@@ -23,7 +23,7 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
 
-        $inventory = MasterWarehouseInventory::with('product')
+        $inventory = MasterWarehouseInventory::with('product.unit')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -43,7 +43,7 @@ class MasterWarehouseInventoryController extends Controller
         }
         $role_slug = auth()->user()->role->slug;
 
-        $products = ProductList::all();
+        $products = ProductList::with('unit')->orderBy('name')->get();
 
         // Pass the master warehouse so the view can show a warning if none is set
         $masterWarehouse = Warehouse::master()->first();
@@ -69,7 +69,7 @@ class MasterWarehouseInventoryController extends Controller
         $validated = $request->validate([
             'product_id'  => 'required|exists:products_list,id',
             'expiry_date' => 'nullable|date',
-            'quantity'    => 'required|integer|min:1',
+            'quantity'    => 'required|numeric|min:0.01',
             'price'       => 'required|decimal:0,2',
         ]);
 
@@ -117,7 +117,7 @@ class MasterWarehouseInventoryController extends Controller
             $request->all(),
             [
                 'warehouse_id' => 'required|exists:warehouses,id',
-                'quantity'     => 'required|integer|min:1'
+                'quantity'     => 'required|numeric|min:0.01'
             ]
         );
         if ($validator->fails()) {
@@ -133,9 +133,9 @@ class MasterWarehouseInventoryController extends Controller
             ], 422);
         }
 
-        $master = MasterWarehouseInventory::with('product')->findOrFail($request->master_inventory_id);
+        $master = MasterWarehouseInventory::with('product.unit')->findOrFail($request->master_inventory_id);
 
-        if ((int)$request->quantity > $master->quantity) {
+        if ((float) $request->quantity > $master->quantity) {
             return response()->json([
                 'success' => false,
                 'message' => 'Not enough stock! Only ' . $master->quantity . ' available in Master Warehouse.'
@@ -156,9 +156,11 @@ class MasterWarehouseInventoryController extends Controller
         // Reduce stock in master inventory
         $master->decrement('quantity', $request->quantity);
 
+        $unitName = $master->product?->unit?->name;
+
         return response()->json([
             'success'      => true,
-            'message'      => "Assigned {$request->quantity} × {$master->product->name} to warehouse!",
+            'message'      => "Assigned {$request->quantity}" . ($unitName ? " {$unitName}" : '') . " of {$master->product->name} to warehouse!",
             'new_quantity' => $master->quantity
         ]);
     }
@@ -169,7 +171,7 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
         if (auth()->user()->role->slug == "master-warehouse" || auth()->user()->role->slug == "admin") {
-            $assignments = WarehouseAssignment::with(['masterInventory.product', 'warehouse'])
+            $assignments = WarehouseAssignment::with(['masterInventory.product.unit', 'warehouse'])
                 ->orderBy('assigned_at', 'desc')
                 ->paginate(10);
             return view('admin.master_warehouse_inventory.assigned', compact('assignments'));

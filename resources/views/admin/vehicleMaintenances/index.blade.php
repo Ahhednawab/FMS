@@ -174,12 +174,12 @@
                                     <td>{{ $value->vehicle_make ?? 'N/A' }}</td>
                                     <td>{{ $value->model ?? 'N/A' }}</td>
                                     <td>{{ $maintenanceTypes[$value->maintenance_type] ?? $value->maintenance_type }}</td>
-                                    <td>{{ $value->workDone?->name ?? 'N/A' }}</td>
+                                    <td>{{ implode(', ', $value->workDoneNames()) ?: 'N/A' }}</td>
                                     <td>{{ $value->warehouse?->name ?? 'N/A' }}</td>
                                     <td>{{ $value->workshop?->name ?? 'N/A' }}</td>
                                     <td>
                                         @forelse ($value->maintenanceParts->groupBy('product_id') as $rows)
-                                            <div>{{ $rows->first()->product?->name }} ({{ $rows->sum('quantity') }})</div>
+                                            <div>{{ $rows->first()->product?->name }} ({{ $rows->sum('quantity') + 0 }}{{ $rows->first()->product?->unit?->name ? ' ' . $rows->first()->product->unit->name : '' }})</div>
                                         @empty
                                             N/A
                                         @endforelse

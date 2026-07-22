@@ -75,19 +75,25 @@
 
     <div class="col-md-3">
         <div class="form-group">
+            @php
+                $selectedWorkDones = collect(old('work_done', $maintenance?->workDoneNames() ?? []))
+                    ->map(fn ($name) => trim((string) $name))
+                    ->filter()
+                    ->values();
+            @endphp
             <label>Work Done</label>
-            <input list="work_done_options"
-                   name="work_done"
-                   id="work_done"
-                   class="form-control"
-                   value="{{ old('work_done', $maintenance?->workDone?->name) }}"
-                   required>
-
-            <datalist id="work_done_options">
-                @foreach ($workDones as $workDone)
-                    <option value="{{ $workDone }}"></option>
+            <select name="work_done[]" id="work_done" class="form-control" multiple required
+                data-placeholder="Search or type to add new">
+                @foreach ($workDones as $workDoneId => $workDoneName)
+                    <option value="{{ $workDoneName }}" data-id="{{ $workDoneId }}"
+                        {{ $selectedWorkDones->contains($workDoneName) ? 'selected' : '' }}>
+                        {{ $workDoneName }}
+                    </option>
                 @endforeach
-            </datalist>
+                @foreach ($selectedWorkDones->reject(fn ($name) => collect($workDones)->contains($name)) as $missingName)
+                    <option value="{{ $missingName }}" selected>{{ $missingName }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 

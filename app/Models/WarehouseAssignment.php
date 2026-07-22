@@ -19,6 +19,10 @@ class WarehouseAssignment extends Model
         'assigned_by',
     ];
 
+    protected $casts = [
+        'quantity' => 'float',
+    ];
+
     public function masterInventory()
     {
         return $this->belongsTo(MasterWarehouseInventory::class, 'master_inventory_id');

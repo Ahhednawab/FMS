@@ -233,6 +233,8 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
         ->name('vehicleMaintenances.warehouseProducts');
     Route::get('vehicleMaintenances/alert/{alert}/details', [VehicleMaintenanceController::class, 'alertDetails'])
         ->name('vehicleMaintenances.alertDetails');
+    Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
+        ->name('vehicleMaintenances.workDones.destroy');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 
@@ -392,6 +394,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
         ->name('vehicleMaintenances.warehouseProducts');
     Route::get('vehicleMaintenances/alert/{alert}/details', [VehicleMaintenanceController::class, 'alertDetails'])
         ->name('vehicleMaintenances.alertDetails');
+    Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
+        ->name('vehicleMaintenances.workDones.destroy');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 

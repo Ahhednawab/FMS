@@ -26,7 +26,15 @@
                     <div class="col-md-3 mb-3"><strong>Vehicle Model</strong><p>{{ $vehicleMaintenance->model ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Current Mileage</strong><p>{{ $vehicleMaintenance->odometer_reading ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Maintenance Type</strong><p>{{ ucwords(str_replace('_', ' ', $vehicleMaintenance->maintenance_type)) }}</p></div>
-                    <div class="col-md-3 mb-3"><strong>Work Done</strong><p>{{ $vehicleMaintenance->workDone?->name ?? 'N/A' }}</p></div>
+                    <div class="col-md-3 mb-3"><strong>Work Done</strong>
+                        <p>
+                            @forelse ($vehicleMaintenance->workDoneNames() as $workDoneName)
+                                <span class="badge badge-light border mr-1 mb-1">{{ $workDoneName }}</span>
+                            @empty
+                                N/A
+                            @endforelse
+                        </p>
+                    </div>
                     <div class="col-md-3 mb-3"><strong>Warehouse</strong><p>{{ $vehicleMaintenance->warehouse?->name ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Workshop</strong><p>{{ $vehicleMaintenance->workshop?->name ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Labor / Service Charges</strong><p>Rs. {{ number_format($vehicleMaintenance->labor_cost, 2) }}</p></div>
@@ -68,7 +76,7 @@
                             @forelse ($vehicleMaintenance->maintenanceParts->groupBy('product_id') as $rows)
                                 <tr>
                                     <td>{{ $rows->first()->product?->name ?? 'N/A' }}</td>
-                                    <td>{{ $rows->sum('quantity') }}</td>
+                                    <td>{{ $rows->sum('quantity') + 0 }} {{ $rows->first()->product?->unit?->name }}</td>
                                     <td>Rs. {{ number_format($rows->first()->unit_price, 2) }}</td>
                                     <td>Rs. {{ number_format($rows->sum('total_price'), 2) }}</td>
                                 </tr>

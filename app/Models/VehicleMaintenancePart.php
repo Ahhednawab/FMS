@@ -17,6 +17,7 @@ class VehicleMaintenancePart extends Model
     ];
 
     protected $casts = [
+        'quantity' => 'float',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
     ];

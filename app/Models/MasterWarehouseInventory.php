@@ -20,6 +20,10 @@ class MasterWarehouseInventory extends Model
         'price',
     ];
 
+    protected $casts = [
+        'quantity' => 'float',
+    ];
+
     /**
      * The product linked to this inventory batch.
      */

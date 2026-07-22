@@ -79,20 +79,18 @@
                                 <td>Rs. {{ number_format($item->price * $item->quantity, 2) }}</td>
                                 <td>
                                     <span class="badge bg-{{ $item->quantity > 0 ? 'success' : 'danger' }}">
-                                        {{ $item->quantity }}
+                                        {{ $item->quantity }} {{ $item->product?->unit?->name }}
                                     </span>
                                 </td>
                                 <td>
                                     @if ($item->quantity > 0 && isset($masterWarehouse) && $masterWarehouse && count($warehouses) > 0)
                                         <form class="assign-form d-flex gap-2" data-inventory-id="{{ $item->id }}">
                                             @csrf
-                                            <select name="qty" class="form-select form-select-sm mx-1"
-                                                style="width:90px" required>
-                                                <option value="">Qty</option>
-                                                @for ($i = 1; $i <= $item->quantity; $i++)
-                                                    <option value="{{ $i }}">{{ $i }}</option>
-                                                @endfor
-                                            </select>
+                                            <input type="number" name="qty" class="form-control form-control-sm mx-1"
+                                                style="width:110px" required min="0.01" step="0.01"
+                                                max="{{ $item->quantity }}"
+                                                placeholder="Qty{{ $item->product?->unit?->name ? ' (' . $item->product->unit->name . ')' : '' }}"
+                                                title="Available: {{ $item->quantity }} {{ $item->product?->unit?->name }}">
 
                                             {{-- ✅ FIX: Uses Warehouse::subWarehouses() data from controller --}}
                                             <select name="warehouse_id" class="form-select form-select-sm mx-1" required>

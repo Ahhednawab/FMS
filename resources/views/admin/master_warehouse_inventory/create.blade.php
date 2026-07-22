@@ -58,8 +58,9 @@
                         <select name="product_id" id="product_id" class="form-control" required>
                             <option value="" disabled selected>Select Product</option>
                             @foreach ($products as $product)
-                                <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
-                                    {{ $product->name }}
+                                <option value="{{ $product->id }}" data-unit="{{ $product->unit?->name }}"
+                                    {{ old('product_id') == $product->id ? 'selected' : '' }}>
+                                    {{ $product->name }}{{ $product->unit ? ' (' . $product->unit->name . ')' : '' }}
                                 </option>
                             @endforeach
                         </select>
@@ -75,9 +76,10 @@
 
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="quantity">Quantity</label>
-                        <input type="number" name="quantity" class="form-control" id="quantity" required min="1"
-                            value="{{ old('quantity') }}">
+                        <label for="quantity">Quantity <span id="quantity-unit" class="text-muted"></span></label>
+                        <input type="number" name="quantity" class="form-control" id="quantity" required min="0.01"
+                            step="0.01" value="{{ old('quantity') }}">
+                        <small class="text-muted">Decimals allowed, e.g. 15.5 or 2.75</small>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -120,6 +122,15 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // Show the product's unit next to the Quantity label
+            function updateQuantityUnit() {
+                const unit = $('#product_id').find(':selected').data('unit');
+                $('#quantity-unit').text(unit ? '(' + unit + ')' : '');
+            }
+
+            $('#product_id').on('change', updateQuantityUnit);
+            updateQuantityUnit();
         });
     </script>
 @endpush

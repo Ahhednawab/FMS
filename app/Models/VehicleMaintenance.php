@@ -75,6 +75,31 @@ class VehicleMaintenance extends Model
         return $this->belongsTo(VehicleMaintenanceWorkDone::class, 'work_done_id');
     }
 
+    public function workDones()
+    {
+        return $this->belongsToMany(
+            VehicleMaintenanceWorkDone::class,
+            'vehicle_maintenance_work_done_items',
+            'vehicle_maintenance_id',
+            'work_done_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * All Work Done names for display, falling back to the legacy
+     * single work_done_id column for records without pivot rows.
+     */
+    public function workDoneNames(): array
+    {
+        $names = $this->workDones->pluck('name')->all();
+
+        if (empty($names) && $this->workDone) {
+            $names = [$this->workDone->name];
+        }
+
+        return $names;
+    }
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);

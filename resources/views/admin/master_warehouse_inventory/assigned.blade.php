@@ -54,7 +54,7 @@
                                                     </small>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-success fs-6">{{ $assign->quantity }}</span>
+                                                    <span class="badge bg-success fs-6">{{ $assign->quantity }} {{ $assign->masterInventory?->product?->unit?->name }}</span>
                                                 </td>
                                                 <td>RS. {{ number_format($assign->price, 2) }}</td>
                                                 <td>RS. {{ number_format($assign->quantity * $assign->price, 2) }}</td>

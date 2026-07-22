@@ -2,26 +2,97 @@
     $(function() {
         $('.select2').select2({ width: '100%' });
 
+        // ── Work Done: searchable dropdown with add-new + delete ──────────
+        function workDoneTemplate(item) {
+            if (!item.id || !item.element) {
+                return item.text;
+            }
+
+            const $row = $('<span class="d-flex justify-content-between align-items-center w-100"></span>');
+            $row.append($('<span></span>').text(item.text));
+
+            const dbId = $(item.element).data('id');
+            if (dbId) {
+                $row.append(
+                    $('<i class="icon-trash text-danger ml-2 work-done-delete" title="Delete this option"></i>')
+                        .attr('data-id', dbId)
+                );
+            } else if (item.newTag) {
+                $row.append('<small class="text-muted ml-2">(new)</small>');
+            }
+
+            return $row;
+        }
+
+        $('#work_done').select2({
+            width: '100%',
+            multiple: true,
+            tags: true,
+            placeholder: $('#work_done').data('placeholder'),
+            templateResult: workDoneTemplate,
+            createTag: function(params) {
+                const term = $.trim(params.term);
+                if (!term) return null;
+                return { id: term, text: term, newTag: true };
+            }
+        });
+
+        // Delete an option from inside the dropdown (mouseup fires before
+        // select2's own selection handler, so stop it from selecting).
+        $(document).on('mouseup', '.work-done-delete', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $icon = $(this);
+            const dbId = $icon.data('id');
+            const $option = $('#work_done option').filter(function() {
+                return String($(this).data('id')) === String(dbId);
+            });
+            const name = $option.first().text().trim();
+
+            if (!confirm(`Delete "${name}" from the Work Done list?`)) {
+                return;
+            }
+
+            $.ajax({
+                url: `{{ url('vehicleMaintenances/work-dones') }}/${dbId}`,
+                type: 'POST',
+                data: { _method: 'DELETE', _token: '{{ csrf_token() }}' }
+            }).done(function() {
+                $option.remove();
+                $('#work_done').trigger('change');
+                $('#work_done').select2('close');
+            }).fail(function() {
+                alert('Could not delete the option. Please try again.');
+            });
+        });
+
         let warehouseProducts = [];
 
         function money(value) {
             return (Number(value) || 0).toFixed(2);
         }
 
+        function qty(value) {
+            return (Number(value) || 0).toString();
+        }
+
         function productOptions(part = {}) {
             let options = '<option value="">--Select--</option>';
             let found = false;
-            
+
             warehouseProducts.forEach(function(product) {
                 const selected = String(product.id) === String(part.product_id) ? 'selected' : '';
                 if (selected) found = true;
-                options += `<option value="${product.id}" data-price="${product.unit_price}" data-stock="${product.available_quantity}" ${selected}>${product.name} (${product.available_quantity} available)</option>`;
+                const unit = product.unit_name || '';
+                const stockLabel = `${qty(product.available_quantity)}${unit ? ' ' + unit : ''} available`;
+                options += `<option value="${product.id}" data-price="${product.unit_price}" data-stock="${product.available_quantity}" data-unit="${unit}" ${selected}>${product.name} (${stockLabel})</option>`;
             });
-            
+
             if (part.product_id && !found) {
-                options += `<option value="${part.product_id}" data-price="${part.unit_price}" data-stock="0" selected>${part.product_name || 'Unknown Product'} (0 available - Previously Used)</option>`;
+                options += `<option value="${part.product_id}" data-price="${part.unit_price}" data-stock="0" data-unit="" selected>${part.product_name || 'Unknown Product'} (0 available - Previously Used)</option>`;
             }
-            
+
             return options;
         }
 
@@ -54,7 +125,10 @@
                         </select>
                         <small class="text-muted stock-label"></small>
                     </td>
-                    <td><input type="number" min="1" step="1" class="form-control part-quantity" data-field="quantity" value="${part.quantity || 1}" required></td>
+                    <td>
+                        <input type="number" min="0.01" step="0.01" class="form-control part-quantity" data-field="quantity" value="${part.quantity || 1}" required>
+                        <small class="text-muted qty-unit-label"></small>
+                    </td>
                     <td><input type="number" min="0" step="0.01" class="form-control part-unit-price" data-field="unit_price" value="${part.unit_price || 0}" readonly></td>
                     <td><input type="number" class="form-control part-total" value="0.00" readonly></td>
                     <td><button type="button" class="btn btn-sm btn-danger remove-part-row">Remove</button></td>
@@ -150,7 +224,9 @@
             if (!isInit && option.val()) {
                 row.find('.part-unit-price').val(money(option.data('price')));
             }
-            row.find('.stock-label').text(option.val() ? `${option.data('stock')} available` : '');
+            const unit = option.val() ? (option.data('unit') || '') : '';
+            row.find('.stock-label').text(option.val() ? `${qty(option.data('stock'))}${unit ? ' ' + unit : ''} available` : '');
+            row.find('.qty-unit-label').text(unit);
             calculateAmount();
         });
 
