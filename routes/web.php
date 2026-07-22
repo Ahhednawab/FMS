@@ -259,6 +259,8 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
     Route::get('/salaries/by-month/{month}', [SalaryController::class, 'getByMonth'])
         ->name('salaries.byMonth');
+    Route::get('/salaries/{month}/export', [SalaryController::class, 'export'])
+        ->name('salaries.export');
     Route::resource('salaries', SalaryController::class);
 
 

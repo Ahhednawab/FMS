@@ -353,8 +353,8 @@
             const totalClaim = roundMoney(totalMonthlyRent + sundayGazette + controlRoomCharges);
             const salesTax = roundMoney(totalClaim * 0.15);
             const inclusiveTotal = roundMoney(totalClaim + salesTax);
-            const taxValue = roundMoney(totalClaim * 0.03);
-            const withholdingTax = roundMoney(inclusiveTotal * 0.06);
+            const taxValue = roundMoney(inclusiveTotal * 0.07);
+            const withholdingTax = roundMoney(salesTax * 0.20);
             const netPayable = roundMoney(inclusiveTotal - withholdingTax - taxValue - agreedDeduction);
             const diff = roundMoney(netPayable - paymentReceived);
 

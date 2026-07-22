@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SalaryMonthExport;
 use App\Models\Salary;
 use App\Models\Driver;
 use App\Models\EmployeeAdvance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SalaryController extends Controller
 {
@@ -201,11 +203,41 @@ public function show(Request $request, $month)
     $status  = $request->get('status');
     $perPage = $request->get('per_page', 10);
 
+    $drivers = $this->monthDriversQuery($salaryMonth, $status)
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view(
+        'admin.salaries.show',
+        compact('drivers', 'salaryMonth', 'status', 'perPage')
+    );
+}
+
+/**
+ * Download all salary records of a month as Excel
+ */
+public function export($month)
+{
+    $salaryMonth = Carbon::parse($month)->startOfMonth();
+
+    $drivers = $this->monthDriversQuery($salaryMonth, null)->get();
+
+    $fileName = 'Salary_Report_' . $salaryMonth->format('F_Y') . '.xlsx';
+
+    return Excel::download(new SalaryMonthExport($drivers, $salaryMonth), $fileName);
+}
+
+/**
+ * Drivers of a month with salary + attendance summary (shared by show/export)
+ */
+private function monthDriversQuery(Carbon $salaryMonth, ?string $status)
+{
     $startDate = $salaryMonth->copy()->startOfMonth()->toDateString();
     $endDate   = $salaryMonth->copy()->endOfMonth()->toDateString();
 
     $driversQuery = Driver::query()
         ->with([
+            'station',
             'salaries' => function ($q) use ($salaryMonth) {
                 $q->where('salary_month', $salaryMonth->toDateString());
             }
@@ -251,14 +283,7 @@ public function show(Request $request, $month)
         });
     }
 
-    $drivers = $driversQuery
-        ->paginate($perPage)
-        ->withQueryString();
-
-    return view(
-        'admin.salaries.show',
-        compact('drivers', 'salaryMonth', 'status', 'perPage')
-    );
+    return $driversQuery;
 }
 
 

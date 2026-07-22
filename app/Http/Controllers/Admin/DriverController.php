@@ -782,16 +782,15 @@ class DriverController extends Controller
 
     public function destroy(Driver $driver)
     {
-        $driver->is_active = 0;
-        $driver->save();
+        $driver->delete();
 
-        return redirect()->route('drivers.index')->with('delete_msg', 'Driver deleted successfully.');
+        return redirect()->route('drivers.index')->with('delete_msg', 'Driver permanently deleted.');
     }
 
     public function destroyMultiple(Request $request)
     {
         $ids = $request->ids;
-        Driver::whereIn('id', $ids)->update(['is_active' => 0]);
+        Driver::whereIn('id', $ids)->delete();
         return response()->json(['success' => true]);
     }
 

@@ -49,6 +49,9 @@
                                     <a href="{{ route('salaries.show', $row->month) }}" class="btn btn-sm btn-info">
                                         <i class="icon-eye"></i> View
                                     </a>
+                                    <a href="{{ route('salaries.export', $row->month) }}" class="btn btn-sm btn-success">
+                                        <i class="icon-file-excel"></i> Download Excel
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach

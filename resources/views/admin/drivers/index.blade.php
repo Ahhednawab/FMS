@@ -186,7 +186,7 @@
                                                     class="d-inline">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="dropdown-item"
-                                                        onclick="return confirm('Are you sure?')"><i
+                                                        onclick="return confirm('Are you sure you want to permanently delete this driver? This action cannot be undone.')"><i
                                                             class="icon-trash"></i> Delete</button>
                                                 </form>
                                             </div>
@@ -378,7 +378,7 @@
                 const ids = getSelectedIds();
                 if (!ids.length) return alert('Select at least one driver');
 
-                if (confirm('Delete selected drivers?')) {
+                if (confirm('Are you sure you want to permanently delete the selected drivers? This action cannot be undone.')) {
                     $.post("{{ route('drivers.destroyMultiple') }}", {
                         _token: '{{ csrf_token() }}',
                         ids: ids
