@@ -61,7 +61,7 @@
     <div class="col-md-3">
         <div class="form-group">
             <label>Maintenance Type</label>
-            <select name="maintenance_type" class="form-control" required>
+            <select name="maintenance_type" id="maintenance_type" class="form-control" required>
                 <option value="">--Select--</option>
 
                 @foreach ($maintenanceTypes as $key => $label)
@@ -94,6 +94,7 @@
                     <option value="{{ $missingName }}" selected>{{ $missingName }}</option>
                 @endforeach
             </select>
+            <small id="work-done-hint" class="text-muted d-block mt-1"></small>
         </div>
     </div>
 
@@ -131,58 +132,12 @@
     </div>
 </div>
 
-<!-- Alert Integration Row -->
-<div class="row">
-    <div class="col-md-4">
-        <div class="form-group">
-            <label>Alert <small class="text-muted">(Optional)</small></label>
-            <select name="alert_id" id="alert_id" class="form-control select2">
-                <option value="">--Select Alert--</option>
-                @foreach ($alerts as $alert)
-                    <option value="{{ $alert->id }}"
-                        data-threshold="{{ $alert->threshold }}"
-                        {{ old('alert_id', $maintenance?->alert_id) == $alert->id ? 'selected' : '' }}>
-                        {{ $alert->title }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="form-group">
-            <label>Threshold (KM) <small class="text-muted">(Auto-filled)</small></label>
-            <input type="number" name="threshold_km" id="threshold_km" class="form-control"
-                value="{{ old('threshold_km', $maintenance?->threshold_km) }}"
-                placeholder="Auto-populated from alert" readonly>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="form-group">
-            <label>Alert Before (KM)</label>
-            <input type="number" name="alert_before_km" id="alert_before_km" class="form-control"
-                value="{{ old('alert_before_km', $maintenance?->alert_before_km) }}"
-                min="0" placeholder="e.g. 500">
-            <small class="text-muted">Trigger alert this many KM before the threshold.</small>
-        </div>
-    </div>
-</div>
-
-<!-- Computed Alert Mileages Row -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="form-group">
-            <label>Next Due Mileage (KM) <small class="text-muted">(Auto-calculated)</small></label>
-            <input type="number" name="next_due_mileage" id="next_due_mileage" class="form-control"
-                value="{{ old('next_due_mileage', $maintenance?->next_due_mileage) }}" readonly>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="form-group">
-            <label>Alert Start Mileage (KM) <small class="text-muted">(Auto-calculated)</small></label>
-            <input type="number" name="alert_start_mileage" id="alert_start_mileage" class="form-control"
-                value="{{ old('alert_start_mileage', $maintenance?->alert_start_mileage) }}" readonly>
+<!-- Predictive Maintenance Preview (auto-calculated from configuration) -->
+<div class="row" id="predictive-preview-row" style="display:none;">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <strong><i class="icon-calculator mr-1"></i> Predictive Maintenance Schedule</strong>
+            <div id="predictive-preview-body" class="mt-2"></div>
         </div>
     </div>
 </div>
@@ -251,4 +206,11 @@
 
 <script>
     window.existingMaintenanceParts = @json($selectedParts->values());
+
+    // Predefined predictive maintenance items (shown as Work Done options when
+    // Maintenance Type = Predictive). Custom entries are treated as one-time.
+    window.predictiveItems = @json(array_values($predictiveItems ?? []));
+
+    // The free-text Work Done catalog (id + name) used for non-predictive types.
+    window.workDoneCatalog = @json(collect($workDones)->map(fn ($name, $id) => ['id' => $id, 'name' => $name])->values());
 </script>

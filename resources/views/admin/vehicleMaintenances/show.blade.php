@@ -51,16 +51,6 @@
                     </div>
                 @endif
 
-                @if($vehicleMaintenance->alert_id)
-                    <h5 class="mt-3">Alert Tracking</h5>
-                    <div class="row">
-                        <div class="col-md-3 mb-3"><strong>Alert Threshold</strong><p>{{ $vehicleMaintenance->threshold_km }} KM</p></div>
-                        <div class="col-md-3 mb-3"><strong>Alert Before</strong><p>{{ $vehicleMaintenance->alert_before_km }} KM</p></div>
-                        <div class="col-md-3 mb-3"><strong>Next Due Mileage</strong><p>{{ $vehicleMaintenance->next_due_mileage ?? 'N/A' }} KM</p></div>
-                        <div class="col-md-3 mb-3"><strong>Alert Start Mileage</strong><p>{{ $vehicleMaintenance->alert_start_mileage ?? 'N/A' }} KM</p></div>
-                    </div>
-                @endif
-
                 <h5 class="mt-3">Parts Used</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered">

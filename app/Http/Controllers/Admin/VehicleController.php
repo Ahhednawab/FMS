@@ -422,7 +422,7 @@ class VehicleController extends Controller
             }
         }
 
-        $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $this->vehicleMaintenanceScheduleService->syncVehicle($vehicle);
         $this->syncVehicleDriverAssignmentsFromRequest($vehicle, $request);
 
         // Delete draft if it exists
@@ -715,7 +715,7 @@ class VehicleController extends Controller
 
         $vehicle->save();
 
-        $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+        $this->vehicleMaintenanceScheduleService->syncVehicle($vehicle);
         $this->syncVehicleDriverAssignmentsFromRequest($vehicle, $request);
 
         return redirect()->route('vehicles.index')->with('success', 'Vehicle Updated successfully.');

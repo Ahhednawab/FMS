@@ -185,11 +185,11 @@
             }).done(function(data) {
                 $('#current_mileage').val(data.mileage ?? '');
                 $('#mileage-message').text('');
-                calculateAlertMileages();
+                updatePredictivePreview();
             }).fail(function(xhr) {
                 const message = xhr.responseJSON?.message || 'No mileage record found for the selected date.';
                 clearMileage(message);
-                calculateAlertMileages();
+                updatePredictivePreview();
             });
         }
 
@@ -198,6 +198,8 @@
             if (!vehicleId) {
                 $('#vehicle_make, #vehicle_model').val('');
                 clearMileage('');
+                configIntervals = { has_config: false, items: {} };
+                updatePredictivePreview();
                 return;
             }
 
@@ -210,6 +212,7 @@
                 }
             });
 
+            fetchConfigIntervals();
             fetchDailyMileage();
         });
 
@@ -237,50 +240,127 @@
             calculateAmount();
         });
 
+        // ── Predictive Maintenance ─────────────────────────────────────────
+        let configIntervals = { has_config: false, items: {} };
+
+        function currentMaintenanceType() {
+            return $('#maintenance_type').val() || '';
+        }
+
+        function fmt(n) {
+            return (Number(n) || 0).toLocaleString();
+        }
+
+        // Rebuild the Work Done option list to match the maintenance type:
+        // predefined predictive items vs the free-text catalog. Current
+        // selections (including custom "one-time" entries) are preserved.
+        function rebuildWorkDoneOptions() {
+            const $wd = $('#work_done');
+            const selected = $wd.val() || [];
+            const isPredictive = currentMaintenanceType() === 'predictive';
+
+            $wd.find('option').remove();
+
+            if (isPredictive) {
+                (window.predictiveItems || []).forEach(function(name) {
+                    $wd.append(new Option(name, name, false, selected.includes(name)));
+                });
+                $('#work-done-hint').text('Predictive: choose from the predefined items. Any custom entry is saved as one-time maintenance (no alerts).');
+            } else {
+                (window.workDoneCatalog || []).forEach(function(o) {
+                    const opt = new Option(o.name, o.name, false, selected.includes(o.name));
+                    opt.setAttribute('data-id', o.id);
+                    $wd.append(opt);
+                });
+                $('#work-done-hint').text('');
+            }
+
+            // Preserve any selected values not present in the rebuilt list.
+            selected.forEach(function(name) {
+                if (!$wd.find('option').toArray().some(o => o.value === name)) {
+                    $wd.append(new Option(name, name, true, true));
+                }
+            });
+
+            $wd.val(selected).trigger('change.select2');
+        }
+
+        function fetchConfigIntervals() {
+            const vehicleId = $('#vehicle_id').val();
+            if (!vehicleId) {
+                configIntervals = { has_config: false, items: {} };
+                updatePredictivePreview();
+                return;
+            }
+            $.get(`{{ url('vehicleMaintenances/vehicle') }}/${vehicleId}/config-intervals`, function(data) {
+                configIntervals = data || { has_config: false, items: {} };
+                updatePredictivePreview();
+            });
+        }
+
+        // Show the auto-calculated next-due / upcoming-alert mileages for each
+        // selected item while the record is being entered.
+        function updatePredictivePreview() {
+            const $row = $('#predictive-preview-row');
+
+            if (currentMaintenanceType() !== 'predictive') {
+                $row.hide();
+                return;
+            }
+
+            const current = parseInt($('#current_mileage').val()) || 0;
+            const selected = $('#work_done').val() || [];
+            const predictive = window.predictiveItems || [];
+            const rows = [];
+
+            selected.forEach(function(name) {
+                if (predictive.includes(name)) {
+                    const interval = configIntervals.items ? configIntervals.items[name] : null;
+                    if (interval && current > 0) {
+                        rows.push(`<strong>${name}</strong> — next due at <strong>${fmt(current + interval)} KM</strong> `
+                            + `(interval ${fmt(interval)} KM, upcoming alert at ${fmt(current + interval - 200)} KM)`);
+                    } else if (interval) {
+                        rows.push(`<strong>${name}</strong> — interval ${fmt(interval)} KM (mileage not available yet)`);
+                    } else {
+                        rows.push(`<strong>${name}</strong> — no interval configured for this Make/Model`);
+                    }
+                } else {
+                    rows.push(`<strong>${name}</strong> — one-time maintenance (no alerts)`);
+                }
+            });
+
+            if (!rows.length) {
+                $row.hide();
+                return;
+            }
+
+            let html = '';
+            if (!configIntervals.has_config) {
+                html += `<div class="text-danger mb-2">No maintenance configuration found for this vehicle's Make/Model. `
+                    + `Predefined items will not generate alerts until a configuration is added.</div>`;
+            }
+            html += rows.map(r => `<div>• ${r}</div>`).join('');
+            $('#predictive-preview-body').html(html);
+            $row.show();
+        }
+
+        $('#maintenance_type').on('change', function() {
+            rebuildWorkDoneOptions();
+            updatePredictivePreview();
+        });
+
+        $('#work_done').on('change', updatePredictivePreview);
+
+        // ── Initial state ──────────────────────────────────────────────────
+        rebuildWorkDoneOptions();
+
         if ($('#warehouse_id').val()) {
             loadWarehouseProducts();
         }
         if ($('#vehicle_id').val()) {
             $('#vehicle_id').trigger('change', [true]);
+        } else {
+            updatePredictivePreview();
         }
-
-        // ── Alert Integration ──────────────────────────────────────────────
-        // When an alert is selected, auto-populate the read-only Threshold (KM) field.
-        function applyAlertThreshold() {
-            const selected = $('#alert_id').find(':selected');
-            const threshold = selected.data('threshold');
-            if (selected.val() && threshold !== undefined) {
-                $('#threshold_km').val(threshold);
-            } else {
-                $('#threshold_km').val('');
-            }
-            calculateAlertMileages();
-        }
-
-        function calculateAlertMileages() {
-            const currentKm = parseInt($('#current_mileage').val()) || 0;
-            const thresholdKm = parseInt($('#threshold_km').val()) || 0;
-            const alertBeforeKm = parseInt($('#alert_before_km').val()) || 0;
-
-            if (currentKm > 0 && thresholdKm > 0) {
-                const nextDue = currentKm + thresholdKm;
-                $('#next_due_mileage').val(nextDue);
-
-                if (alertBeforeKm > 0) {
-                    $('#alert_start_mileage').val(nextDue - alertBeforeKm);
-                } else {
-                    $('#alert_start_mileage').val('');
-                }
-            } else {
-                $('#next_due_mileage').val('');
-                $('#alert_start_mileage').val('');
-            }
-        }
-
-        $('#alert_id').on('change', applyAlertThreshold);
-        $('#alert_before_km').on('input', calculateAlertMileages);
-
-        // Seed threshold on page load (edit mode — alert already selected)
-        applyAlertThreshold();
     });
 </script>

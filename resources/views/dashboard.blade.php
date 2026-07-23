@@ -510,10 +510,9 @@
         }
 
 
-        // MAINTENANCE
+        // MAINTENANCE (predictive alerts: Upcoming + Due)
         function loadMaintenance(page = 1) {
-            $.get("{{ route('notifications.index') }}", {
-                type: 'maintenance',
+            $.get("{{ route('vehicleMaintenances.predictiveAlerts') }}", {
                 page,
                 vehicle_id: $('#maintenance_vehicle').val(),
                 title: $('#maintenance_alert').val()
@@ -533,16 +532,16 @@
                 }
 
                 res.data.data.forEach(n => {
+                    const url = "{{ route('vehicleMaintenances.index') }}?vehicle_id=" + n.vehicle_id;
+                    const badgeClass = n.stage === 'due' ? 'badge-danger' : 'badge-warning';
                     tbody.append(`
-                <tr id="n-${n.id}">
-                    <td>${n.title}</td>
+                <tr>
+                    <td><span class="badge ${badgeClass}">${n.title}</span></td>
                     <td>${n.message}</td>
                     <td class="text-center">
-                        <button
-                            class="btn btn-success btn-sm"
-                            onclick="markDone(${n.id}, loadMaintenance)">
-                            Mark as Done
-                        </button>
+                        <a href="${url}" class="btn btn-primary btn-sm">
+                            View Maintenance
+                        </a>
                     </td>
                 </tr>
             `);
@@ -560,9 +559,9 @@
             }, () => reloadFn());
         }
 
-        // LOAD MAINTENANCE ALERTS
+        // LOAD MAINTENANCE ALERTS (filter titles: Upcoming / Due)
         function loadMaintenanceAlerts() {
-            $.get('/notifications/maintenance-alerts', res => {
+            $.get("{{ route('vehicleMaintenances.predictiveAlertTitles') }}", res => {
                 let select = $('#maintenance_alert').empty().append(`<option value="">All Alerts</option>`);
                 res.data.forEach(alert => {
                     select.append(`<option value="${alert}">${alert}</option>`);

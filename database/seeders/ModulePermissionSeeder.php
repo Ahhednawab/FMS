@@ -53,6 +53,7 @@ class ModulePermissionSeeder extends Seeder
 
             'vehicle_maintenances',
             'vehicle_maintenance_reports',
+            'vehicle_maintenance_configurations',
 
             'driver_attendances',
             'vehicle_attendances',

@@ -59,6 +59,7 @@ use App\Http\Controllers\Admin\InventoryDispatchController;
 use App\Http\Controllers\Admin\DailyMileageReportController;
 use App\Http\Controllers\Admin\InventoryWarehouseController;
 use App\Http\Controllers\Admin\VehicleMaintenanceController;
+use App\Http\Controllers\Admin\VehicleMaintenanceConfigurationController;
 use App\Http\Controllers\Admin\VehiclesAttendanceController;
 use App\Http\Controllers\Admin\InventoryLargerReportController;
 use App\Http\Controllers\Admin\MasterWarehouseInventoryController;
@@ -233,13 +234,18 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
         ->name('vehicleMaintenances.vehicleDetails');
     Route::get('vehicleMaintenances/vehicle/{vehicle}/daily-mileage', [VehicleMaintenanceController::class, 'dailyMileage'])
         ->name('vehicleMaintenances.dailyMileage');
+    Route::get('vehicleMaintenances/vehicle/{vehicle}/config-intervals', [VehicleMaintenanceController::class, 'configIntervals'])
+        ->name('vehicleMaintenances.configIntervals');
     Route::get('vehicleMaintenances/warehouse/{warehouse}/products', [VehicleMaintenanceController::class, 'warehouseProducts'])
         ->name('vehicleMaintenances.warehouseProducts');
-    Route::get('vehicleMaintenances/alert/{alert}/details', [VehicleMaintenanceController::class, 'alertDetails'])
-        ->name('vehicleMaintenances.alertDetails');
+    Route::get('vehicleMaintenances/predictive-alerts', [VehicleMaintenanceController::class, 'predictiveAlerts'])
+        ->name('vehicleMaintenances.predictiveAlerts');
+    Route::get('vehicleMaintenances/predictive-alert-titles', [VehicleMaintenanceController::class, 'predictiveAlertTitles'])
+        ->name('vehicleMaintenances.predictiveAlertTitles');
     Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
         ->name('vehicleMaintenances.workDones.destroy');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
+    Route::resource('vehicleMaintenanceConfigurations', VehicleMaintenanceConfigurationController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 
 
@@ -394,13 +400,18 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
         ->name('vehicleMaintenances.vehicleDetails');
     Route::get('vehicleMaintenances/vehicle/{vehicle}/daily-mileage', [VehicleMaintenanceController::class, 'dailyMileage'])
         ->name('vehicleMaintenances.dailyMileage');
+    Route::get('vehicleMaintenances/vehicle/{vehicle}/config-intervals', [VehicleMaintenanceController::class, 'configIntervals'])
+        ->name('vehicleMaintenances.configIntervals');
     Route::get('vehicleMaintenances/warehouse/{warehouse}/products', [VehicleMaintenanceController::class, 'warehouseProducts'])
         ->name('vehicleMaintenances.warehouseProducts');
-    Route::get('vehicleMaintenances/alert/{alert}/details', [VehicleMaintenanceController::class, 'alertDetails'])
-        ->name('vehicleMaintenances.alertDetails');
+    Route::get('vehicleMaintenances/predictive-alerts', [VehicleMaintenanceController::class, 'predictiveAlerts'])
+        ->name('vehicleMaintenances.predictiveAlerts');
+    Route::get('vehicleMaintenances/predictive-alert-titles', [VehicleMaintenanceController::class, 'predictiveAlertTitles'])
+        ->name('vehicleMaintenances.predictiveAlertTitles');
     Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
         ->name('vehicleMaintenances.workDones.destroy');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
+    Route::resource('vehicleMaintenanceConfigurations', VehicleMaintenanceConfigurationController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
 
     // Attendance

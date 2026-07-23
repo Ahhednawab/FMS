@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Alert;
 use App\Models\DailyMileageReport;
 use App\Models\InventoryLargerReport;
-use App\Models\MaintenanceAlert;
 use App\Models\Product;
 use App\Models\ProductList;
 use App\Models\Vehicle;
 use App\Models\VehicleMaintenance;
+use App\Models\VehicleMaintenanceConfiguration;
 use App\Models\VehicleMaintenancePart;
 use App\Models\VehicleMaintenanceWorkDone;
 use App\Models\Warehouse;
@@ -19,6 +18,7 @@ use App\Models\Workshop;
 use App\Services\VehicleMaintenanceScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -59,15 +59,16 @@ class VehicleMaintenanceController extends Controller
             'workshops'      => $this->workshopOptions(),
             'workDones'      => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'maintenanceTypes' => $this->maintenanceTypes(),
-            'alerts'         => Alert::orderBy('title')->get(['id', 'title', 'threshold']),
+            'predictiveItems' => VehicleMaintenanceConfiguration::itemNames(),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $this->validateMaintenance($request);
+        $summary = [];
 
-        DB::transaction(function () use ($validated, $request) {
+        DB::transaction(function () use ($validated, $request, &$summary) {
             $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
             $dailyMileage = $this->dailyMileageFor($vehicle->id, $validated['service_date']);
             if (!$dailyMileage) {
@@ -78,11 +79,7 @@ class VehicleMaintenanceController extends Controller
 
             $workDones = $this->resolveWorkDones($validated['work_done']);
 
-            $baseMileage  = (int) $dailyMileage->current_km;
-            $thresholdKm  = isset($validated['threshold_km']) ? (int) $validated['threshold_km'] : null;
-            $alertBefore  = isset($validated['alert_before_km']) ? (int) $validated['alert_before_km'] : null;
-            $nextDue      = ($thresholdKm !== null) ? $baseMileage + $thresholdKm : null;
-            $alertStart   = ($nextDue !== null && $alertBefore !== null) ? $nextDue - $alertBefore : null;
+            $baseMileage = (int) $dailyMileage->current_km;
 
             $maintenance = VehicleMaintenance::create([
                 'maintenance_id'      => $request->maintenance_id ?: VehicleMaintenance::GetMaintenanceId(),
@@ -99,11 +96,6 @@ class VehicleMaintenanceController extends Controller
                 'service_cost'        => 0,
                 'service_description' => $workDones->pluck('name')->implode(', '),
                 'remarks'             => $validated['remarks'] ?? null,
-                'alert_id'            => $validated['alert_id'] ?? null,
-                'threshold_km'        => $thresholdKm,
-                'alert_before_km'     => $alertBefore,
-                'next_due_mileage'    => $nextDue,
-                'alert_start_mileage' => $alertStart,
                 'created_by'          => auth()->id(),
                 'is_active'           => 1,
             ]);
@@ -113,10 +105,11 @@ class VehicleMaintenanceController extends Controller
             $total = $this->deductParts($maintenance, $validated['warehouse_id'], $validated['parts']);
             $maintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
-            $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
+            $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
         });
 
-        return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance created successfully.');
+        return redirect()->route('vehicleMaintenances.index')
+            ->with('success', $this->maintenanceSavedMessage('created', $summary));
     }
 
     public function edit(VehicleMaintenance $vehicleMaintenance)
@@ -131,15 +124,16 @@ class VehicleMaintenanceController extends Controller
             'workshops'          => $this->workshopOptions(),
             'workDones'          => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'maintenanceTypes'   => $this->maintenanceTypes(),
-            'alerts'             => Alert::orderBy('title')->get(['id', 'title', 'threshold']),
+            'predictiveItems'    => VehicleMaintenanceConfiguration::itemNames(),
         ]);
     }
 
     public function update(Request $request, VehicleMaintenance $vehicleMaintenance)
     {
         $validated = $this->validateMaintenance($request);
+        $summary = [];
 
-        DB::transaction(function () use ($validated, $vehicleMaintenance) {
+        DB::transaction(function () use ($validated, $vehicleMaintenance, &$summary) {
             $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
             $dailyMileage = $this->dailyMileageFor($vehicle->id, $validated['service_date']);
             if (!$dailyMileage) {
@@ -150,11 +144,7 @@ class VehicleMaintenanceController extends Controller
 
             $workDones = $this->resolveWorkDones($validated['work_done']);
 
-            $baseMileage  = (int) $dailyMileage->current_km;
-            $thresholdKm  = isset($validated['threshold_km']) ? (int) $validated['threshold_km'] : null;
-            $alertBefore  = isset($validated['alert_before_km']) ? (int) $validated['alert_before_km'] : null;
-            $nextDue      = ($thresholdKm !== null) ? $baseMileage + $thresholdKm : null;
-            $alertStart   = ($nextDue !== null && $alertBefore !== null) ? $nextDue - $alertBefore : null;
+            $baseMileage = (int) $dailyMileage->current_km;
 
             $this->restoreParts($vehicleMaintenance);
 
@@ -171,11 +161,6 @@ class VehicleMaintenanceController extends Controller
                 'labor_cost'          => $validated['labor_cost'] ?? 0,
                 'service_description' => $workDones->pluck('name')->implode(', '),
                 'remarks'             => $validated['remarks'] ?? null,
-                'alert_id'            => $validated['alert_id'] ?? null,
-                'threshold_km'        => $thresholdKm,
-                'alert_before_km'     => $alertBefore,
-                'next_due_mileage'    => $nextDue,
-                'alert_start_mileage' => $alertStart,
             ]);
 
             $vehicleMaintenance->workDones()->sync($workDones->pluck('id')->all());
@@ -183,10 +168,11 @@ class VehicleMaintenanceController extends Controller
             $total = $this->deductParts($vehicleMaintenance, $validated['warehouse_id'], $validated['parts']);
             $vehicleMaintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
-            $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
+            $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
         });
 
-        return redirect()->route('vehicleMaintenances.index')->with('success', 'Vehicle maintenance updated successfully.');
+        return redirect()->route('vehicleMaintenances.index')
+            ->with('success', $this->maintenanceSavedMessage('updated', $summary));
     }
 
     public function show(VehicleMaintenance $vehicleMaintenance)
@@ -256,14 +242,64 @@ class VehicleMaintenanceController extends Controller
     }
 
     /**
-     * Return alert title + threshold for a given alert ID (used by form JS).
+     * Return the configured predictive maintenance intervals (KM) for a
+     * vehicle's make + model, used by the form to preview the next due mileage.
      */
-    public function alertDetails(Alert $alert)
+    public function configIntervals(Vehicle $vehicle)
+    {
+        $config = VehicleMaintenanceConfiguration::forVehicle($vehicle->make, $vehicle->model);
+
+        $items = [];
+
+        if ($config) {
+            foreach (VehicleMaintenanceConfiguration::itemNames() as $item) {
+                $interval = $config->intervalFor($item);
+                if ($interval !== null) {
+                    $items[$item] = $interval;
+                }
+            }
+        }
+
+        return response()->json([
+            'has_config' => (bool) $config,
+            'items'      => $items,
+        ]);
+    }
+
+    /**
+     * Live predictive maintenance alerts (Upcoming + Due) for the dashboard.
+     * Paginated to match the dashboard's generic notification renderer.
+     */
+    public function predictiveAlerts(Request $request)
+    {
+        $alerts = $this->vehicleMaintenanceScheduleService->dashboardAlerts([
+            'vehicle_id' => $request->get('vehicle_id'),
+            'title'      => $request->get('title'),
+        ]);
+
+        $perPage = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $items = $alerts->forPage($page, $perPage)->values();
+
+        $paginator = new LengthAwarePaginator(
+            $items,
+            $alerts->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return response()->json(['data' => $paginator]);
+    }
+
+    /**
+     * Distinct alert titles for the dashboard "Alert" filter dropdown.
+     */
+    public function predictiveAlertTitles()
     {
         return response()->json([
-            'id'        => $alert->id,
-            'title'     => $alert->title,
-            'threshold' => $alert->threshold,
+            'status' => 'success',
+            'data'   => $this->vehicleMaintenanceScheduleService->alertFilterTitles(),
         ]);
     }
 
@@ -321,9 +357,6 @@ class VehicleMaintenanceController extends Controller
             'workshop_id'      => 'required|exists:workshops,id',
             'labor_cost'       => 'nullable|numeric|min:0',
             'remarks'          => 'nullable|string',
-            'alert_id'         => 'nullable|exists:alerts,id',
-            'threshold_km'     => 'nullable|integer|min:0',
-            'alert_before_km'  => 'nullable|integer|min:0',
             'parts'            => 'required|array|min:1',
             'parts.*.product_id' => 'required|exists:products_list,id',
             'parts.*.quantity'   => 'required|numeric|min:0.01',
@@ -502,10 +535,33 @@ class VehicleMaintenanceController extends Controller
     private function maintenanceTypes(): array
     {
         return [
+            'predictive' => 'Predictive Maintenance',
             'preventive' => 'Preventive Maintenance',
             'corrective' => 'Corrective Maintenance',
             'emergency' => 'Emergency Maintenance',
         ];
+    }
+
+    /**
+     * Build the flash message shown after a maintenance record is saved,
+     * including the automatically-calculated next predictive due mileages.
+     *
+     * @param  array<int, array{item: string, interval: int, next_due: int}>  $summary
+     */
+    private function maintenanceSavedMessage(string $action, array $summary): string
+    {
+        $message = "Vehicle maintenance {$action} successfully.";
+
+        if (!empty($summary)) {
+            $parts = array_map(
+                fn ($row) => "{$row['item']} at " . number_format($row['next_due']) . ' KM',
+                $summary
+            );
+
+            $message .= ' Next predictive maintenance will be due — ' . implode('; ', $parts) . '.';
+        }
+
+        return $message;
     }
 
     private function workshopOptions()
@@ -529,58 +585,6 @@ class VehicleMaintenanceController extends Controller
             ->whereDate('report_date', Carbon::parse($serviceDate)->toDateString())
             ->orderByDesc('id')
             ->first();
-    }
-
-    /**
-     * Create or update a MaintenanceAlert record based on the saved maintenance record.
-     * - If alert_before_km is configured and current_km >= alert_before_km → create/update alert (not resolved).
-     * - If current_km < alert_before_km                                    → mark any existing alert as resolved.
-     * - If no alert is configured on the maintenance record                → resolve any lingering alert.
-     */
-    private function syncMaintenanceAlert(VehicleMaintenance $maintenance, int $currentKm): void
-    {
-        if (!$maintenance->alert_id || !$maintenance->alert_before_km) {
-            // No alert configured — resolve any existing unresolved alert for this vehicle+alert combo
-            if ($maintenance->alert_id) {
-                MaintenanceAlert::where('vehicle_id', $maintenance->vehicle_id)
-                    ->where('alert_id', $maintenance->alert_id)
-                    ->where('is_resolved', false)
-                    ->update(['is_resolved' => true]);
-            }
-            return;
-        }
-
-        $existing = MaintenanceAlert::where('vehicle_id', $maintenance->vehicle_id)
-            ->where('alert_id', $maintenance->alert_id)
-            ->where('is_resolved', false)
-            ->first();
-
-        if ($currentKm >= $maintenance->alert_before_km) {
-            // Threshold reached — upsert the alert
-            if ($existing) {
-                $existing->update([
-                    'vehicle_maintenance_id' => $maintenance->id,
-                    'threshold_km'           => $maintenance->threshold_km,
-                    'alert_before_km'        => $maintenance->alert_before_km,
-                    'current_km'             => $currentKm,
-                ]);
-            } else {
-                MaintenanceAlert::create([
-                    'vehicle_maintenance_id' => $maintenance->id,
-                    'vehicle_id'             => $maintenance->vehicle_id,
-                    'alert_id'               => $maintenance->alert_id,
-                    'threshold_km'           => $maintenance->threshold_km,
-                    'alert_before_km'        => $maintenance->alert_before_km,
-                    'current_km'             => $currentKm,
-                    'is_resolved'            => false,
-                ]);
-            }
-        } else {
-            // Below threshold — resolve if existed
-            if ($existing) {
-                $existing->update(['is_resolved' => true]);
-            }
-        }
     }
 }
 

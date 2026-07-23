@@ -2,11 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\DailyMileageReport;
 use App\Models\Driver;
 use App\Models\Notification;
 use App\Models\Vehicle;
-use App\Models\VehicleMaintenanceSchedule;
 use App\Services\VehicleDriverAssignmentService;
 use App\Services\VehicleMaintenanceScheduleService;
 use Carbon\Carbon;
@@ -32,7 +30,9 @@ class DailyNotification extends Command
         $vehicles = Vehicle::with(['primaryDriver', 'poolDrivers'])->where('is_active', 1)->get();
 
         foreach ($vehicles as $vehicle) {
-            $this->vehicleMaintenanceScheduleService->ensureDefaults($vehicle);
+            // Seed / refresh predictive maintenance baselines so every vehicle
+            // whose Make + Model is configured starts being monitored.
+            $this->vehicleMaintenanceScheduleService->syncVehicle($vehicle);
             $this->vehicleDriverAssignmentService->resolveCurrentDriver($vehicle);
 
             if ($vehicle->insurance_expiry_date) {
@@ -96,76 +96,9 @@ class DailyNotification extends Command
             }
         }
 
-        $maintenanceSchedules = VehicleMaintenanceSchedule::with('vehicle')
-            ->whereHas('vehicle', fn ($query) => $query->where('is_active', 1))
-            ->get();
-
-        foreach ($maintenanceSchedules as $schedule) {
-            $currentKm = DailyMileageReport::where('vehicle_id', $schedule->vehicle_id)
-                ->orderByDesc('report_date')
-                ->value('current_km');
-
-            if ($currentKm === null) {
-                continue;
-            }
-
-            if ($schedule->next_due_km === null) {
-                $schedule->update([
-                    'next_due_km' => $currentKm + (int) $schedule->service_interval_km,
-                ]);
-                continue;
-            }
-
-            $alertAtKm = (int) $schedule->next_due_km - (int) $schedule->alert_before_km;
-            if ($currentKm >= $alertAtKm && $schedule->last_alerted_at === null) {
-                $this->createNotification(
-                    $schedule->maintenance_item . ' Maintenance Reminder',
-                    "{$schedule->maintenance_item} is due soon for vehicle {$schedule->vehicle->vehicle_no}. Current KM: {$currentKm}, Due KM: {$schedule->next_due_km}.",
-                    Notification::TYPE_MAINTENANCE,
-                    $schedule->vehicle_id
-                );
-
-                $schedule->update(['last_alerted_at' => now()]);
-            }
-        }
-
-        // Smart Maintenance Alerts
-        $latestMaintenances = \Illuminate\Support\Facades\DB::table('vehicle_maintenances')
-            ->select('vehicle_id', 'alert_id', \Illuminate\Support\Facades\DB::raw('MAX(id) as max_id'))
-            ->whereNotNull('alert_start_mileage')
-            ->where('is_active', 1)
-            ->where('is_alert_triggered', 0)
-            ->groupBy('vehicle_id', 'alert_id')
-            ->get();
-
-        $maintenanceIds = $latestMaintenances->pluck('max_id');
-
-        $smartMaintenances = \App\Models\VehicleMaintenance::with(['vehicle', 'alert'])
-            ->whereIn('id', $maintenanceIds)
-            ->get();
-
-        foreach ($smartMaintenances as $maintenance) {
-            $currentKm = \App\Models\DailyMileageReport::where('vehicle_id', $maintenance->vehicle_id)
-                ->orderByDesc('report_date')
-                ->value('current_km');
-
-            if ($currentKm === null) {
-                continue;
-            }
-
-            if ($currentKm >= $maintenance->alert_start_mileage) {
-                $alertTitle = $maintenance->alert ? $maintenance->alert->title : 'Smart Maintenance Alert';
-                
-                $this->createNotification(
-                    $alertTitle,
-                    "Vehicle {$maintenance->vehicle->vehicle_no} has reached the {$alertTitle} alert mileage ({$maintenance->alert_start_mileage} KM). Current mileage is {$currentKm} KM. Maintenance is due. Please schedule maintenance.",
-                    \App\Models\Notification::TYPE_MAINTENANCE,
-                    $maintenance->vehicle_id
-                );
-
-                $maintenance->update(['is_alert_triggered' => 1]);
-            }
-        }
+        // Predictive maintenance alerts (Upcoming / Due) are computed live on
+        // the dashboard from the configuration-driven schedules seeded above,
+        // so no maintenance notifications are generated here.
 
         $drivers = Driver::where('is_active', 1)->get();
 

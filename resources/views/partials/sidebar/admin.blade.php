@@ -487,23 +487,29 @@
                     @endif
                 @endif
                 @if (auth()->user()->hasPermission('vehicle_maintenances') ||
-                        auth()->user()->hasPermission('vehicle_maintenance_reports'))
+                        auth()->user()->hasPermission('vehicle_maintenance_reports') ||
+                        auth()->user()->hasPermission('vehicle_maintenance_configurations'))
 
                     <li
-                        class="nav-item nav-item-submenu {{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*')
+                        class="nav-item nav-item-submenu {{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*') || request()->routeIs('vehicleMaintenanceConfigurations.*')
                             ? 'nav-item-open'
                             : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Vehicle
                                 Maintenance</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                            style="{{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*')
+                            style="{{ request()->routeIs('vehicleMaintenances.*') || request()->routeIs('vehicleMaintenanceReports.*') || request()->routeIs('vehicleMaintenanceConfigurations.*')
                                 ? 'display:block;'
                                 : '' }}">
                             @if (auth()->user()->hasPermission('vehicle_maintenances'))
                                 <li class="nav-item"><a href="{{ route('vehicleMaintenances.index') }}"
                                         class="nav-link {{ request()->routeIs('vehicleMaintenances.*') ? 'active' : '' }}">Vehicle
                                         Maintenance</a></li>
+                            @endif
+                            @if (auth()->user()->hasPermission('vehicle_maintenance_configurations'))
+                                <li class="nav-item"><a href="{{ route('vehicleMaintenanceConfigurations.index') }}"
+                                        class="nav-link {{ request()->routeIs('vehicleMaintenanceConfigurations.*') ? 'active' : '' }}">Maintenance
+                                        Configuration</a></li>
                             @endif
                             {{-- @if (auth()->user()->hasPermission('vehicle_maintenance_reports'))
                                 <li class="nav-item"><a href="{{ route('vehicleMaintenanceReports.index') }}"
