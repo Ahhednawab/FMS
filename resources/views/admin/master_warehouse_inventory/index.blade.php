@@ -44,6 +44,121 @@
             </div>
         @endif
 
+        @php
+            $masterStockSummary = collect($masterStockSummary ?? []);
+            $masterStockByProduct = $masterStockSummary->keyBy('id');
+            $masterAlertProducts = $masterStockSummary->filter(fn ($row) => $row->status !== 'ok');
+        @endphp
+
+        {{-- ── Low stock alerts ────────────────────────────────────── --}}
+        @foreach ($masterAlertProducts as $row)
+            @php $unit = $row->unit_name ? ' ' . $row->unit_name . ($row->current_stock == 1 ? '' : 's') : ''; @endphp
+            @if ($row->status === 'out')
+                <div class="alert alert-danger mb-2">
+                    <i class="icon-cross-circle2 mr-1"></i>
+                    <strong>Out of Stock:</strong> {{ $row->name }} is out of stock in the Master Warehouse. Please add new inventory.
+                </div>
+            @elseif ($row->status === 'critical')
+                <div class="alert alert-danger mb-2">
+                    <i class="icon-warning2 mr-1"></i>
+                    <strong>Critical Stock Alert:</strong> {{ $row->name }} has only {{ $row->current_stock + 0 }}{{ $unit }} remaining in the Master Warehouse. Please replenish the stock.
+                </div>
+            @else
+                <div class="alert alert-warning mb-2">
+                    <i class="icon-warning22 mr-1"></i>
+                    <strong>Low Stock Alert:</strong> {{ $row->name }} has only {{ $row->current_stock + 0 }}{{ $unit }} remaining in the Master Warehouse. Please replenish the stock.
+                </div>
+            @endif
+        @endforeach
+
+        {{-- ── Filters ─────────────────────────────────────────────── --}}
+        <div class="card shadow mb-3">
+            <div class="card-body py-3">
+                <form method="GET" action="{{ route('master_warehouse_inventory.index') }}">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="mb-1">Product Name</label>
+                            <input type="text" name="q" class="form-control" placeholder="Search product..."
+                                value="{{ request('q') }}">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="mb-1">Warehouse</label>
+                            <select name="warehouse_id" class="form-control">
+                                <option value="">All Warehouses</option>
+                                @foreach ($filterWarehouses ?? [] as $warehouse)
+                                    <option value="{{ $warehouse->id }}"
+                                        {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
+                                        {{ $warehouse->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="mb-1">Category</label>
+                            <select name="product_category_id" class="form-control">
+                                <option value="">All Categories</option>
+                                @foreach ($filterCategories ?? [] as $category)
+                                    <option value="{{ $category->id }}"
+                                        {{ request('product_category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="mb-1">Brand</label>
+                            <select name="brand_id" class="form-control">
+                                <option value="">All Brands</option>
+                                @foreach ($filterBrands ?? [] as $brand)
+                                    <option value="{{ $brand->id }}"
+                                        {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
+                                        {{ $brand->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="mb-1">Unit</label>
+                            <select name="unit_id" class="form-control">
+                                <option value="">All</option>
+                                @foreach ($filterUnits ?? [] as $unit)
+                                    <option value="{{ $unit->id }}"
+                                        {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+                                        {{ $unit->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="mb-1">Status</label>
+                            <select name="stock_status" class="form-control">
+                                <option value="">All</option>
+                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>In Stock</option>
+                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>Low Stock</option>
+                                <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>Out of Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <label class="mb-1">Per Page</label>
+                            <select name="per_page" class="form-control">
+                                @foreach ([10, 25, 50, 100] as $count)
+                                    <option value="{{ $count }}" {{ ($perPage ?? 10) == $count ? 'selected' : '' }}>
+                                        {{ $count }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="icon-filter3 mr-1"></i> Apply Filters
+                        </button>
+                        <a href="{{ route('master_warehouse_inventory.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card shadow">
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
@@ -55,13 +170,27 @@
                             <th>Unit Price</th>
                             <th>Total Price</th>
                             <th>Available Qty</th>
+                            <th style="width:220px;">Low Stock Limit</th>
                             <th class="text-center">Assign to Sub-Warehouse</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($inventory as $item)
-                            <tr>
-                                <td><strong>{{ $item->product?->name ?? '—' }}</strong></td>
+                            @php
+                                $productSummary = $masterStockByProduct->get($item->product_id);
+                                $productStatus = $productSummary->status ?? 'ok';
+                            @endphp
+                            <tr class="{{ $productStatus === 'out' || $productStatus === 'critical' ? 'table-danger' : ($productStatus === 'low' ? 'table-warning' : '') }}">
+                                <td>
+                                    <strong>{{ $item->product?->name ?? '—' }}</strong>
+                                    @if ($productStatus === 'out')
+                                        <span class="badge bg-danger ml-1">Out of Stock</span>
+                                    @elseif ($productStatus === 'critical')
+                                        <span class="badge bg-danger ml-1">Critical Stock</span>
+                                    @elseif ($productStatus === 'low')
+                                        <span class="badge bg-warning text-dark ml-1">Low Stock</span>
+                                    @endif
+                                </td>
                                 <td>{{ $item->batch_number ?? '-' }}</td>
                                 <td>
                                     @if ($item->expiry_date)
@@ -78,9 +207,34 @@
                                 <td>Rs. {{ number_format($item->price, 2) }}</td>
                                 <td>Rs. {{ number_format($item->price * $item->quantity, 2) }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $item->quantity > 0 ? 'success' : 'danger' }}">
+                                    @php
+                                        $limit = $item->product?->low_stock_limit;
+                                        $isLow = $item->quantity > 0 && $limit !== null && $limit > 0 && $item->quantity <= $limit;
+                                    @endphp
+                                    <span class="badge bg-{{ $item->quantity <= 0 ? 'danger' : ($isLow ? 'warning text-dark' : 'success') }}">
                                         {{ $item->quantity }} {{ $item->product?->unit?->name }}
                                     </span>
+                                    @if ($item->quantity <= 0)
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    @elseif ($isLow)
+                                        <span class="badge bg-warning text-dark">Low Stock</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($item->product)
+                                        <div class="d-flex">
+                                            <input type="number" min="0" step="0.01"
+                                                class="form-control form-control-sm low-stock-limit-input"
+                                                style="width:110px;"
+                                                value="{{ $item->product->low_stock_limit !== null ? $item->product->low_stock_limit + 0 : '' }}"
+                                                placeholder="Not set"
+                                                data-product-id="{{ $item->product_id }}">
+                                            <button type="button" class="btn btn-sm btn-primary ml-1 save-low-stock-limit"
+                                                data-product-id="{{ $item->product_id }}">Save</button>
+                                        </div>
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($item->quantity > 0 && isset($masterWarehouse) && $masterWarehouse && count($warehouses) > 0)
@@ -117,11 +271,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">No inventory records found.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    {{ request()->hasAny(['q', 'warehouse_id', 'product_category_id', 'brand_id', 'unit_id', 'stock_status']) ? 'No inventory matches the selected filters.' : 'No inventory records found.' }}
+                                </td>
                             </tr>
                         @endforelse
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="float-right">
                                     {{ $inventory->links() }}
                                 </div>
@@ -224,6 +380,47 @@
                             text: 'Please check your connection and try again.',
                         });
                     } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            });
+
+            // ── Low Stock Limit save (per product) ─────────────────────
+            document.querySelectorAll('.save-low-stock-limit').forEach(function(btn) {
+                btn.addEventListener('click', async function() {
+                    // A product can span multiple batch rows — use the input beside this button.
+                    const input = btn.closest('div').querySelector('.low-stock-limit-input');
+                    const originalText = btn.textContent;
+
+                    btn.disabled = true;
+                    btn.textContent = '...';
+
+                    try {
+                        const response = await fetch(`{{ route('assigned_inventory.lowStockLimit') }}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                                    '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                product_id: btn.dataset.productId,
+                                low_stock_limit: input.value === '' ? null : input.value
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.message || 'Could not save the low stock limit.');
+                            btn.disabled = false;
+                            btn.textContent = originalText;
+                        }
+                    } catch (error) {
+                        alert('Could not save the low stock limit.');
                         btn.disabled = false;
                         btn.textContent = originalText;
                     }

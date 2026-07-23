@@ -60,10 +60,22 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2 mb-2">
-                                    <label class="mb-1">Stock Status</label>
+                                <div class="col-md-1 mb-2">
+                                    <label class="mb-1">Unit</label>
+                                    <select name="unit_id" class="form-control">
+                                        <option value="">All</option>
+                                        @foreach ($filterUnits ?? [] as $unit)
+                                            <option value="{{ $unit->id }}"
+                                                {{ request('unit_id') == $unit->id ? 'selected' : '' }}>
+                                                {{ $unit->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-1 mb-2">
+                                    <label class="mb-1">Status</label>
                                     <select name="stock_status" class="form-control">
-                                        <option value="">All Statuses</option>
+                                        <option value="">All</option>
                                         <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>In Stock</option>
                                         <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>Low Stock</option>
                                         <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>Out of Stock</option>

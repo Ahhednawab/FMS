@@ -23,9 +23,43 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
 
+        $perPage = in_array((int) $request->get('per_page'), [10, 25, 50, 100]) ? (int) $request->get('per_page') : 10;
+
         $inventory = MasterWarehouseInventory::with('product.unit')
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $query->whereHas('product', fn ($product) => $product->where('name', 'like', '%' . $request->q . '%'));
+            })
+            ->when($request->filled('warehouse_id'), fn ($query) => $query->where('warehouse_id', $request->warehouse_id))
+            ->when($request->filled('product_category_id'), function ($query) use ($request) {
+                $query->whereHas('product', fn ($product) => $product->where('product_category_id', $request->product_category_id));
+            })
+            ->when($request->filled('brand_id'), function ($query) use ($request) {
+                $query->whereHas('product', fn ($product) => $product->where('brand_id', $request->brand_id));
+            })
+            ->when($request->filled('unit_id'), function ($query) use ($request) {
+                $query->whereHas('product', fn ($product) => $product->where('unit_id', $request->unit_id));
+            })
+            ->when($request->stock_status === 'out', fn ($query) => $query->where('quantity', '<=', 0))
+            ->when($request->stock_status === 'low', function ($query) {
+                $query->where('quantity', '>', 0)
+                    ->whereHas('product', function ($product) {
+                        $product->where('low_stock_limit', '>', 0)
+                            ->whereRaw('master_warehouse_inventory.quantity <= products_list.low_stock_limit');
+                    });
+            })
+            ->when($request->stock_status === 'in', function ($query) {
+                $query->where('quantity', '>', 0)
+                    ->whereHas('product', function ($product) {
+                        $product->where(function ($inner) {
+                            $inner->whereNull('low_stock_limit')
+                                ->orWhere('low_stock_limit', '<=', 0)
+                                ->orWhereRaw('master_warehouse_inventory.quantity > products_list.low_stock_limit');
+                        });
+                    });
+            })
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate($perPage)
+            ->withQueryString();
 
         // ✅ FIX: Use the correct Warehouse model with scopeSubWarehouses()
         // The old code used Warehouses (legacy model) which queries a different table/columns.
@@ -33,7 +67,40 @@ class MasterWarehouseInventoryController extends Controller
 
         // Pass the current master warehouse so the view can show it
         $masterWarehouse = Warehouse::master()->first();
-        return view('admin.master_warehouse_inventory.index', compact('inventory', 'warehouses', 'masterWarehouse'));
+
+        // Per-product stock totals in the Master Warehouse with low-stock status
+        $masterStockSummary = MasterWarehouseInventory::query()
+            ->join('products_list as pl', 'master_warehouse_inventory.product_id', '=', 'pl.id')
+            ->leftJoin('units', 'pl.unit_id', '=', 'units.id')
+            ->when($masterWarehouse, fn ($query) => $query->where('master_warehouse_inventory.warehouse_id', $masterWarehouse->id))
+            ->groupBy('master_warehouse_inventory.product_id', 'pl.name', 'pl.low_stock_limit', 'units.name')
+            ->orderBy('pl.name')
+            ->get([
+                'master_warehouse_inventory.product_id as id',
+                'pl.name',
+                'pl.low_stock_limit',
+                DB::raw('units.name as unit_name'),
+                DB::raw('SUM(master_warehouse_inventory.quantity) as current_stock'),
+            ])
+            ->map(function ($row) {
+                $row->current_stock = (float) $row->current_stock;
+                $row->low_stock_limit = $row->low_stock_limit !== null ? (float) $row->low_stock_limit : null;
+                $row->status = $this->stockStatus($row->current_stock, $row->low_stock_limit);
+
+                return $row;
+            });
+
+        return view('admin.master_warehouse_inventory.index', [
+            'inventory' => $inventory,
+            'warehouses' => $warehouses,
+            'masterWarehouse' => $masterWarehouse,
+            'masterStockSummary' => $masterStockSummary,
+            'filterWarehouses' => Warehouse::whereIn('id', MasterWarehouseInventory::distinct()->pluck('warehouse_id'))->orderBy('name')->get(['id', 'name']),
+            'filterCategories' => \App\Models\ProductCategory::orderBy('name')->get(['id', 'name']),
+            'filterBrands' => \App\Models\Brand::orderBy('name')->get(['id', 'name']),
+            'filterUnits' => \App\Models\Unit::orderBy('name')->get(['id', 'name']),
+            'perPage' => $perPage,
+        ]);
     }
 
     public function create(Request $request)
@@ -248,7 +315,7 @@ class MasterWarehouseInventoryController extends Controller
      */
     public function updateLowStockLimit(Request $request)
     {
-        if (!auth()->user()->hasPermission('assigned_inventory')) {
+        if (!auth()->user()->hasPermission('assigned_inventory') && !auth()->user()->hasPermission('master_warehouse_inventory')) {
             abort(403, 'You do not have permission to access this page.');
         }
 
@@ -317,6 +384,7 @@ class MasterWarehouseInventoryController extends Controller
             ->when($request->filled('warehouse_id'), fn ($q) => $q->where('warehouse_assignments.warehouse_id', $request->warehouse_id))
             ->when($request->filled('product_category_id'), fn ($q) => $q->where('pl.product_category_id', $request->product_category_id))
             ->when($request->filled('brand_id'), fn ($q) => $q->where('pl.brand_id', $request->brand_id))
+            ->when($request->filled('unit_id'), fn ($q) => $q->where('pl.unit_id', $request->unit_id))
             ->groupBy('mwi.product_id', 'pl.name', 'pl.low_stock_limit', 'units.name', 'pc.name', 'brands.name')
             ->orderBy('pl.name')
             ->select([
@@ -354,6 +422,7 @@ class MasterWarehouseInventoryController extends Controller
             'filterWarehouses' => Warehouse::subWarehouses()->orderBy('name')->get(['id', 'name']),
             'filterCategories' => \App\Models\ProductCategory::orderBy('name')->get(['id', 'name']),
             'filterBrands' => \App\Models\Brand::orderBy('name')->get(['id', 'name']),
+            'filterUnits' => \App\Models\Unit::orderBy('name')->get(['id', 'name']),
             'perPage' => $perPage,
         ]);
     }
