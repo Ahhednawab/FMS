@@ -30,62 +30,25 @@
             @endif
         @endforeach
 
-        {{-- ── Current stock levels & low stock limits ──────────────── --}}
-        @if ($stockSummary->count())
-            <div class="row">
-                <div class="col-12">
-                    <div class="card shadow mb-3">
-                        <div class="text-white" style="background-color: #1b3244;padding-left: 10px;padding-bottom: 10px;">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-boxes"></i> Current Stock Levels
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Current Stock</th>
-                                            <th style="width:260px;">Low Stock Limit</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($stockSummary as $row)
-                                            <tr class="{{ $row->status === 'out' || $row->status === 'critical' ? 'table-danger' : ($row->status === 'low' ? 'table-warning' : '') }}">
-                                                <td><strong>{{ $row->name }}</strong></td>
-                                                <td>{{ $row->current_stock + 0 }} {{ $row->unit_name }}</td>
-                                                <td>
-                                                    <div class="d-flex">
-                                                        <input type="number" min="0" step="0.01"
-                                                            class="form-control form-control-sm low-stock-limit-input"
-                                                            style="width:120px;"
-                                                            value="{{ $row->low_stock_limit !== null ? $row->low_stock_limit + 0 : '' }}"
-                                                            placeholder="Not set"
-                                                            data-product-id="{{ $row->id }}">
-                                                        <button type="button" class="btn btn-sm btn-primary ml-1 save-low-stock-limit"
-                                                            data-product-id="{{ $row->id }}">Save</button>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @if ($row->status === 'out')
-                                                        <span class="badge bg-danger">Out of Stock</span>
-                                                    @elseif ($row->status === 'critical')
-                                                        <span class="badge bg-danger">Critical Stock</span>
-                                                    @elseif ($row->status === 'low')
-                                                        <span class="badge bg-warning text-dark">Low Stock</span>
-                                                    @else
-                                                        <span class="badge bg-success">Normal</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+        {{-- ── Warehouses containing the searched product ───────────── --}}
+        @if (request()->filled('q'))
+            <div class="card shadow mb-3">
+                <div class="card-body py-3">
+                    <h5 class="mb-2"><i class="fas fa-search-location mr-1"></i> Warehouse availability for "{{ request('q') }}"</h5>
+                    @if (collect($productWarehouses ?? [])->count())
+                        @foreach (collect($productWarehouses)->groupBy('product_name') as $productName => $rows)
+                            <div class="mb-1">
+                                <strong>{{ $productName }}</strong>:
+                                @foreach ($rows as $row)
+                                    <span class="badge bg-info mr-1">
+                                        {{ $row->warehouse_name }} ({{ $row->current_stock + 0 }} {{ $row->unit_name }})
+                                    </span>
+                                @endforeach
                             </div>
-                        </div>
-                    </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted mb-0">No warehouse currently contains a product matching "{{ request('q') }}".</p>
+                    @endif
                 </div>
             </div>
         @endif
@@ -93,13 +56,76 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow">
-                    <div class=" text-white" style="background-color: #1b3244;padding-left: 10px;padding-bottom: 10px;">
+                    <div class="text-white d-flex justify-content-between align-items-center"
+                        style="background-color: #1b3244;padding:10px;">
                         <h3 class="card-title mb-0">
                             <i class="fas fa-exchange-alt"></i> Assigned Inventory History
                         </h3>
+                        <a href="{{ route('assigned_inventory.stockLevels') }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-boxes mr-1"></i> Current Stock Levels
+                        </a>
                     </div>
 
                     <div class="card-body">
+                        {{-- ── Filters ─────────────────────────────────── --}}
+                        <form method="GET" action="{{ route('assigned_inventory.index') }}" class="mb-3">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="mb-1">Product Name</label>
+                                    <input type="text" name="q" class="form-control" placeholder="Search product..."
+                                        value="{{ request('q') }}">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="mb-1">Warehouse</label>
+                                    <select name="warehouse_id" class="form-control">
+                                        <option value="">All Warehouses</option>
+                                        @foreach ($filterWarehouses ?? [] as $warehouse)
+                                            <option value="{{ $warehouse->id }}"
+                                                {{ request('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
+                                                {{ $warehouse->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="mb-1">Assigned By</label>
+                                    <select name="assigned_by" class="form-control">
+                                        <option value="">All Users</option>
+                                        @foreach ($filterUsers ?? [] as $user)
+                                            <option value="{{ $user->id }}"
+                                                {{ request('assigned_by') == $user->id ? 'selected' : '' }}>
+                                                {{ $user->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="mb-1">Assigned From</label>
+                                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="mb-1">Assigned To</label>
+                                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                                </div>
+                                <div class="col-md-1 mb-2">
+                                    <label class="mb-1">Per Page</label>
+                                    <select name="per_page" class="form-control">
+                                        @foreach ([10, 25, 50, 100] as $count)
+                                            <option value="{{ $count }}" {{ ($perPage ?? 10) == $count ? 'selected' : '' }}>
+                                                {{ $count }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-filter mr-1"></i> Apply Filters
+                                </button>
+                                <a href="{{ route('assigned_inventory.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+                            </div>
+                        </form>
+
                         @if ($assignments->count() > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle">
@@ -183,7 +209,9 @@
                         @else
                             <div class="text-center py-5">
                                 <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No assignments yet.</p>
+                                <p class="text-muted">
+                                    {{ request()->hasAny(['q', 'warehouse_id', 'assigned_by', 'date_from', 'date_to']) ? 'No assignments match the selected filters.' : 'No assignments yet.' }}
+                                </p>
                             </div>
                         @endif
                     </div>
@@ -193,45 +221,3 @@
     </div>
 @endsection
 
-@push('scripts')
-    <script>
-        document.querySelectorAll('.save-low-stock-limit').forEach(function(btn) {
-            btn.addEventListener('click', async function() {
-                const productId = btn.dataset.productId;
-                const input = document.querySelector(`.low-stock-limit-input[data-product-id="${productId}"]`);
-                const originalText = btn.textContent;
-
-                btn.disabled = true;
-                btn.textContent = '...';
-
-                try {
-                    const response = await fetch(`{{ route('assigned_inventory.lowStockLimit') }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            product_id: productId,
-                            low_stock_limit: input.value === '' ? null : input.value
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok && data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message || 'Could not save the low stock limit.');
-                        btn.disabled = false;
-                        btn.textContent = originalText;
-                    }
-                } catch (error) {
-                    alert('Could not save the low stock limit.');
-                    btn.disabled = false;
-                    btn.textContent = originalText;
-                }
-            });
-        });
-    </script>
-@endpush

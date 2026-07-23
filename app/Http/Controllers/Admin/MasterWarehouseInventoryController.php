@@ -171,13 +171,51 @@ class MasterWarehouseInventoryController extends Controller
             abort(403, 'You do not have permission to access this page.');
         }
         if (auth()->user()->role->slug == "master-warehouse" || auth()->user()->role->slug == "admin") {
-            $assignments = WarehouseAssignment::with(['masterInventory.product.unit', 'warehouse'])
+            $perPage = in_array((int) $request->get('per_page'), [10, 25, 50, 100]) ? (int) $request->get('per_page') : 10;
+
+            $assignments = WarehouseAssignment::with(['masterInventory.product.unit', 'warehouse', 'assignedBy'])
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $query->whereHas('masterInventory.product', fn ($product) => $product->where('name', 'like', '%' . $request->q . '%'));
+                })
+                ->when($request->filled('warehouse_id'), fn ($query) => $query->where('warehouse_id', $request->warehouse_id))
+                ->when($request->filled('assigned_by'), fn ($query) => $query->where('assigned_by', $request->assigned_by))
+                ->when($request->filled('date_from'), fn ($query) => $query->whereDate('assigned_at', '>=', $request->date_from))
+                ->when($request->filled('date_to'), fn ($query) => $query->whereDate('assigned_at', '<=', $request->date_to))
                 ->orderBy('assigned_at', 'desc')
-                ->paginate(10);
+                ->paginate($perPage)
+                ->withQueryString();
 
             $stockSummary = $this->assignedStockSummary();
 
-            return view('admin.master_warehouse_inventory.assigned', compact('assignments', 'stockSummary'));
+            // When searching by product, show every warehouse where the
+            // product is currently available or has been assigned.
+            $productWarehouses = collect();
+            if ($request->filled('q')) {
+                $productWarehouses = WarehouseAssignment::query()
+                    ->join('master_warehouse_inventory as mwi', 'warehouse_assignments.master_inventory_id', '=', 'mwi.id')
+                    ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
+                    ->join('warehouses as w', 'warehouse_assignments.warehouse_id', '=', 'w.id')
+                    ->leftJoin('units', 'pl.unit_id', '=', 'units.id')
+                    ->where('pl.name', 'like', '%' . $request->q . '%')
+                    ->groupBy('pl.id', 'pl.name', 'w.id', 'w.name', 'units.name')
+                    ->orderBy('pl.name')
+                    ->orderBy('w.name')
+                    ->get([
+                        'pl.name as product_name',
+                        'w.name as warehouse_name',
+                        DB::raw('units.name as unit_name'),
+                        DB::raw('SUM(warehouse_assignments.quantity) as current_stock'),
+                    ]);
+            }
+
+            return view('admin.master_warehouse_inventory.assigned', [
+                'assignments' => $assignments,
+                'stockSummary' => $stockSummary,
+                'productWarehouses' => $productWarehouses,
+                'filterWarehouses' => Warehouse::subWarehouses()->orderBy('name')->get(['id', 'name']),
+                'filterUsers' => \App\Models\User::whereIn('id', WarehouseAssignment::whereNotNull('assigned_by')->distinct()->pluck('assigned_by'))->orderBy('name')->get(['id', 'name']),
+                'perPage' => $perPage,
+            ]);
         } else {
 
             $subwarehouse = Warehouse::where('manager_id', auth()->user()->id)->get();
@@ -254,6 +292,70 @@ class MasterWarehouseInventoryController extends Controller
 
                 return $row;
             });
+    }
+
+    /**
+     * Current Stock Levels page — per-product stock with filters
+     * and server-side pagination.
+     */
+    public function stockLevels(Request $request)
+    {
+        if (!auth()->user()->hasPermission('assigned_inventory')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
+        $perPage = in_array((int) $request->get('per_page'), [10, 25, 50, 100]) ? (int) $request->get('per_page') : 25;
+
+        $query = WarehouseAssignment::query()
+            ->join('master_warehouse_inventory as mwi', 'warehouse_assignments.master_inventory_id', '=', 'mwi.id')
+            ->join('products_list as pl', 'mwi.product_id', '=', 'pl.id')
+            ->join('warehouses as w', 'warehouse_assignments.warehouse_id', '=', 'w.id')
+            ->leftJoin('units', 'pl.unit_id', '=', 'units.id')
+            ->leftJoin('product_category as pc', 'pl.product_category_id', '=', 'pc.id')
+            ->leftJoin('brands', 'pl.brand_id', '=', 'brands.id')
+            ->when($request->filled('q'), fn ($q) => $q->where('pl.name', 'like', '%' . $request->q . '%'))
+            ->when($request->filled('warehouse_id'), fn ($q) => $q->where('warehouse_assignments.warehouse_id', $request->warehouse_id))
+            ->when($request->filled('product_category_id'), fn ($q) => $q->where('pl.product_category_id', $request->product_category_id))
+            ->when($request->filled('brand_id'), fn ($q) => $q->where('pl.brand_id', $request->brand_id))
+            ->groupBy('mwi.product_id', 'pl.name', 'pl.low_stock_limit', 'units.name', 'pc.name', 'brands.name')
+            ->orderBy('pl.name')
+            ->select([
+                'mwi.product_id as id',
+                'pl.name',
+                'pl.low_stock_limit',
+                DB::raw('units.name as unit_name'),
+                DB::raw('pc.name as category_name'),
+                DB::raw('brands.name as brand_name'),
+                DB::raw('SUM(warehouse_assignments.quantity) as current_stock'),
+                DB::raw("GROUP_CONCAT(DISTINCT w.name ORDER BY w.name SEPARATOR ', ') as warehouse_names"),
+            ]);
+
+        // Stock status filter works on the aggregated stock vs the limit.
+        if ($request->stock_status === 'out') {
+            $query->havingRaw('current_stock <= 0');
+        } elseif ($request->stock_status === 'low') {
+            $query->havingRaw('current_stock > 0 AND pl.low_stock_limit > 0 AND current_stock <= pl.low_stock_limit');
+        } elseif ($request->stock_status === 'in') {
+            $query->havingRaw('current_stock > 0 AND (pl.low_stock_limit IS NULL OR pl.low_stock_limit <= 0 OR current_stock > pl.low_stock_limit)');
+        }
+
+        $stockLevels = $query->paginate($perPage)->withQueryString();
+
+        $stockLevels->getCollection()->transform(function ($row) {
+            $row->current_stock = (float) $row->current_stock;
+            $row->low_stock_limit = $row->low_stock_limit !== null ? (float) $row->low_stock_limit : null;
+            $row->status = $this->stockStatus($row->current_stock, $row->low_stock_limit);
+
+            return $row;
+        });
+
+        return view('admin.master_warehouse_inventory.stock_levels', [
+            'stockLevels' => $stockLevels,
+            'filterWarehouses' => Warehouse::subWarehouses()->orderBy('name')->get(['id', 'name']),
+            'filterCategories' => \App\Models\ProductCategory::orderBy('name')->get(['id', 'name']),
+            'filterBrands' => \App\Models\Brand::orderBy('name')->get(['id', 'name']),
+            'perPage' => $perPage,
+        ]);
     }
 
     private function stockStatus(float $stock, ?float $limit): string

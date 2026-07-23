@@ -33,14 +33,14 @@
                         <div class="col-md-3 text-center">
                             <div class="card">
                                 <h5 class="m-0">Driver</h5>
-                                <p>{{ $driverAttendance->driver->full_name }}</p>
+                                <p>{{ $driverAttendance->driver?->full_name ?? 'Driver Deleted' }}</p>
                             </div>
                         </div>
 
                         <div class="col-md-2 text-center">
                             <div class="card">
                                 <h5 class="m-0">Status</h5>
-                                <p>{{ $driverAttendance->driver->driverStatus->name }}</p>
+                                <p>{{ $driverAttendance->driver?->driverStatus?->name ?? 'N/A' }}</p>
                             </div>
                         </div>
 
@@ -48,7 +48,7 @@
                             <div class="card">
                                 <h5 class="m-0">Shift</h5>
                                 <p>
-                                    @php($st = $driverAttendance->driver->shiftTiming)
+                                    @php($st = $driverAttendance->driver?->shiftTiming)
                                     @if ($st)
                                         {{ $st->name }} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }} -
                                         {{ \Carbon\Carbon::parse($st->end_time)->format('h:i A') }})
@@ -69,7 +69,7 @@
                         <div class="col-md-2 text-center">
                             <div class="card">
                                 <h5 class="m-0">Attendance</h5>
-                                <p>{{ $driverAttendance->attendanceStatus->name }}</p>
+                                <p>{{ $driverAttendance->attendanceStatus?->name ?? 'N/A' }}</p>
                             </div>
                         </div>
 
@@ -83,14 +83,14 @@
                         <div class="col-md-3 text-center">
                             <div class="card">
                                 <h5 class="m-0">Original Driver</h5>
-                                <p>{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver->full_name }}</p>
+                                <p>{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver?->full_name ?? 'Driver Deleted' }}</p>
                             </div>
                         </div>
 
                         <div class="col-md-2 text-center">
                             <div class="card">
                                 <h5 class="m-0">Replacement</h5>
-                                <p>{{ $driverAttendance->is_replacement ? ($driverAttendance->replacementDriver?->full_name ?? $driverAttendance->driver->full_name) : 'No' }}</p>
+                                <p>{{ $driverAttendance->is_replacement ? ($driverAttendance->replacementDriver?->full_name ?? $driverAttendance->driver?->full_name ?? 'Driver Deleted') : 'No' }}</p>
                             </div>
                         </div>
 

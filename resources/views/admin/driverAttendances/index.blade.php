@@ -183,15 +183,15 @@
                                         <span class="checkmark"></span>
                                     </label>
                                 </td>
-                                <td>{{ $value->driver->full_name }}</td>
+                                <td>{{ $value->driver?->full_name ?? 'Driver Deleted' }}</td>
                                 <td class="text-center">{{ $value->vehicle?->vehicle_no ?? 'N/A' }}</td>
                                 <td class="text-center">{{ $value->originalDriver?->full_name ?? $value->driver?->full_name ?? 'N/A' }}</td>
                                 <td class="text-center">
                                     {{ $value->is_replacement ? ($value->replacementDriver?->full_name ?? $value->driver?->full_name ?? 'N/A') : 'No' }}
                                 </td>
-                                <td class="text-center">{{  $value->driver->driverStatus?->name ?? 'N/A' }}</td>
+                                <td class="text-center">{{ $value->driver?->driverStatus?->name ?? 'N/A' }}</td>
                                 <td class="text-center">
-                                    @php($st = $value->driver->shiftTiming)
+                                    @php($st = $value->driver?->shiftTiming)
                                     @if ($st)
                                         {{ $st?->name ?? 'N/A' }} ({{ \Carbon\Carbon::parse($st->start_time)->format('h:i A') }}
                                         - {{ \Carbon\Carbon::parse($st->end_time)->format('h:i A') }})

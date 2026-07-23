@@ -38,7 +38,7 @@
                                     <div class="form-group">
                                         <strong>Driver</strong>
                                         <input type="text" class="form-control" name="full_name"
-                                            value="{{ $driverAttendance->driver->full_name }}" readonly>
+                                            value="{{ $driverAttendance->driver?->full_name ?? 'Driver Deleted' }}" readonly>
                                     </div>
                                 </div>
 
@@ -58,7 +58,7 @@
                                     <div class="form-group">
                                         <strong>Shift</strong>
                                         <input type="text" class="form-control" name="shift"
-                                            value="{{ optional($driverAttendance->driver->shiftTiming)->name
+                                            value="{{ optional($driverAttendance->driver?->shiftTiming)->name
                                                 ? $driverAttendance->driver->shiftTiming->name .
                                                     ' (' .
                                                     \Carbon\Carbon::parse($driverAttendance->driver->shiftTiming->start_time)->format('h:i A') .
@@ -74,7 +74,7 @@
                                     <div class="form-group">
                                         <strong>Status</strong>
                                         <input type="text" class="form-control" name="full_name"
-                                            value="{{ $driverAttendance->driver->driverStatus->name }}" readonly>
+                                            value="{{ $driverAttendance->driver?->driverStatus?->name ?? 'N/A' }}" readonly>
                                     </div>
                                 </div>
 
@@ -90,7 +90,7 @@
                                     <div class="form-group">
                                         <strong>Original Driver</strong>
                                         <input type="text" class="form-control" name="original_driver"
-                                            value="{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver->full_name }}" readonly>
+                                            value="{{ $driverAttendance->originalDriver?->full_name ?? $driverAttendance->driver?->full_name ?? 'Driver Deleted' }}" readonly>
                                     </div>
                                 </div>
 

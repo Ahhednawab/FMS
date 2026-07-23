@@ -529,6 +529,12 @@ class DriversAttendanceController extends Controller
         $mainDriver = $driverAttendance->originalDriver ?? $driverAttendance->driver;
         $vehicle = $driverAttendance->vehicle ?? $mainDriver?->vehicle;
 
+        if (! $mainDriver) {
+            return back()
+                ->withInput()
+                ->withErrors(['date' => 'The driver for this attendance record no longer exists, so it cannot be updated.']);
+        }
+
         if ($isReplacement) {
             if ($replacementDriverId <= 0) {
                 return back()
