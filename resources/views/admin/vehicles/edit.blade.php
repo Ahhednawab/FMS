@@ -57,29 +57,40 @@
                                     </div>
                                 </div>
 
+                                @php
+                                    $selectedMake = old('make', $vehicle->make ?? '');
+                                    $selectedModel = old('model', $vehicle->model ?? '');
+                                @endphp
+
                                 <!-- Make (Manufacturer) -->
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <strong>Make (Manufacturer)</strong>
-                                        <input type="text" class="form-control" name="make"
-                                            value="{{ old('make', $vehicle->make ?? '') }}">
+                                        <select name="make" id="vehicle_make_select"
+                                            class="form-control vehicle-make-select @error('make') is-invalid @enderror">
+                                            <option value="">-- Select Make --</option>
+                                            @foreach (array_keys($makeModelMap) as $makeOption)
+                                                <option value="{{ $makeOption }}" {{ $selectedMake === $makeOption ? 'selected' : '' }}>{{ $makeOption }}</option>
+                                            @endforeach
+                                            @if ($selectedMake && !array_key_exists($selectedMake, $makeModelMap))
+                                                <option value="{{ $selectedMake }}" selected>{{ $selectedMake }}</option>
+                                            @endif
+                                        </select>
+                                        <small class="text-muted d-block mt-1">Managed in Vehicle Maintenance Configuration.</small>
                                         @if ($errors->has('make'))
                                             <label class="text-danger">{{ $errors->first('make') }}</label>
                                         @endif
                                     </div>
                                 </div>
 
-                                <!-- Model (Year) -->
+                                <!-- Model -->
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <strong>Model (Year)</strong>
-                                        <select class="custom-select" name="model">
-                                            <option value="">-- Select Model Year --</option>
-                                            @for ($year = date('Y'); $year >= 1980; $year--)
-                                                <option value="{{ $year }}"
-                                                    {{ old('model', $vehicle->model ?? '') == $year ? 'selected' : '' }}>
-                                                    {{ $year }}</option>
-                                            @endfor
+                                        <strong>Model</strong>
+                                        <select name="model" id="vehicle_model_select"
+                                            data-selected="{{ $selectedModel }}"
+                                            class="form-control vehicle-model-select @error('model') is-invalid @enderror">
+                                            <option value="">-- Select Model --</option>
                                         </select>
                                         @if ($errors->has('model'))
                                             <label class="text-danger">{{ $errors->first('model') }}</label>
@@ -953,3 +964,7 @@
     </script>
 
 @endsection
+
+@push('scripts')
+    @include('admin.vehicles.partials.make-model-scripts')
+@endpush

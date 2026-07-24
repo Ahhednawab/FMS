@@ -36,11 +36,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        $(function() {
-            $('.select2-tags').select2({ width: '100%', tags: true });
-        });
-    </script>
-@endpush

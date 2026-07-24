@@ -1,43 +1,24 @@
 @php
     $config = $configuration ?? null;
-    $currentMake = old('make', $config?->make);
-    $currentModel = old('model', $config?->model);
 @endphp
 
+{{--
+    Vehicle Make and Model identify the configuration and are the key the
+    predictive engine matches vehicles on, so they are read-only here.
+    Only the maintenance intervals below can be updated.
+--}}
 <div class="row">
     <div class="col-md-4">
         <div class="form-group">
-            <label>Vehicle Make <span class="text-danger">*</span></label>
-            <select name="make" id="config_make" class="form-control select2-tags" data-placeholder="Select or type a Make">
-                <option value="">--Select--</option>
-                @foreach ($makes as $make)
-                    <option value="{{ $make }}" {{ $currentMake == $make ? 'selected' : '' }}>{{ $make }}</option>
-                @endforeach
-                @if ($currentMake && !$makes->contains($currentMake))
-                    <option value="{{ $currentMake }}" selected>{{ $currentMake }}</option>
-                @endif
-            </select>
-            @error('make')
-                <small class="text-danger d-block">{{ $message }}</small>
-            @enderror
+            <label>Vehicle Make</label>
+            <input type="text" class="form-control" value="{{ $config?->make }}" readonly>
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="form-group">
-            <label>Vehicle Model <span class="text-danger">*</span></label>
-            <select name="model" id="config_model" class="form-control select2-tags" data-placeholder="Select or type a Model">
-                <option value="">--Select--</option>
-                @foreach ($models as $model)
-                    <option value="{{ $model }}" {{ $currentModel == $model ? 'selected' : '' }}>{{ $model }}</option>
-                @endforeach
-                @if ($currentModel && !$models->contains($currentModel))
-                    <option value="{{ $currentModel }}" selected>{{ $currentModel }}</option>
-                @endif
-            </select>
-            @error('model')
-                <small class="text-danger d-block">{{ $message }}</small>
-            @enderror
+            <label>Vehicle Model</label>
+            <input type="text" class="form-control" value="{{ $config?->model }}" readonly>
         </div>
     </div>
 </div>

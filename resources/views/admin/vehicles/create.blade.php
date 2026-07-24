@@ -60,51 +60,41 @@
                             </div>
                         </div>
 
+                        @php
+                            $selectedMake = old('make', $draftData['make'] ?? '');
+                            $selectedModel = old('model', $draftData['model'] ?? '');
+                        @endphp
+
                         <!-- Make (Manufacturer) -->
                         <div class="col-md-3">
                             <div class="form-group">
                                 <strong>Make (Manufacturer)<span style="color:red">*</span></strong>
-                                <input type="text"
-                                    class="form-control
-                {{ $isDraftMode && empty($draftData['make'] ?? '') ? 'is-invalid' : '' }}
-                @error('make') is-invalid @enderror"
-                                    name="make" value="{{ $draftData['make'] ?? old('make') }}">
-
-                                @if ($isDraftMode && empty($draftData['make'] ?? ''))
-                                    <span class="text-danger"></span>
-                                @endif
-
+                                <select name="make" id="vehicle_make_select"
+                                    class="form-control vehicle-make-select @error('make') is-invalid @enderror">
+                                    <option value="">-- Select Make --</option>
+                                    @foreach (array_keys($makeModelMap) as $makeOption)
+                                        <option value="{{ $makeOption }}" {{ $selectedMake === $makeOption ? 'selected' : '' }}>{{ $makeOption }}</option>
+                                    @endforeach
+                                    @if ($selectedMake && !array_key_exists($selectedMake, $makeModelMap))
+                                        <option value="{{ $selectedMake }}" selected>{{ $selectedMake }}</option>
+                                    @endif
+                                </select>
+                                <small class="text-muted d-block mt-1">Managed in Vehicle Maintenance Configuration.</small>
                                 @error('make')
                                     <label class="text-danger">{{ $message }}</label>
                                 @enderror
                             </div>
                         </div>
 
-                        <!-- Model (Year) -->
+                        <!-- Model -->
                         <div class="col-md-3">
                             <div class="form-group">
-                                <strong>Model (Year)<span style="color:red">*</span></strong>
-                                <select name="model"
-                                    class="custom-select
-                {{ request()->has('draft_id') && empty($draftData['model'] ?? '') ? 'is-invalid' : '' }}
-                @error('model') is-invalid @enderror">
-
-                                    <option value="">-- Select Model Year --</option>
-
-                                    @for ($year = date('Y'); $year >= 1980; $year--)
-                                        <option value="{{ $year }}"
-                                            {{ ($draftData['model'] ?? old('model')) == $year ? 'selected' : '' }}>
-                                            {{ $year }}
-                                        </option>
-                                    @endfor
+                                <strong>Model<span style="color:red">*</span></strong>
+                                <select name="model" id="vehicle_model_select"
+                                    data-selected="{{ $selectedModel }}"
+                                    class="form-control vehicle-model-select @error('model') is-invalid @enderror">
+                                    <option value="">-- Select Model --</option>
                                 </select>
-
-                                {{-- Draft mode validation --}}
-                                @if (request()->has('draft_id') && empty($draftData['model'] ?? ''))
-                                    <span class="text-danger"></span>
-                                @endif
-
-                                {{-- Laravel validation --}}
                                 @error('model')
                                     <label class="text-danger">{{ $message }}</label>
                                 @enderror
@@ -1379,3 +1369,7 @@
 
 
 @endsection
+
+@push('scripts')
+    @include('admin.vehicles.partials.make-model-scripts')
+@endpush

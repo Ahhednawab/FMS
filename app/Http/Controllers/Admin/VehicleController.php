@@ -12,6 +12,7 @@ use App\Models\ShiftHours;
 use App\Models\ShiftTimings;
 use App\Models\Station;
 use App\Models\Vehicle;
+use App\Models\VehicleMaintenanceConfiguration;
 use App\Models\VehicleType;
 use App\Models\Vendor;
 use App\Services\VehicleDriverAssignmentService;
@@ -83,8 +84,9 @@ class VehicleController extends Controller
             '2' => 'No',
         ];
         $draftInfo = $this->getDraftDataForView($request, 'vehicles');
+        $makeModelMap = $this->vehicleMakeModelMap();
 
-        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers') + $draftInfo);
+        return view('admin.vehicles.create', compact('serial_no', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers', 'makeModelMap') + $draftInfo);
     }
 
     public function store(Request $request)
@@ -467,7 +469,31 @@ class VehicleController extends Controller
             '2' => 'No',
         ];
 
-        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers'));
+        $makeModelMap = $this->vehicleMakeModelMap();
+
+        return view('admin.vehicles.edit', compact('vehicle', 'insurance_companies', 'vehicleTypes', 'stations', 'status', 'ladder_maker', 'ibc_center', 'vendors', 'shift_hours', 'shift_timings', 'regularDrivers', 'poolDrivers', 'makeModelMap'));
+    }
+
+    /**
+     * Make => [models] map sourced from the Vehicle Maintenance Configuration
+     * module. Powers the dependent Make / Model dropdowns on the vehicle form
+     * so both are picked from centralized master data (no free-text entry).
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function vehicleMakeModelMap(): array
+    {
+        return VehicleMaintenanceConfiguration::where('is_active', 1)
+            ->orderBy('make')
+            ->orderBy('model')
+            ->get(['make', 'model'])
+            ->groupBy('make')
+            ->map(fn ($rows) => $rows->pluck('model')
+                ->map(fn ($model) => (string) $model)
+                ->unique()
+                ->values()
+                ->all())
+            ->toArray();
     }
 
     public function update(Request $request, Vehicle $vehicle)
