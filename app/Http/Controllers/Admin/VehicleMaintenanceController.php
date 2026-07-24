@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class VehicleMaintenanceController extends Controller
@@ -42,7 +43,7 @@ class VehicleMaintenanceController extends Controller
             'vehicleMakes' => Vehicle::where('is_active', 1)->whereNotNull('make')->distinct()->orderBy('make')->pluck('make'),
             'vehicleModels' => Vehicle::where('is_active', 1)->whereNotNull('model')->distinct()->orderBy('model')->pluck('model'),
             'workDones' => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
-            'warehouses' => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'warehouses' => Warehouse::subWarehouses()->orderBy('name')->pluck('name', 'id'),
             'workshops' => $this->workshopOptions(),
             'products' => ProductList::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'createdByUsers' => \App\Models\User::orderBy('name')->pluck('name', 'id'),
@@ -55,7 +56,7 @@ class VehicleMaintenanceController extends Controller
         return view('admin.vehicleMaintenances.create', [
             'maintenance_id' => VehicleMaintenance::GetMaintenanceId(),
             'vehicles'       => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
-            'warehouses'     => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'warehouses'     => Warehouse::subWarehouses()->orderBy('name')->pluck('name', 'id'),
             'workshops'      => $this->workshopOptions(),
             'workDones'      => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'maintenanceTypes' => $this->maintenanceTypes(),
@@ -90,7 +91,6 @@ class VehicleMaintenanceController extends Controller
                 'service_date'        => $validated['service_date'],
                 'maintenance_type'    => $validated['maintenance_type'],
                 'work_done_id'        => $workDones->first()->id,
-                'warehouse_id'        => $validated['warehouse_id'],
                 'workshop_id'         => $validated['workshop_id'],
                 'labor_cost'          => $validated['labor_cost'] ?? 0,
                 'service_cost'        => 0,
@@ -102,7 +102,7 @@ class VehicleMaintenanceController extends Controller
 
             $maintenance->workDones()->sync($workDones->pluck('id')->all());
 
-            $total = $this->deductParts($maintenance, $validated['warehouse_id'], $validated['parts']);
+            $total = $this->deductParts($maintenance, $validated['parts']);
             $maintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
@@ -120,7 +120,7 @@ class VehicleMaintenanceController extends Controller
             'vehicleMaintenance' => $vehicleMaintenance,
             'maintenance_id'     => $vehicleMaintenance->maintenance_id,
             'vehicles'           => Vehicle::where('is_active', 1)->orderBy('vehicle_no')->pluck('vehicle_no', 'id'),
-            'warehouses'         => Warehouse::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
+            'warehouses'         => Warehouse::subWarehouses()->orderBy('name')->pluck('name', 'id'),
             'workshops'          => $this->workshopOptions(),
             'workDones'          => VehicleMaintenanceWorkDone::where('is_active', 1)->orderBy('name')->pluck('name', 'id'),
             'maintenanceTypes'   => $this->maintenanceTypes(),
@@ -156,7 +156,6 @@ class VehicleMaintenanceController extends Controller
                 'service_date'        => $validated['service_date'],
                 'maintenance_type'    => $validated['maintenance_type'],
                 'work_done_id'        => $workDones->first()->id,
-                'warehouse_id'        => $validated['warehouse_id'],
                 'workshop_id'         => $validated['workshop_id'],
                 'labor_cost'          => $validated['labor_cost'] ?? 0,
                 'service_description' => $workDones->pluck('name')->implode(', '),
@@ -165,7 +164,7 @@ class VehicleMaintenanceController extends Controller
 
             $vehicleMaintenance->workDones()->sync($workDones->pluck('id')->all());
 
-            $total = $this->deductParts($vehicleMaintenance, $validated['warehouse_id'], $validated['parts']);
+            $total = $this->deductParts($vehicleMaintenance, $validated['parts']);
             $vehicleMaintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
@@ -177,7 +176,7 @@ class VehicleMaintenanceController extends Controller
 
     public function show(VehicleMaintenance $vehicleMaintenance)
     {
-        $vehicleMaintenance->load(['vehicle', 'workDone', 'workDones', 'warehouse', 'workshop', 'maintenanceParts.product.unit', 'createdBy']);
+        $vehicleMaintenance->load(['vehicle', 'workDone', 'workDones', 'warehouse', 'workshop', 'maintenanceParts.product.unit', 'maintenanceParts.warehouse', 'createdBy']);
 
         return view('admin.vehicleMaintenances.show', compact('vehicleMaintenance'));
     }
@@ -230,7 +229,9 @@ class VehicleMaintenanceController extends Controller
 
     public function vehicleDetails(Vehicle $vehicle)
     {
-        $warehouse = Warehouse::where('is_active', 1)
+        // Only sub warehouses can be picked on a maintenance row, so never
+        // suggest the master warehouse as a row default.
+        $warehouse = Warehouse::subWarehouses()
             ->where('station_id', $vehicle->station_id)
             ->first();
 
@@ -353,43 +354,67 @@ class VehicleMaintenanceController extends Controller
             'maintenance_type' => 'required|in:' . implode(',', array_keys($this->maintenanceTypes())),
             'work_done'        => 'required|array|min:1',
             'work_done.*'      => 'required|string|max:255',
-            'warehouse_id'     => 'required|exists:warehouses,id',
             'workshop_id'      => 'required|exists:workshops,id',
             'labor_cost'       => 'nullable|numeric|min:0',
             'remarks'          => 'nullable|string',
             'parts'            => 'required|array|min:1',
-            'parts.*.product_id' => 'required|exists:products_list,id',
-            'parts.*.quantity'   => 'required|numeric|min:0.01',
-            'parts.*.unit_price' => 'required|numeric|min:0',
+            // Only active sub warehouses may be used — never the master warehouse.
+            'parts.*.warehouse_id' => [
+                'required',
+                Rule::exists('warehouses', 'id')->where(
+                    fn ($query) => $query->where('is_master', false)->where('is_active', 1)
+                ),
+            ],
+            'parts.*.product_id'   => 'required|exists:products_list,id',
+            'parts.*.quantity'     => 'required|numeric|min:0.01',
+            'parts.*.unit_price'   => 'required|numeric|min:0',
+        ], [
+            'parts.*.warehouse_id.required' => 'Select a warehouse for each product row.',
+            'parts.*.warehouse_id.exists'   => 'Select a valid sub warehouse for each product row.',
+            'parts.*.product_id.required'   => 'Select a product for each product row.',
         ]);
     }
 
-    private function deductParts(VehicleMaintenance $maintenance, int $warehouseId, array $parts): float
+    /**
+     * Deduct each part from the warehouse selected on its own row, so a single
+     * maintenance record can draw products from several warehouses.
+     */
+    private function deductParts(VehicleMaintenance $maintenance, array $parts): float
     {
         $total = 0;
-        $requestedByProduct = collect($parts)
-            ->groupBy('product_id')
-            ->map(fn ($rows) => (float) $rows->sum('quantity'));
 
-        foreach ($requestedByProduct as $productId => $quantity) {
+        // Stock is checked per warehouse + product pair, so the same product
+        // requested twice from one warehouse is validated against the combined
+        // quantity rather than each row in isolation.
+        $requested = collect($parts)
+            ->groupBy(fn ($part) => $part['warehouse_id'] . '|' . $part['product_id'])
+            ->map(fn ($rows) => [
+                'warehouse_id' => (int) $rows->first()['warehouse_id'],
+                'product_id'   => (int) $rows->first()['product_id'],
+                'quantity'     => (float) $rows->sum('quantity'),
+            ]);
+
+        foreach ($requested as $row) {
             $available = (float) WarehouseAssignment::query()
                 ->join('master_warehouse_inventory as mwi', 'warehouse_assignments.master_inventory_id', '=', 'mwi.id')
-                ->where('warehouse_assignments.warehouse_id', $warehouseId)
-                ->where('mwi.product_id', $productId)
+                ->where('warehouse_assignments.warehouse_id', $row['warehouse_id'])
+                ->where('mwi.product_id', $row['product_id'])
                 ->sum('warehouse_assignments.quantity');
 
-            if ($quantity > $available) {
-                $product = ProductList::with('unit')->find($productId);
+            if ($row['quantity'] > $available) {
+                $product = ProductList::with('unit')->find($row['product_id']);
                 $productName = $product?->name ?? 'selected product';
                 $unitSuffix = $product?->unit?->name ? ' ' . $product->unit->name : '';
+                $warehouseName = Warehouse::find($row['warehouse_id'])?->name ?? 'selected warehouse';
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'parts' => "Insufficient stock for {$productName}. Available: {$available}{$unitSuffix}, requested: {$quantity}{$unitSuffix}.",
+                    'parts' => "Insufficient stock for {$productName} in {$warehouseName}. Available: {$available}{$unitSuffix}, requested: {$row['quantity']}{$unitSuffix}.",
                 ]);
             }
         }
 
         foreach ($parts as $part) {
             $remaining = (float) $part['quantity'];
+            $warehouseId = (int) $part['warehouse_id'];
 
             $assignments = WarehouseAssignment::query()
                 ->join('master_warehouse_inventory as mwi', 'warehouse_assignments.master_inventory_id', '=', 'mwi.id')
@@ -501,7 +526,7 @@ class VehicleMaintenanceController extends Controller
     private function maintenanceQuery(Request $request)
     {
         return VehicleMaintenance::query()
-            ->with(['vehicle', 'workDone', 'workDones', 'warehouse', 'workshop', 'maintenanceParts.product.unit', 'createdBy'])
+            ->with(['vehicle', 'workDone', 'workDones', 'warehouse', 'workshop', 'maintenanceParts.product.unit', 'maintenanceParts.warehouse', 'createdBy'])
             ->where('vehicle_maintenances.is_active', 1)
             ->when($request->filled('from_date'), fn ($query) => $query->whereDate('service_date', '>=', $request->from_date))
             ->when($request->filled('to_date'), fn ($query) => $query->whereDate('service_date', '<=', $request->to_date))
@@ -513,7 +538,12 @@ class VehicleMaintenanceController extends Controller
                 $inner->where('work_done_id', $request->work_done_id)
                     ->orWhereHas('workDones', fn ($workDones) => $workDones->where('vehicle_maintenance_work_dones.id', $request->work_done_id));
             }))
-            ->when($request->filled('warehouse_id'), fn ($query) => $query->where('warehouse_id', $request->warehouse_id))
+            // Warehouse now lives on each product row, so match any maintenance
+            // record that drew a part from the selected warehouse.
+            ->when($request->filled('warehouse_id'), fn ($query) => $query->whereHas(
+                'maintenanceParts',
+                fn ($parts) => $parts->where('vehicle_maintenance_parts.warehouse_id', $request->warehouse_id)
+            ))
             ->when($request->filled('workshop_id'), fn ($query) => $query->where('workshop_id', $request->workshop_id))
             ->when($request->filled('created_by'), fn ($query) => $query->where('created_by', $request->created_by))
             ->when($request->filled('amount_min'), fn ($query) => $query->where('service_cost', '>=', $request->amount_min))
@@ -538,7 +568,6 @@ class VehicleMaintenanceController extends Controller
             'predictive' => 'Predictive Maintenance',
             'preventive' => 'Preventive Maintenance',
             'corrective' => 'Corrective Maintenance',
-            'emergency' => 'Emergency Maintenance',
         ];
     }
 

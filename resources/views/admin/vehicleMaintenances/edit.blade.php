@@ -24,10 +24,13 @@
                     @method('PUT')
 
                     @include('admin.vehicleMaintenances.partials.form', [
+                        {{-- Grouped by warehouse + product, since each row now
+                             carries its own warehouse. --}}
                         'selectedParts' => $vehicleMaintenance->maintenanceParts
-                            ->groupBy('product_id')
+                            ->groupBy(fn ($part) => $part->warehouse_id . '|' . $part->product_id)
                             ->map(function ($rows) {
                                 return [
+                                    'warehouse_id' => $rows->first()->warehouse_id,
                                     'product_id' => $rows->first()->product_id,
                                     'product_name' => $rows->first()->product?->name ?? 'Unknown Product',
                                     'quantity' => $rows->sum('quantity'),

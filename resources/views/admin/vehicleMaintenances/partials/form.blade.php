@@ -100,24 +100,6 @@
 
     <div class="col-md-3">
         <div class="form-group">
-            <label>Warehouse</label>
-            <select name="warehouse_id" id="warehouse_id" class="form-control select2" required>
-                <option value="">--Select--</option>
-
-                @foreach ($warehouses as $id => $name)
-                    <option value="{{ $id }}" {{ old('warehouse_id', $maintenance?->warehouse_id) == $id ? 'selected' : '' }}>
-                        {{ $name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-    </div>
-</div>
-
-<!-- Workshop Row -->
-<div class="row">
-    <div class="col-md-3">
-        <div class="form-group">
             <label>Workshop</label>
             <select name="workshop_id" class="form-control select2" required>
                 <option value="">--Select--</option>
@@ -184,28 +166,43 @@
 
 
 
-<!-- Parts Table -->
-<div class="table-responsive mt-4">
+<!-- Products / Parts Section -->
+<hr class="my-4" style="border-top:1px solid #d9d9d9;">
+
+<h6 class="font-weight-semibold mb-3">Products Used</h6>
+
+<p class="text-muted mb-3">
+    Each row draws from its own warehouse — pick a warehouse first and the
+    product list will show only what that warehouse has in stock.
+</p>
+
+<!-- Parts Table: warehouse + product are chosen per row -->
+<div class="table-responsive">
     <table class="table table-bordered" id="parts-table">
         <thead>
             <tr>
-                <th>Product</th>
+                <th style="min-width:200px;">Warehouse</th>
+                <th style="min-width:220px;">Product</th>
                 <th style="width:140px;">Quantity Used</th>
+                <th style="width:110px;">Unit</th>
                 <th style="width:140px;">Unit Price</th>
                 <th style="width:140px;">Total Price</th>
-                <th style="width:80px;">Action</th>
+                <th style="width:90px;">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
     <button type="button" class="btn btn-light" id="add-part-row">
-        Add Part
+        Add Product
     </button>
 </div>
 
 <script>
     window.existingMaintenanceParts = @json($selectedParts->values());
+
+    // Warehouse options for the per-row Warehouse dropdown in the parts table.
+    window.warehouseOptions = @json(collect($warehouses)->map(fn ($name, $id) => ['id' => $id, 'name' => $name])->values());
 
     // Predefined predictive maintenance items (shown as Work Done options when
     // Maintenance Type = Predictive). Custom entries are treated as one-time.

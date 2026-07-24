@@ -175,7 +175,17 @@
                                     <td>{{ $value->model ?? 'N/A' }}</td>
                                     <td>{{ $maintenanceTypes[$value->maintenance_type] ?? $value->maintenance_type }}</td>
                                     <td>{{ implode(', ', $value->workDoneNames()) ?: 'N/A' }}</td>
-                                    <td>{{ $value->warehouse?->name ?? 'N/A' }}</td>
+                                    <td>
+                                        {{-- Warehouses are per product row, so list the distinct ones used. --}}
+                                        @php
+                                            $partWarehouses = $value->maintenanceParts
+                                                ->map(fn ($part) => $part->warehouse?->name)
+                                                ->filter()
+                                                ->unique()
+                                                ->values();
+                                        @endphp
+                                        {{ $partWarehouses->isNotEmpty() ? $partWarehouses->implode(', ') : ($value->warehouse?->name ?? 'N/A') }}
+                                    </td>
                                     <td>{{ $value->workshop?->name ?? 'N/A' }}</td>
                                     <td>
                                         @forelse ($value->maintenanceParts->groupBy('product_id') as $rows)

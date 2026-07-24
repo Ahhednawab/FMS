@@ -67,7 +67,10 @@
             });
         });
 
-        let warehouseProducts = [];
+        // Products are fetched per warehouse and cached, so each row can use a
+        // different warehouse without refetching the same list repeatedly.
+        let productCache = {};
+        let defaultWarehouseId = null;
 
         function money(value) {
             return (Number(value) || 0).toFixed(2);
@@ -77,11 +80,34 @@
             return (Number(value) || 0).toString();
         }
 
-        function productOptions(part = {}) {
+        function fetchProducts(warehouseId) {
+            if (productCache[warehouseId]) {
+                return $.Deferred().resolve(productCache[warehouseId]).promise();
+            }
+
+            return $.get(`{{ url('vehicleMaintenances/warehouse') }}/${warehouseId}/products`)
+                .then(function(products) {
+                    productCache[warehouseId] = products;
+                    return products;
+                });
+        }
+
+        function warehouseOptions(selectedId) {
+            let options = '<option value="">--Select--</option>';
+
+            (window.warehouseOptions || []).forEach(function(warehouse) {
+                const selected = String(warehouse.id) === String(selectedId) ? 'selected' : '';
+                options += `<option value="${warehouse.id}" ${selected}>${warehouse.name}</option>`;
+            });
+
+            return options;
+        }
+
+        function productOptions(products, part = {}) {
             let options = '<option value="">--Select--</option>';
             let found = false;
 
-            warehouseProducts.forEach(function(product) {
+            products.forEach(function(product) {
                 const selected = String(product.id) === String(part.product_id) ? 'selected' : '';
                 if (selected) found = true;
                 const unit = product.unit_name || '';
@@ -94,6 +120,27 @@
             }
 
             return options;
+        }
+
+        // Fill one row's Product dropdown from its own selected warehouse.
+        function loadRowProducts($row, warehouseId, part = {}) {
+            const $product = $row.find('.part-product');
+
+            if (!warehouseId) {
+                $product.html('<option value="">--Select warehouse first--</option>').trigger('change.select2');
+                $row.find('.stock-label').text('');
+                $row.find('.part-unit').val('');
+                calculateAmount();
+                return;
+            }
+
+            $product.html('<option value="">Loading…</option>').trigger('change.select2');
+
+            fetchProducts(warehouseId).done(function(products) {
+                $product.html(productOptions(products, part));
+                // isInit = true so an existing row keeps its saved unit price.
+                $product.trigger('change', [Boolean(part.product_id)]);
+            });
         }
 
         function reindexRows() {
@@ -117,52 +164,53 @@
         }
 
         function addPartRow(part = {}) {
+            const rowWarehouse = part.warehouse_id || defaultWarehouseId || '';
+
             const row = $(`
                 <tr>
                     <td>
+                        <select class="form-control part-warehouse" data-field="warehouse_id" required>
+                            ${warehouseOptions(rowWarehouse)}
+                        </select>
+                    </td>
+                    <td>
                         <select class="form-control part-product" data-field="product_id" required>
-                            ${productOptions(part)}
+                            <option value="">--Select warehouse first--</option>
                         </select>
                         <small class="text-muted stock-label"></small>
                     </td>
                     <td>
                         <input type="number" min="0.01" step="0.01" class="form-control part-quantity" data-field="quantity" value="${part.quantity || 1}" required>
-                        <small class="text-muted qty-unit-label"></small>
                     </td>
+                    <td><input type="text" class="form-control part-unit" value="" readonly></td>
                     <td><input type="number" min="0" step="0.01" class="form-control part-unit-price" data-field="unit_price" value="${part.unit_price || 0}" readonly></td>
                     <td><input type="number" class="form-control part-total" value="0.00" readonly></td>
                     <td><button type="button" class="btn btn-sm btn-danger remove-part-row">Remove</button></td>
                 </tr>
             `);
+
             $('#parts-table tbody').append(row);
-            row.find('.part-product').select2({ width: '100%' }).trigger('change', [true]);
+            row.find('.part-warehouse').select2({ width: '100%' });
+            row.find('.part-product').select2({ width: '100%' });
             reindexRows();
+
+            if (rowWarehouse) {
+                loadRowProducts(row, rowWarehouse, part);
+            }
+
             calculateAmount();
         }
 
-        function loadWarehouseProducts(callback = null) {
-            const warehouseId = $('#warehouse_id').val();
-            warehouseProducts = [];
-            $('#parts-table tbody').empty();
+        // Seed the table: existing rows on edit, otherwise one blank row.
+        function seedPartRows() {
+            const existing = window.existingMaintenanceParts || [];
 
-            if (!warehouseId) {
-                calculateAmount();
-                return;
+            if (existing.length) {
+                existing.forEach(function(part) { addPartRow(part); });
+                window.existingMaintenanceParts = [];
+            } else {
+                addPartRow();
             }
-
-            $.get(`{{ url('vehicleMaintenances/warehouse') }}/${warehouseId}/products`, function(products) {
-                warehouseProducts = products;
-                const existing = window.existingMaintenanceParts || [];
-
-                if (existing.length) {
-                    existing.forEach(addPartRow);
-                    window.existingMaintenanceParts = [];
-                } else {
-                    addPartRow();
-                }
-
-                if (callback) callback();
-            });
         }
 
         function clearMileage(message = '') {
@@ -207,8 +255,17 @@
                 $('#vehicle_make').val(data.make || '');
                 $('#vehicle_model').val(data.model || '');
 
-                if (data.warehouse_id && !isInitialLoad) {
-                    $('#warehouse_id').val(data.warehouse_id).trigger('change');
+                // The vehicle's station warehouse becomes the default for new
+                // product rows; rows that already have one are left alone.
+                defaultWarehouseId = data.warehouse_id || null;
+
+                if (defaultWarehouseId && !isInitialLoad) {
+                    $('#parts-table tbody tr').each(function() {
+                        const $warehouse = $(this).find('.part-warehouse');
+                        if (!$warehouse.val()) {
+                            $warehouse.val(defaultWarehouseId).trigger('change');
+                        }
+                    });
                 }
             });
 
@@ -217,9 +274,17 @@
         });
 
         $('#service_date').on('change', fetchDailyMileage);
-        $('#warehouse_id').on('change', loadWarehouseProducts);
         $('#add-part-row').on('click', function() { addPartRow(); });
         $('#labor_cost').on('input', calculateAmount);
+
+        // Changing a row's warehouse reloads only that row's product list.
+        $('#parts-table').on('change', '.part-warehouse', function() {
+            const row = $(this).closest('tr');
+            row.find('.part-unit-price').val(0);
+            row.find('.part-unit').val('');
+            row.find('.stock-label').text('');
+            loadRowProducts(row, $(this).val(), {});
+        });
 
         $('#parts-table').on('change', '.part-product', function(e, isInit = false) {
             const option = $(this).find(':selected');
@@ -229,7 +294,7 @@
             }
             const unit = option.val() ? (option.data('unit') || '') : '';
             row.find('.stock-label').text(option.val() ? `${qty(option.data('stock'))}${unit ? ' ' + unit : ''} available` : '');
-            row.find('.qty-unit-label').text(unit);
+            row.find('.part-unit').val(unit);
             calculateAmount();
         });
 
@@ -353,10 +418,8 @@
 
         // ── Initial state ──────────────────────────────────────────────────
         rebuildWorkDoneOptions();
+        seedPartRows();
 
-        if ($('#warehouse_id').val()) {
-            loadWarehouseProducts();
-        }
         if ($('#vehicle_id').val()) {
             $('#vehicle_id').trigger('change', [true]);
         } else {

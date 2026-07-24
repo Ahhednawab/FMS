@@ -35,7 +35,6 @@
                             @endforelse
                         </p>
                     </div>
-                    <div class="col-md-3 mb-3"><strong>Warehouse</strong><p>{{ $vehicleMaintenance->warehouse?->name ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Workshop</strong><p>{{ $vehicleMaintenance->workshop?->name ?? 'N/A' }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Labor / Service Charges</strong><p>Rs. {{ number_format($vehicleMaintenance->labor_cost, 2) }}</p></div>
                     <div class="col-md-3 mb-3"><strong>Amount</strong><p>Rs. {{ number_format($vehicleMaintenance->service_cost, 2) }}</p></div>
@@ -56,6 +55,7 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
+                                <th>Warehouse</th>
                                 <th>Product</th>
                                 <th>Quantity Used</th>
                                 <th>Unit Price</th>
@@ -63,15 +63,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($vehicleMaintenance->maintenanceParts->groupBy('product_id') as $rows)
+                            @forelse ($vehicleMaintenance->maintenanceParts->groupBy(fn ($part) => $part->warehouse_id . '|' . $part->product_id) as $rows)
                                 <tr>
+                                    <td>{{ $rows->first()->warehouse?->name ?? 'N/A' }}</td>
                                     <td>{{ $rows->first()->product?->name ?? 'N/A' }}</td>
                                     <td>{{ $rows->sum('quantity') + 0 }} {{ $rows->first()->product?->unit?->name }}</td>
                                     <td>Rs. {{ number_format($rows->first()->unit_price, 2) }}</td>
                                     <td>Rs. {{ number_format($rows->sum('total_price'), 2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="text-center text-muted">No parts used.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted">No parts used.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
