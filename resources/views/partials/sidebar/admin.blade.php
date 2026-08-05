@@ -420,7 +420,7 @@
         </li> --}}
 
                 @if (auth()->user()->hasPermission('accident_details') || auth()->user()->hasPermission('accident_reports'))
-                    {{-- <li
+                    <li
                         class="nav-item nav-item-submenu
                         {{ request()->routeIs('accidentDetails.*') || request()->routeIs('accidentReports.*') ? 'nav-item-open' : '' }}">
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Accidents</span></a>
@@ -445,7 +445,7 @@
                                 @endif
                             @endif
                         </ul>
-                    </li> --}}
+                    </li>
                 @endif
                 @if (false)
                     @if (auth()->user()->hasPermission('client_invoices') ||

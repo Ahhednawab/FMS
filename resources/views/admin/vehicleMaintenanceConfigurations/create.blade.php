@@ -39,6 +39,7 @@
 @push('scripts')
     <script>
         $(function() {
+            // Searchable dropdowns; tags allow a brand-new Make/Model to be added.
             $('.select2-tags').select2({ width: '100%', tags: true });
         });
     </script>

@@ -24,6 +24,7 @@ class AccidentDetail extends Model
         'remarks',
         'bill_to_ke',
         'payment_status',
+        'is_active',
         'created_by',
     ];
 

@@ -44,10 +44,22 @@ class VehicleMaintenanceConfigurationController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $this->validateConfiguration($request);
+        $validated = $request->validate(
+            array_merge($this->makeModelRules($request), $this->intervalRules()),
+            ['make.unique' => 'A configuration for this Make and Model already exists.']
+        );
 
-        $configuration = VehicleMaintenanceConfiguration::create(
-            array_merge($validated, ['is_active' => 1])
+        // Keyed on make + model so a previously deleted (is_active = 0) row is
+        // revived rather than colliding with the unique index.
+        $configuration = VehicleMaintenanceConfiguration::updateOrCreate(
+            [
+                'make'  => $validated['make'],
+                'model' => $validated['model'],
+            ],
+            array_merge(
+                array_intersect_key($validated, $this->intervalRules()),
+                ['is_active' => 1]
+            )
         );
 
         $this->vehicleMaintenanceScheduleService->syncConfiguration($configuration);
@@ -56,19 +68,27 @@ class VehicleMaintenanceConfigurationController extends Controller
             ->with('success', 'Vehicle maintenance configuration created successfully.');
     }
 
+    /**
+     * No dedicated detail page — the list already shows every interval.
+     */
+    public function show(VehicleMaintenanceConfiguration $vehicleMaintenanceConfiguration)
+    {
+        return redirect()->route('vehicleMaintenanceConfigurations.edit', $vehicleMaintenanceConfiguration->id);
+    }
+
     public function edit(VehicleMaintenanceConfiguration $vehicleMaintenanceConfiguration)
     {
         return view('admin.vehicleMaintenanceConfigurations.edit', [
             'configuration' => $vehicleMaintenanceConfiguration,
             'items'         => VehicleMaintenanceConfiguration::ITEMS,
-            'makes'         => $this->makeOptions(),
-            'models'        => $this->modelOptions(),
         ]);
     }
 
     public function update(Request $request, VehicleMaintenanceConfiguration $vehicleMaintenanceConfiguration)
     {
-        $validated = $this->validateConfiguration($request, $vehicleMaintenanceConfiguration->id);
+        // Make + Model are read-only on the Edit page, so only the intervals are
+        // validated and updated — they can never be changed from here.
+        $validated = $request->validate($this->intervalRules());
 
         $vehicleMaintenanceConfiguration->update($validated);
 
@@ -87,48 +107,76 @@ class VehicleMaintenanceConfigurationController extends Controller
     }
 
     /**
-     * Validate make + model (unique together) and every predefined interval.
+     * Make + Model rules, used only when creating. The pair must be unique
+     * among active configurations (a soft-deleted pair is revived instead).
+     *
+     * @return array<string, mixed>
      */
-    private function validateConfiguration(Request $request, ?int $ignoreId = null): array
+    private function makeModelRules(Request $request): array
     {
-        $rules = [
+        return [
             'make'  => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('vehicle_maintenance_configurations')
-                    ->where(fn ($query) => $query->where('model', $request->input('model')))
-                    ->ignore($ignoreId),
+                Rule::unique('vehicle_maintenance_configurations')->where(
+                    fn ($query) => $query
+                        ->where('model', $request->input('model'))
+                        ->where('is_active', 1)
+                ),
             ],
             'model' => ['required', 'string', 'max:255'],
         ];
+    }
+
+    /**
+     * One nullable, non-negative integer rule per predefined maintenance item.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function intervalRules(): array
+    {
+        $rules = [];
 
         foreach (VehicleMaintenanceConfiguration::ITEMS as $column) {
             $rules[$column] = ['nullable', 'integer', 'min:0'];
         }
 
-        return $request->validate($rules, [
-            'make.unique' => 'A configuration for this Make and Model already exists.',
-        ]);
+        return $rules;
     }
 
+    /**
+     * Known Vehicle Makes — everything already configured, plus the makes in
+     * use on the fleet, so existing vehicles can be onboarded easily.
+     */
     private function makeOptions()
     {
-        return Vehicle::where('is_active', 1)
-            ->whereNotNull('make')
-            ->where('make', '!=', '')
-            ->distinct()
-            ->orderBy('make')
-            ->pluck('make');
+        return $this->distinctValues('make');
     }
 
     private function modelOptions()
     {
-        return Vehicle::where('is_active', 1)
-            ->whereNotNull('model')
-            ->where('model', '!=', '')
+        return $this->distinctValues('model');
+    }
+
+    private function distinctValues(string $column)
+    {
+        $fromVehicles = Vehicle::where('is_active', 1)
+            ->whereNotNull($column)
+            ->where($column, '!=', '')
             ->distinct()
-            ->orderBy('model')
-            ->pluck('model');
+            ->pluck($column);
+
+        $fromConfigurations = VehicleMaintenanceConfiguration::whereNotNull($column)
+            ->where($column, '!=', '')
+            ->distinct()
+            ->pluck($column);
+
+        return $fromVehicles
+            ->merge($fromConfigurations)
+            ->map(fn ($value) => (string) $value)
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
     }
 }

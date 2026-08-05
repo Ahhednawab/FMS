@@ -1,24 +1,65 @@
 @php
     $config = $configuration ?? null;
+    $isEdit = (bool) $config;
+    $makes = $makes ?? collect();
+    $models = $models ?? collect();
+    $currentMake = old('make', $config?->make);
+    $currentModel = old('model', $config?->model);
 @endphp
 
 {{--
-    Vehicle Make and Model identify the configuration and are the key the
-    predictive engine matches vehicles on, so they are read-only here.
-    Only the maintenance intervals below can be updated.
+    On Create, Make and Model are searchable dropdowns. On Edit they are
+    read-only: they identify the configuration and are the key the predictive
+    engine matches vehicles on, so only the intervals below can be changed.
 --}}
 <div class="row">
     <div class="col-md-4">
         <div class="form-group">
-            <label>Vehicle Make</label>
-            <input type="text" class="form-control" value="{{ $config?->make }}" readonly>
+            <label>Vehicle Make @unless ($isEdit)<span class="text-danger">*</span>@endunless</label>
+
+            @if ($isEdit)
+                <input type="text" class="form-control" value="{{ $config->make }}" readonly>
+            @else
+                <select name="make" id="config_make" class="form-control select2-tags"
+                    data-placeholder="Select or type a Make">
+                    <option value="">--Select--</option>
+                    @foreach ($makes as $make)
+                        <option value="{{ $make }}" {{ $currentMake == $make ? 'selected' : '' }}>{{ $make }}</option>
+                    @endforeach
+                    @if ($currentMake && !$makes->contains($currentMake))
+                        <option value="{{ $currentMake }}" selected>{{ $currentMake }}</option>
+                    @endif
+                </select>
+            @endif
+
+            @error('make')
+                <small class="text-danger d-block">{{ $message }}</small>
+            @enderror
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="form-group">
-            <label>Vehicle Model</label>
-            <input type="text" class="form-control" value="{{ $config?->model }}" readonly>
+            <label>Vehicle Model @unless ($isEdit)<span class="text-danger">*</span>@endunless</label>
+
+            @if ($isEdit)
+                <input type="text" class="form-control" value="{{ $config->model }}" readonly>
+            @else
+                <select name="model" id="config_model" class="form-control select2-tags"
+                    data-placeholder="Select or type a Model">
+                    <option value="">--Select--</option>
+                    @foreach ($models as $model)
+                        <option value="{{ $model }}" {{ $currentModel == $model ? 'selected' : '' }}>{{ $model }}</option>
+                    @endforeach
+                    @if ($currentModel && !$models->contains($currentModel))
+                        <option value="{{ $currentModel }}" selected>{{ $currentModel }}</option>
+                    @endif
+                </select>
+            @endif
+
+            @error('model')
+                <small class="text-danger d-block">{{ $message }}</small>
+            @enderror
         </div>
     </div>
 </div>

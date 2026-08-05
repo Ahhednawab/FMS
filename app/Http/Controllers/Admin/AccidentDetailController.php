@@ -33,7 +33,7 @@ class AccidentDetailController extends Controller
             'received' => 'Received',
         ];
 
-        $query = AccidentDetail::query();
+        $query = AccidentDetail::query()->where('is_active', 1);
 
         if ($status !== 'all') {
             $query->where('payment_status', $status);
@@ -316,7 +316,7 @@ class AccidentDetailController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = AccidentDetail::query();
+        $query = AccidentDetail::query()->where('is_active', 1);
 
         if ($request->payment_status && $request->payment_status !== 'all') {
             $query->where('payment_status', $request->payment_status);
