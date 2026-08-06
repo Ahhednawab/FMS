@@ -32,10 +32,11 @@
                         <label>Rows per page</label>
                         <select name="per_page" class="form-control" id="perPageFilter">
                             @foreach ([5, 10, 25, 50, 100] as $count)
-                                <option value="{{ $count }}" {{ $count == $perPage ? 'selected' : '' }}>
+                                <option value="{{ $count }}" {{ (string) $perPage === (string) $count ? 'selected' : '' }}>
                                     {{ $count }}
                                 </option>
                             @endforeach
+                            <option value="all" {{ (string) $perPage === 'all' ? 'selected' : '' }}>All</option>
                         </select>
                     </div>
                 </div>
@@ -60,6 +61,7 @@
                                 <th>#</th>
                                 <th>Driver</th>
                                 <th>CNIC</th>
+                                <th>Station</th>
                                 <th>Basic</th>
                                 <th>Extra</th>
                                 <th>Overtime</th>
@@ -91,6 +93,7 @@
                                     <td>{{ ($drivers->currentPage() - 1) * $drivers->perPage() + $loop->iteration }}</td>
                                     <td>{{ $driver->full_name }}</td>
                                     <td>{{ $driver->cnic_no }}</td>
+                                    <td>{{ optional($driver->station)->area ?? '-' }}</td>
                                     <td>{{ number_format($basic, 2) }}</td>
                                     <td>{{ number_format($extra, 2) }}</td>
                                     <td>{{ number_format($overtime, 2) }}</td>

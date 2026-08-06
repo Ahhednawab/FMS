@@ -203,9 +203,18 @@ public function show(Request $request, $month)
     $status  = $request->get('status');
     $perPage = $request->get('per_page', 10);
 
-    $drivers = $this->monthDriversQuery($salaryMonth, $status)
-        ->paginate($perPage)
-        ->withQueryString();
+    $query = $this->monthDriversQuery($salaryMonth, $status);
+
+    if ($perPage === 'all') {
+        // Render every record on a single page so the Excel / PDF exports,
+        // which read the rendered table, cover the entire dataset.
+        $perPage = 'all';
+        $total   = (clone $query)->count();
+        $drivers = $query->paginate(max($total, 1))->withQueryString();
+    } else {
+        $perPage = max((int) $perPage, 1);
+        $drivers = $query->paginate($perPage)->withQueryString();
+    }
 
     return view(
         'admin.salaries.show',

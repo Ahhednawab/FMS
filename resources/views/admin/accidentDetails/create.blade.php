@@ -53,7 +53,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Vehicle No <span class="text-danger">*</span></label>
-                                <select class="custom-select" id="vehicle_no" name="vehicle_no" required>
+                                <select class="form-control select2-vehicle" id="vehicle_no" name="vehicle_no" required>
                                     <option value="">--Select Vehicle--</option>
                                     @foreach ($vehicles as $key => $value)
                                         <option value="{{ $key }}"
@@ -239,8 +239,16 @@
     </div>
 
     <script>
-        // Fetch vehicle information on change
-        document.getElementById('vehicle_no').addEventListener('change', function() {
+        // Searchable Vehicle No dropdown
+        $('#vehicle_no').select2({
+            width: '100%',
+            placeholder: '--Select Vehicle--'
+        });
+
+        // Fetch vehicle information on change.
+        // Bound with jQuery because select2 raises jQuery events, which a native
+        // addEventListener handler would never receive.
+        $('#vehicle_no').on('change', function() {
             const vehicleNo = this.value;
             if (vehicleNo) {
                 fetch(`/admin/accidentDetails/get-vehicle-info/${vehicleNo}`)

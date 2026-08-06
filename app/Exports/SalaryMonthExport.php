@@ -27,7 +27,7 @@ class SalaryMonthExport implements FromCollection, WithHeadings, WithTitle, Shou
             'Employee ID',
             'Employee Name',
             'CNIC',
-            'Department / Station',
+            'Station',
             'Designation',
             'Salary Month',
             'Basic Salary',
