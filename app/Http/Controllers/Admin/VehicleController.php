@@ -300,7 +300,7 @@ class VehicleController extends Controller
         $vehicle->station_id = $request->station_id;
         $vehicle->ibc_center_id = $request->ibc_center_id;
         $vehicle->fabrication_vendor_id = $request->fabrication_vendor_id;
-        //        $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->medical_box = $request->medical_box;
         $vehicle->on_duty_status = $request->on_duty_status;
         $vehicle->seat_cover = $request->seat_cover;
         $vehicle->fire_extenguisher = $request->fire_extenguisher;
@@ -662,7 +662,7 @@ class VehicleController extends Controller
             mkdir($uploadPath, 0755, true);
         }
 
-        // $vehicle->vehicle_no                =   $request->vehicle_no;
+        $vehicle->vehicle_no = $request->vehicle_no;
         $vehicle->make = $request->make;
         $vehicle->model = $request->model;
         $vehicle->chasis_no = $request->chasis_no;
@@ -676,7 +676,7 @@ class VehicleController extends Controller
         $vehicle->station_id = $request->station_id;
         $vehicle->ibc_center_id = $request->ibc_center_id;
         $vehicle->fabrication_vendor_id = $request->fabrication_vendor_id;
-        //        $vehicle->medical_box               =   $request->medical_box;
+        $vehicle->medical_box = $request->medical_box;
         $vehicle->on_duty_status = $request->on_duty_status;
         $vehicle->seat_cover = $request->seat_cover;
         $vehicle->fire_extenguisher = $request->fire_extenguisher;

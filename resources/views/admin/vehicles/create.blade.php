@@ -1328,11 +1328,11 @@
             filterPoolDrivers();
             toggleSecondaryDriverFields();
             togglePrimaryDriverRequiredMarker();
-            calculateNextInspectionDate();
-            calculateFitnessExpiryDate();
-            calculateInsuranceExpiryDate();
-            calculateRoutePermitExpiryDate();
-            calculateNextTaxDate();
+
+            // NOTE: the calculate*() helpers only run when the user changes a
+            // base date (see the change listeners above). Running them on load
+            // would overwrite expiry dates restored from a saved draft or from
+            // old() input after a validation error.
         });
     </script>
 
