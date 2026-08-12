@@ -300,7 +300,13 @@ class VehicleController extends Controller
         $vehicle->station_id = $request->station_id;
         $vehicle->ibc_center_id = $request->ibc_center_id;
         $vehicle->fabrication_vendor_id = $request->fabrication_vendor_id;
-        $vehicle->medical_box = $request->medical_box;
+        // The Medical Box field is currently hidden on the vehicle form, so the
+        // request usually has no value for it. The column is NOT NULL, so only
+        // assign it when a value is actually submitted — otherwise keep the
+        // stored value (or let the column default apply on create).
+        if ($request->filled('medical_box')) {
+            $vehicle->medical_box = $request->medical_box;
+        }
         $vehicle->on_duty_status = $request->on_duty_status;
         $vehicle->seat_cover = $request->seat_cover;
         $vehicle->fire_extenguisher = $request->fire_extenguisher;
@@ -676,7 +682,13 @@ class VehicleController extends Controller
         $vehicle->station_id = $request->station_id;
         $vehicle->ibc_center_id = $request->ibc_center_id;
         $vehicle->fabrication_vendor_id = $request->fabrication_vendor_id;
-        $vehicle->medical_box = $request->medical_box;
+        // The Medical Box field is currently hidden on the vehicle form, so the
+        // request usually has no value for it. The column is NOT NULL, so only
+        // assign it when a value is actually submitted — otherwise keep the
+        // stored value (or let the column default apply on create).
+        if ($request->filled('medical_box')) {
+            $vehicle->medical_box = $request->medical_box;
+        }
         $vehicle->on_duty_status = $request->on_duty_status;
         $vehicle->seat_cover = $request->seat_cover;
         $vehicle->fire_extenguisher = $request->fire_extenguisher;
