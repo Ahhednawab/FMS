@@ -315,6 +315,10 @@
     </div>
 
     <script>
+        // Tax rates come from InvoiceController so this live preview always
+        // matches what the server recalculates and stores on save.
+        const INVOICE_RATES = @json($invoiceRates);
+
         let rowIndex = {{ count($vehicleRows) }};
 
         function toNumber(value) {
@@ -351,10 +355,10 @@
             const paymentReceived = toNumber(document.querySelector('.invoice-payment-received')?.value);
 
             const totalClaim = roundMoney(totalMonthlyRent + sundayGazette + controlRoomCharges);
-            const salesTax = roundMoney(totalClaim * 0.15);
+            const salesTax = roundMoney(totalClaim * INVOICE_RATES.salesTax);
             const inclusiveTotal = roundMoney(totalClaim + salesTax);
-            const taxValue = roundMoney(inclusiveTotal * 0.07);
-            const withholdingTax = roundMoney(salesTax * 0.20);
+            const taxValue = roundMoney(inclusiveTotal * INVOICE_RATES.taxValue);
+            const withholdingTax = roundMoney(salesTax * INVOICE_RATES.withholding);
             const netPayable = roundMoney(inclusiveTotal - withholdingTax - taxValue - agreedDeduction);
             const diff = roundMoney(netPayable - paymentReceived);
 

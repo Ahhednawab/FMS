@@ -9,9 +9,35 @@ use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
-    private const SALES_TAX_RATE = 0.15;
-    private const TAX_VALUE_RATE = 0.03;
-    private const WITHHOLDING_RATE = 0.06;
+    /**
+     * Invoice tax rates.
+     *
+     * These are the single source of truth: the server always recalculates the
+     * derived totals from them on save, so the Create and Edit forms must use
+     * the same values (they are shared with the views via invoiceRates()).
+     */
+    public const SALES_TAX_RATE = 0.15;
+
+    /** Tax value: 7% of the sales-tax-inclusive total. */
+    public const TAX_VALUE_RATE = 0.07;
+
+    /** Withholding on sales tax: 20% of the sales tax amount. */
+    public const WITHHOLDING_RATE = 0.20;
+
+    /**
+     * Rates handed to the Blade forms so their live preview matches exactly
+     * what the server will store.
+     *
+     * @return array<string, float>
+     */
+    private function invoiceRates(): array
+    {
+        return [
+            'salesTax'    => self::SALES_TAX_RATE,
+            'taxValue'    => self::TAX_VALUE_RATE,
+            'withholding' => self::WITHHOLDING_RATE,
+        ];
+    }
 
     public function index(Request $request)
     {
@@ -47,6 +73,7 @@ class InvoiceController extends Controller
     {
         return view('admin.invoices.create', [
             'clearanceIndications' => $this->clearanceIndications(),
+            'invoiceRates'         => $this->invoiceRates(),
         ]);
     }
 
@@ -73,6 +100,7 @@ class InvoiceController extends Controller
         return view('admin.invoices.edit', [
             'invoice' => $invoice,
             'clearanceIndications' => $this->clearanceIndications(),
+            'invoiceRates'         => $this->invoiceRates(),
         ]);
     }
 
@@ -193,8 +221,8 @@ class InvoiceController extends Controller
         $totalClaim = $totalMonthlyRent + $sundayGazetteNumber + $controlRoomChargesNumber;
         $salesTax = $totalClaim * self::SALES_TAX_RATE;
         $inclusiveTotal = $totalClaim + $salesTax;
-        $taxValue = $totalClaim * self::TAX_VALUE_RATE;
-        $withholdingTax = $inclusiveTotal * self::WITHHOLDING_RATE;
+        $taxValue = $inclusiveTotal * self::TAX_VALUE_RATE;
+        $withholdingTax = $salesTax * self::WITHHOLDING_RATE;
         $netPayable = $inclusiveTotal - $withholdingTax - $taxValue - $agreedDeductionNumber;
 
         $validated['vehicle_qty'] = $vehicleQty;

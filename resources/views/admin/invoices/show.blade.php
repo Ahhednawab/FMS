@@ -96,8 +96,8 @@
                             <td>{{ $i + 1 }}</td>
                             <td>{{ $qty }}</td>
                             <td>{{ $invoice->days[$i] ?? '-' }}</td>
-                            <td>{{ number_format($invoice->vehicle_rent[$i] ?? 0, 2) }}</td>
-                            <td>{{ number_format($invoice->monthly_rent[$i] ?? 0, 2) }}</td>
+                            <td>{{ $invoice->vehicle_rent[$i] ?? 0 }}</td>
+                            <td>{{ $invoice->monthly_rent[$i] ?? 0 }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -109,15 +109,15 @@
             <table class="table table-sm table-bordered">
                 <tr>
                     <th width="25%">Sunday Gazette</th>
-                    <td>{{ number_format($invoice->sunday_gazette, 2) }}</td>
+                    <td>{{ $invoice->sunday_gazette }}</td>
                 </tr>
                 <tr>
                     <th>Control Room Charges</th>
-                    <td>{{ number_format($invoice->control_room_charges, 2) }}</td>
+                    <td>{{ $invoice->control_room_charges }}</td>
                 </tr>
                 <tr>
                     <th>Total Claim</th>
-                    <td class="font-weight-bold">{{ number_format($invoice->total_claim, 2) }}</td>
+                    <td class="font-weight-bold">{{ $invoice->total_claim }}</td>
                 </tr>
             </table>
 
@@ -126,19 +126,19 @@
             <table class="table table-sm table-bordered">
                 <tr>
                     <th width="25%">Sales Tax</th>
-                    <td>{{ number_format($invoice->sales_tax, 2) }}</td>
+                    <td>{{ $invoice->sales_tax }}</td>
                 </tr>
                 <tr>
                     <th>Inclusive Sales Tax</th>
-                    <td>{{ number_format($invoice->inclusive_sales_tax, 2) }}</td>
+                    <td>{{ $invoice->inclusive_sales_tax }}</td>
                 </tr>
                 <tr>
                     <th>Tax Value</th>
-                    <td>{{ number_format($invoice->tax_value, 2) }}</td>
+                    <td>{{ $invoice->tax_value }}</td>
                 </tr>
                 <tr>
                     <th>Withholding on Sales Tax</th>
-                    <td>{{ number_format($invoice->withholding_on_sales_tax, 2) }}</td>
+                    <td>{{ $invoice->withholding_on_sales_tax }}</td>
                 </tr>
             </table>
 
@@ -147,15 +147,15 @@
             <table class="table table-sm table-bordered">
                 <tr>
                     <th width="25%">Actual Payment</th>
-                    <td>{{ number_format($invoice->actual_payment, 2) }}</td>
+                    <td>{{ $invoice->actual_payment }}</td>
                 </tr>
                 <tr>
                     <th>Agreed Deduction</th>
-                    <td>{{ number_format($invoice->agreed_deduction, 2) }}</td>
+                    <td>{{ $invoice->agreed_deduction }}</td>
                 </tr>
                 <tr>
                     <th>Amount Receivable</th>
-                    <td class="font-weight-bold">{{ number_format($invoice->cheque_value, 2) }}</td>
+                    <td class="font-weight-bold">{{ $invoice->cheque_value }}</td>
                 </tr>
                 {{-- <tr>
                     <th>Cheque No</th>
@@ -163,12 +163,12 @@
                 </tr> --}}
                 <tr>
                     <th>Difference</th>
-                    <td>{{ number_format($invoice->diff, 2) }}</td>
+                    <td>{{ $invoice->diff }}</td>
                 </tr>
 
                 <tr>
                     <th>Payment Received</th>
-                    <td>{{ number_format($invoice->payment_received ?? 0, 2) }}</td>
+                    <td>{{ $invoice->payment_received ?? 0 }}</td>
                 </tr>
 
             </table>

@@ -349,6 +349,10 @@
 
     @push('scripts')
         <script>
+            // Tax rates come from InvoiceController so this form recalculates
+            // exactly the same way the server does — and the same way Create did.
+            const INVOICE_RATES = @json($invoiceRates);
+
             function toNumber(value) {
                 const parsed = parseFloat(value);
                 return Number.isFinite(parsed) ? parsed : 0;
@@ -383,10 +387,10 @@
                 const paymentReceived = toNumber(document.querySelector('.invoice-payment-received')?.value);
 
                 const totalClaim = roundMoney(totalMonthlyRent + sundayGazette + controlRoomCharges);
-                const salesTax = roundMoney(totalClaim * 0.15);
+                const salesTax = roundMoney(totalClaim * INVOICE_RATES.salesTax);
                 const inclusiveTotal = roundMoney(totalClaim + salesTax);
-                const taxValue = roundMoney(totalClaim * 0.03);
-                const withholdingTax = roundMoney(inclusiveTotal * 0.06);
+                const taxValue = roundMoney(inclusiveTotal * INVOICE_RATES.taxValue);
+                const withholdingTax = roundMoney(salesTax * INVOICE_RATES.withholding);
                 const netPayable = roundMoney(inclusiveTotal - withholdingTax - taxValue - agreedDeduction);
                 const diff = roundMoney(netPayable - paymentReceived);
 
