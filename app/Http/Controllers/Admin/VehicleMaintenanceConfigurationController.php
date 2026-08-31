@@ -11,6 +11,9 @@ use Illuminate\Validation\Rule;
 
 class VehicleMaintenanceConfigurationController extends Controller
 {
+    /** Oldest vehicle model year offered on the configuration form. */
+    private const EARLIEST_MODEL_YEAR = 1990;
+
     public function __construct(
         private VehicleMaintenanceScheduleService $vehicleMaintenanceScheduleService
     ) {
@@ -75,34 +78,65 @@ class VehicleMaintenanceConfigurationController extends Controller
             'configuration' => null,
             'items'         => VehicleMaintenanceConfiguration::ITEMS,
             'makes'         => $this->makeOptions(),
-            'models'        => $this->modelOptions(),
+            'modelYears'    => $this->modelYearOptions(),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate(
-            array_merge($this->makeModelRules($request), $this->intervalRules()),
-            ['make.unique' => 'A configuration for this Make and Model already exists.']
-        );
-
-        // Keyed on make + model so a previously deleted (is_active = 0) row is
-        // revived rather than colliding with the unique index.
-        $configuration = VehicleMaintenanceConfiguration::updateOrCreate(
+            array_merge($this->makeModelRules(), $this->intervalRules()),
             [
-                'make'  => $validated['make'],
-                'model' => $validated['model'],
-            ],
-            array_merge(
-                array_intersect_key($validated, $this->intervalRules()),
-                ['is_active' => 1]
-            )
+                'model.required' => 'Select at least one Vehicle Model year.',
+                'model.array'    => 'Select at least one Vehicle Model year.',
+                'model.*.in'     => 'Vehicle Model must be a year between ' . self::EARLIEST_MODEL_YEAR . ' and ' . now()->format('Y') . '.',
+            ]
         );
 
-        $this->vehicleMaintenanceScheduleService->syncConfiguration($configuration);
+        $make  = trim($validated['make']);
+        $years = collect($validated['model'])
+            ->map(fn ($year) => (string) $year)
+            ->unique()
+            ->sort(SORT_NATURAL)
+            ->values();
 
-        return redirect()->route('vehicleMaintenanceConfigurations.index')
-            ->with('success', 'Vehicle maintenance configuration created successfully.');
+        // Only an active configuration blocks a new one; a previously deleted
+        // (is_active = 0) row is revived below instead of colliding with the
+        // unique make+model index.
+        $clashes = VehicleMaintenanceConfiguration::where('is_active', 1)
+            ->where('make', $make)
+            ->whereIn('model', $years->all())
+            ->orderBy('model')
+            ->pluck('model');
+
+        if ($clashes->isNotEmpty()) {
+            return back()->withInput()->withErrors([
+                'model' => 'A configuration already exists for ' . $make . ' — '
+                    . $clashes->implode(', ') . '. Deselect '
+                    . ($clashes->count() > 1 ? 'those years' : 'that year')
+                    . ' or edit the existing configuration from the list.',
+            ]);
+        }
+
+        $intervals = array_intersect_key($validated, $this->intervalRules());
+
+        // One configuration row per selected model year: vehicles are matched on
+        // an exact make + model pair, so each year needs its own record.
+        foreach ($years as $year) {
+            $configuration = VehicleMaintenanceConfiguration::updateOrCreate(
+                ['make' => $make, 'model' => $year],
+                array_merge($intervals, ['is_active' => 1])
+            );
+
+            $this->vehicleMaintenanceScheduleService->syncConfiguration($configuration);
+        }
+
+        $message = $years->count() === 1
+            ? 'Vehicle maintenance configuration created for ' . $make . ' ' . $years->first() . '.'
+            : 'Vehicle maintenance configuration created for ' . $make . ' — ' . $years->count()
+                . ' model years (' . $years->implode(', ') . ').';
+
+        return redirect()->route('vehicleMaintenanceConfigurations.index')->with('success', $message);
     }
 
     /**
@@ -144,26 +178,34 @@ class VehicleMaintenanceConfigurationController extends Controller
     }
 
     /**
-     * Make + Model rules, used only when creating. The pair must be unique
-     * among active configurations (a soft-deleted pair is revived instead).
+     * Make + Model rules, used only when creating.
+     *
+     * Model is a multi-select of vehicle model years, so it arrives as an array
+     * and each entry must be one of the offered years. Uniqueness is checked
+     * per year in store(), which also revives soft-deleted rows.
      *
      * @return array<string, mixed>
      */
-    private function makeModelRules(Request $request): array
+    private function makeModelRules(): array
     {
         return [
-            'make'  => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('vehicle_maintenance_configurations')->where(
-                    fn ($query) => $query
-                        ->where('model', $request->input('model'))
-                        ->where('is_active', 1)
-                ),
-            ],
-            'model' => ['required', 'string', 'max:255'],
+            'make'    => ['required', 'string', 'max:255'],
+            'model'   => ['required', 'array', 'min:1'],
+            'model.*' => ['required', Rule::in($this->modelYearOptions()->all())],
         ];
+    }
+
+    /**
+     * Selectable vehicle model years: the current year down to the earliest
+     * supported year, newest first. The current year is always included.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function modelYearOptions()
+    {
+        return collect(range((int) now()->format('Y'), self::EARLIEST_MODEL_YEAR))
+            ->map(fn (int $year) => (string) $year)
+            ->values();
     }
 
     /**
@@ -189,11 +231,6 @@ class VehicleMaintenanceConfigurationController extends Controller
     private function makeOptions()
     {
         return $this->distinctValues('make');
-    }
-
-    private function modelOptions()
-    {
-        return $this->distinctValues('model');
     }
 
     private function distinctValues(string $column)

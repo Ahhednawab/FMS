@@ -79,6 +79,9 @@
         <div class="card">
             <div class="card-body">
                 <form action="{{ route('driverAttendances.store') }}" method="POST" enctype="multipart/form-data">
+                    {{-- How many rows the browser submitted; the server compares this
+                         against what actually arrived to detect a truncated POST. --}}
+                    <input type="hidden" name="marked_row_count" id="marked_row_count" value="">
                     @csrf
                     <div class="row mb-3">
                         <!-- Date -->
@@ -110,7 +113,8 @@
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="selectAll">
                                     <label class="form-check-label font-weight-bold" for="selectAll">Select All
-                                        Drivers</label>
+                                        Drivers<span id="selectAllCount"
+                                            class="text-muted font-weight-normal"></span></label>
                                 </div>
                             </div>
                         </div>
@@ -127,8 +131,11 @@
 
                             <strong>CNIC No</strong>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <strong>Father Name</strong>
+                        </div>
+                        <div class="col-md-1">
+                            <strong>Station</strong>
                         </div>
                         <div class="col-md-1">
                             <strong class="pl-1">Shift</strong>
@@ -157,58 +164,50 @@
                                         data-driver-idx="{{ $i }}" style="margin-top: 0;">
                                 </div>
                             </div>
-                            <input type="hidden" class="form-control" name="driver_id[]" value="{{ $driver->id }}">
+                            <input type="hidden" class="form-control" name="driver_id[{{ $i }}]" value="{{ $driver->id }}">
                             <!-- Driver Name -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="full_name[]"
-                                        value="{{ $driver->full_name }}{{ $driver->driver_type === 'pool' ? ' (Pool)' : ' (Regular)' }}"
+                                    <input type="text" class="form-control"                                         value="{{ $driver->full_name }}{{ $driver->driver_type === 'pool' ? ' (Pool)' : ' (Regular)' }}"
                                         readonly>
                                 </div>
                             </div>
                             <!-- CNIC -->
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="cnicno[]"
-                                        value="{{ $driver->cnic_no }}" readonly>
+                                    <input type="text" class="form-control"                                         value="{{ $driver->cnic_no }}" readonly>
                                 </div>
                             </div>
                             <!-- Father Name -->
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="fathername[]"
-                                        value="{{ $driver->father_name }}" readonly>
+                                    <input type="text" class="form-control"                                         value="{{ $driver->father_name }}" readonly>
+                                </div>
+                            </div>
+                            <!-- Station (drives the Station filter above) -->
+                            <div class="col-md-1">
+                                <div class="form-group">
+                                    <input type="text" class="form-control"                                         value="{{ $driver->station_name }}" readonly>
                                 </div>
                             </div>
                             <!-- Shift -->
                             <div class="col-md-1">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="shift[]"
-                                        value="{{ $driver->shiftTiming ? $driver->shiftTiming->name . ' (' . \Carbon\Carbon::parse($driver->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($driver->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}"
+                                    <input type="text" class="form-control"                                         value="{{ $driver->shiftTiming ? $driver->shiftTiming->name . ' (' . \Carbon\Carbon::parse($driver->shiftTiming->start_time)->format('h:i A') . ' - ' . \Carbon\Carbon::parse($driver->shiftTiming->end_time)->format('h:i A') . ')' : 'N/A' }}"
                                         readonly>
                                 </div>
                             </div>
                             <!-- Status -->
                             <div class="col-md-1">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="driverStatus[]"
-                                        value="{{ $driver->driverStatus->name ?? 'N/A' }}" readonly>
+                                    <input type="text" class="form-control"                                         value="{{ $driver->driverStatus->name ?? 'N/A' }}" readonly>
                                 </div>
                             </div>
-                            <!-- Station (optional, if needed) -->
-                            {{--
-    <div class="col-md-1">
-      <div class="form-group">
-        <strong>Station</strong>
-        <input type="text" class="form-control" name="station[]" value="{{ $driver->vehicle->station->area ?? '' }}" readonly>
-      </div>
-    </div>
-    --}}
                             <!-- Attendance -->
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <select class="custom-select @error('status.' . $i) is-invalid @enderror"
-                                        name="status[]" data-driver-idx="{{ $i }}">
+                                        name="status[{{ $i }}]" data-driver-idx="{{ $i }}">
                                         <option value="">Select</option>
                                         @foreach ($driver_attendance_status as $statusKey => $statusLabel)
                                             @continue(in_array(strtolower(trim($statusLabel)), ['replace', 'leave', 'leave remove'], true))
@@ -228,7 +227,7 @@
                                 style="{{ old('status.' . $i) == (string) $replaceStatusId ? '' : 'display:none;' }}">
                                 <div class="form-group">
                                     <select class="custom-select @error('replacement_driver_id.' . $i) is-invalid @enderror"
-                                        name="replacement_driver_id[]" data-driver-idx="{{ $i }}">
+                                        name="replacement_driver_id[{{ $i }}]" data-driver-idx="{{ $i }}">
                                         <option value="">Select Pool Driver</option>
                                         @foreach (($poolDriverOptions[$driver->id] ?? collect()) as $poolDriverId => $poolDriverName)
                                             <option value="{{ $poolDriverId }}"
@@ -257,6 +256,10 @@
 @endsection
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    {{-- Toast library used by the bulk-action feedback below. Without it the
+         "select at least one driver" warning and the confirmation both threw,
+         so bulk actions appeared to do nothing at all. --}}
+    <script src="{{ asset('assets/js/plugins/notifications/noty.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             const replaceStatusId = @json($replaceStatusId);
@@ -271,6 +274,26 @@
                 }
             });
 
+            // Checkboxes belonging to rows that survive the current filters.
+            // Bulk actions must never reach a driver the user cannot see.
+            function visibleDriverCheckboxes() {
+                return $('.driver-attendance-row:visible').find('.driver-checkbox');
+            }
+
+            function syncSelectAllState() {
+                const $visible = visibleDriverCheckboxes();
+                const allChecked = $visible.length > 0 && $visible.filter(':not(:checked)').length === 0;
+                $('#selectAll').prop('checked', allChecked);
+            }
+
+            // Changing a filter starts a fresh selection. Without this, ticks left
+            // over from a previous filter kept "Select All" in the checked state, so
+            // the user's next click de-selected the list instead of selecting it.
+            function resetDriverSelection() {
+                $('.driver-checkbox').prop('checked', false);
+                $('#selectAll').prop('checked', false);
+            }
+
             function applyDriverFilters() {
                 const selectedDriver = $('#driver_name_filter').val();
                 const selectedStatuses = ($('#driver_status_filter').val() || []).map(String);
@@ -284,9 +307,15 @@
                     const matchesDriver = !selectedDriver || rowDriverId === String(selectedDriver);
                     const matchesStatus = !selectedStatuses.length || selectedStatuses.includes(rowStatusId);
                     const matchesStation = !selectedStations.length || selectedStations.includes(rowStationId);
+                    const visible = matchesDriver && matchesStatus && matchesStation;
 
-                    row.toggle(matchesDriver && matchesStatus && matchesStation);
+                    row.toggle(visible);
                 });
+
+                resetDriverSelection();
+
+                const shown = $('.driver-attendance-row:visible').length;
+                $('#selectAllCount').text(' (' + shown + ' driver' + (shown === 1 ? '' : 's') + ' shown)');
             }
 
             $('#driver_name_filter').on('change', applyDriverFilters);
@@ -301,7 +330,7 @@
             function toggleReplacementDropdown(driverIdx, selectedStatusId) {
                 const showReplacement = replaceStatusId !== null && String(selectedStatusId) === String(replaceStatusId);
                 const $wrapper = $(`.replacement-driver-wrapper[data-driver-idx='${driverIdx}']`);
-                const $select = $wrapper.find('select[name="replacement_driver_id[]"]');
+                const $select = $wrapper.find("select[name^='replacement_driver_id[']");
 
                 if (showReplacement) {
                     $wrapper.show();
@@ -315,8 +344,9 @@
             $('.status-btn').on('click', function() {
                 const statusId = $(this).data('status-id');
                 const statusName = $(this).text().trim();
-                // Find all checked checkboxes
-                const $checkedBoxes = $('.driver-checkbox:checked');
+                // Only drivers that are both selected and visible under the current
+                // filters may be updated.
+                const $checkedBoxes = visibleDriverCheckboxes().filter(':checked');
                 if ($checkedBoxes.length === 0) {
                     // Show error if no drivers are selected
                     new Noty({
@@ -329,7 +359,7 @@
                 // Update status for each selected driver
                 $checkedBoxes.each(function() {
                     const driverIdx = $(this).data('driver-idx');
-                    $(`select[name='status[]'][data-driver-idx='${driverIdx}']`).val(statusId);
+                    $(`select[data-driver-idx='${driverIdx}'][name^='status']`).val(statusId);
                     toggleReplacementDropdown(driverIdx, statusId);
                 });
                 // Show success message
@@ -339,28 +369,44 @@
                     timeout: 3000
                 }).show();
             });
-            // Select All functionality
+            // Select All functionality — limited to the drivers currently in view,
+            // so selecting a Station and clicking it only picks that station's drivers.
             $('#selectAll').on('change', function() {
-                $('.driver-checkbox').prop('checked', $(this).prop('checked'));
+                visibleDriverCheckboxes().prop('checked', $(this).prop('checked'));
             });
-            // Uncheck "Select All" if any checkbox is unchecked
-            $('.driver-checkbox').on('change', function() {
-                if (!$(this).prop('checked')) {
-                    $('#selectAll').prop('checked', false);
-                } else {
-                    // If all checkboxes are checked, check "Select All"
-                    if ($('.driver-checkbox:not(:checked)').length === 0) {
-                        $('#selectAll').prop('checked', true);
-                    }
-                }
-            });
+            // Keep "Select All" in step with the visible rows only
+            $('.driver-checkbox').on('change', syncSelectAllState);
 
-            $('select[name="status[]"]').on('change', function() {
+            $("select[name^='status[']").on('change', function() {
                 toggleReplacementDropdown($(this).data('driver-idx'), $(this).val());
             });
 
-            $('select[name="status[]"]').each(function() {
+            $("select[name^='status[']").each(function() {
                 toggleReplacementDropdown($(this).data('driver-idx'), $(this).val());
+            });
+
+            // Only submit rows that actually carry an attendance status.
+            //
+            // The sheet can list hundreds of drivers, and PHP silently discards
+            // everything past max_input_vars (1000 by default) — which used to
+            // truncate the POST and save attendance for only part of the
+            // selection. Field names carry explicit indices, so dropping the
+            // untouched rows here cannot shift the remaining ones.
+            $('form').on('submit', function() {
+                let marked = 0;
+
+                $('.driver-attendance-row').each(function() {
+                    const $row = $(this);
+                    const $status = $row.find("select[name^='status[']");
+                    const isMarked = !!$status.val();
+
+                    $row.find("[name^='driver_id['], [name^='status['], [name^='replacement_driver_id[']")
+                        .prop('disabled', !isMarked);
+
+                    if (isMarked) marked++;
+                });
+
+                $('#marked_row_count').val(marked);
             });
 
             applyDriverFilters();

@@ -32,8 +32,12 @@ class DriversAttendanceController extends Controller
         $driverAttendances = DriversAttendance::with([
             'driver.shiftTiming',
             'driver.driverStatus',
+            // Station is resolved from the driver's vehicle first, falling back to
+            // the driver's own station (pool drivers carry their station directly).
+            'driver.vehicle.station',
+            'driver.station',
             'attendanceStatus',
-            'vehicle',
+            'vehicle.station',
             'originalDriver',
             'replacementDriver',
         ])
@@ -67,7 +71,7 @@ class DriversAttendanceController extends Controller
         $presentStatusId = optional($attendanceStatuses->get('present'))->id;
         $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
 
-        $drivers = Driver::with(['vehicle'])
+        $drivers = Driver::with(['vehicle.station', 'station'])
             ->whereHas('attendances', function ($query) use ($monthStart, $monthEnd) {
                 $query->where('is_active', 1)
                     ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
@@ -190,7 +194,8 @@ class DriversAttendanceController extends Controller
             return [
                 'serial_no' => $index + 1,
                 'driver' => $driver,
-                'station' => $driver->vehicle?->station?->area ?? $driver->station?->area ?? 'N/A',
+                'station' => $driver->station_name,
+                'nic' => $driver->cnic_no ?: 'N/A',
                 'shift' => $this->resolveDriverShiftLabel($driver),
                 'days' => $daysInMonth->map(function (array $dayMeta) use ($rowsByDate) {
                     $row = $rowsByDate->get($dayMeta['date']);
@@ -254,7 +259,7 @@ class DriversAttendanceController extends Controller
             ->values()
             ->all();
 
-        $driver->load(['vehicle', 'shiftTiming']);
+        $driver->load(['vehicle.station', 'station', 'shiftTiming']);
 
         $attendanceRecords = DriversAttendance::with(['attendanceStatus', 'vehicle', 'originalDriver', 'replacementDriver'])
             ->where('driver_id', $driver->id)
@@ -285,7 +290,7 @@ class DriversAttendanceController extends Controller
         $monthStart = $monthDate->copy()->startOfMonth();
         $monthEnd = $monthDate->copy()->endOfMonth();
 
-        $driver->load(['vehicle', 'shiftTiming']);
+        $driver->load(['vehicle.station', 'station', 'shiftTiming']);
 
         $attendanceRecords = DriversAttendance::with(['attendanceStatus', 'vehicle'])
             ->where('driver_id', $driver->id)
@@ -333,6 +338,7 @@ class DriversAttendanceController extends Controller
         $drivers = Driver::with([
             'driverStatus',
             'shiftTiming',
+            'station',
             'vehicle.station',
             'vehicle.poolDrivers' => function ($query) {
                 $query->where('drivers.is_active', 1)
@@ -342,9 +348,16 @@ class DriversAttendanceController extends Controller
             },
         ])
             ->where('drivers.is_active', 1)
-            ->where('drivers.is_available', 1)
-            ->whereHas('driverStatus', function ($query) {
-                $query->whereRaw('LOWER(TRIM(name)) <> ?', ['left']);
+            // Every employed driver must stay markable. `is_available` is day-to-day
+            // state that syncDriverAvailability() clears whenever a driver is marked
+            // Absent/Leave/OFF, so filtering on it here permanently hid those drivers
+            // from the next day's sheet. A driver created without an employment
+            // status must not be hidden either, hence the null-safe status check.
+            ->where(function ($query) {
+                $query->whereNull('drivers.driver_status_id')
+                    ->orWhereHas('driverStatus', function ($status) {
+                        $status->whereRaw('LOWER(TRIM(name)) <> ?', ['left']);
+                    });
             })
             ->whereIn('drivers.driver_type', ['regular', 'pool'])
             ->orderByRaw("
@@ -381,6 +394,18 @@ class DriversAttendanceController extends Controller
         $statuses = $request->input('status', []);
         $replacementDriverIds = $request->input('replacement_driver_id', []);
         $replaceStatusId = $this->getReplaceStatusId();
+
+        // Guard against a truncated POST. PHP drops every field past
+        // max_input_vars without raising anything, which would otherwise save
+        // attendance for only part of the selection and look like a success.
+        $expectedRows = (int) $request->input('marked_row_count', 0);
+        if ($expectedRows > 0 && count($driverIds) < $expectedRows) {
+            return back()->withInput()->withErrors([
+                'date' => 'Only ' . count($driverIds) . ' of ' . $expectedRows
+                    . ' selected drivers reached the server, so nothing was saved. '
+                    . 'Mark fewer drivers at a time, or ask your administrator to raise the PHP max_input_vars limit.',
+            ]);
+        }
 
         $fieldErrors = [];
         $toInsert = [];

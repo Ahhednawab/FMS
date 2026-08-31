@@ -164,6 +164,8 @@
                                 </label>
                             </th>
                             <th>Driver</th>
+                            <th class="text-center">NIC</th>
+                            <th class="text-center">Station</th>
                             <th class="text-center">Vehicle</th>
                             <th class="text-center">Original Driver</th>
                             <th class="text-center">Replacement</th>
@@ -184,6 +186,10 @@
                                     </label>
                                 </td>
                                 <td>{{ $value->driver?->full_name ?? 'Driver Deleted' }}</td>
+                                <td class="text-center">{{ $value->driver?->cnic_no ?: 'N/A' }}</td>
+                                <td class="text-center">
+                                    {{ $value->driver?->station_name ?? ($value->vehicle?->station?->area ?: 'N/A') }}
+                                </td>
                                 <td class="text-center">{{ $value->vehicle?->vehicle_no ?? 'N/A' }}</td>
                                 <td class="text-center">{{ $value->originalDriver?->full_name ?? $value->driver?->full_name ?? 'N/A' }}</td>
                                 <td class="text-center">

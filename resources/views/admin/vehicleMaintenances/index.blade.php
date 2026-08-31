@@ -229,27 +229,14 @@
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/tables/datatables/extensions/buttons.min.js') }}"></script>
     <script>
-        
-        
-        const cookieName = 'vehicle_maintenance_column_visibility';
-
-function setCookie(name, value, days = 365) {
-    let expires = "";
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    expires = "; expires=" + date.toUTCString();
-    document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
-}
-
-function getCookie(name) {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-}
-
 const table = $('.datatable-colvis-basic').DataTable({
     paging: false,
     searching: false,
     info: false,
+    // Persist column visibility (and ordering) in localStorage so the
+    // columns a user hides stay hidden across refreshes and navigation.
+    stateSave: true,
+    stateDuration: 0,
     dom: 'Bfrtip',
 buttons: [
     {
@@ -283,66 +270,8 @@ buttons: [
         }
     }
 ]});
-setTimeout(function () {
-
-    const cookieValue = getCookie(cookieName);
-
-    if (!cookieValue) return;
-
-    let visibility;
-
-    try {
-        visibility = JSON.parse(cookieValue);
-    } catch (e) {
-        return;
-    }
-
-    Object.keys(visibility).forEach(function(colIndex) {
-
-        const isVisible = visibility[colIndex];
-
-        document.querySelectorAll(
-            '.dt-button-collection button[data-cv-idx="' + colIndex + '"]'
-        ).forEach(btn => {
-
-            if (isVisible) {
-                btn.classList.add('active');
-                btn.setAttribute('aria-pressed', 'true');
-            } else {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-pressed', 'false');
-            }
-
-        });
-
-    });
-
-}, 500);
-
-document.querySelectorAll('.dt-button.buttons-colvis').forEach(function(btn) {
-
-    btn.addEventListener('click', function() {
-
-        setTimeout(function() {
-
-            const visibility = JSON.parse(getCookie(cookieName) || "{}");
-
-            document.querySelectorAll('.dt-button-collection button').forEach(function(item) {
-
-                const idx = item.getAttribute('data-cv-idx');
-
-                if (idx !== null && visibility[idx] === false) {
-                    item.classList.remove('active');
-                    item.setAttribute('aria-pressed', 'false');
-                }
-
-            });
-
-        }, 50);
-
-    });
-
-    $(document).on('click', '.dt-button.buttons-colvis', function () {
+// Keep the colvis dropdown above the card/scroll containers.
+$(document).on('click', '.dt-button.buttons-colvis', function () {
     setTimeout(function () {
         $('.dt-button-collection').appendTo('body');
         $('.dt-button-collection').css({
@@ -350,8 +279,6 @@ document.querySelectorAll('.dt-button.buttons-colvis').forEach(function(btn) {
             zIndex: 99999
         });
     }, 10);
-});
-
 });
     </script>
     <style>

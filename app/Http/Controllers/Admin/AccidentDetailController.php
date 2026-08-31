@@ -341,7 +341,7 @@ class AccidentDetailController extends Controller
     {
         return Excel::download(
             new AccidentDetailsExport($request),
-            'accident-details.xlsx'
+            'accident-details-' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

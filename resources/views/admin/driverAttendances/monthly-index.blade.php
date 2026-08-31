@@ -41,6 +41,8 @@
                         <thead>
                             <tr>
                                 <th>Driver Name</th>
+                                <th>NIC</th>
+                                <th>Station</th>
                                 <th>Vehicle</th>
                                 <th>Total Working Days</th>
                                 <th>Total Present</th>
@@ -53,6 +55,8 @@
                             @forelse ($drivers as $driver)
                                 <tr>
                                     <td>{{ $driver->full_name }}</td>
+                                    <td>{{ $driver->cnic_no ?: 'N/A' }}</td>
+                                    <td>{{ $driver->station_name }}</td>
                                     <td>{{ $driver->vehicle?->vehicle_no ?? 'N/A' }}</td>
                                     <td>{{ $driver->total_working_days }}</td>
                                     <td>{{ $driver->total_present }}</td>
@@ -67,7 +71,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">No monthly attendance records found.</td>
+                                    <td colspan="9" class="text-center text-muted py-4">No monthly attendance records found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

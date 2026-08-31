@@ -169,11 +169,13 @@
 <!-- Products / Parts Section -->
 <hr class="my-4" style="border-top:1px solid #d9d9d9;">
 
-<h6 class="font-weight-semibold mb-3">Products Used</h6>
+<h6 class="font-weight-semibold mb-3">Products Used <small class="text-muted font-weight-normal">(optional)</small></h6>
 
 <p class="text-muted mb-3">
     Each row draws from its own warehouse — pick a warehouse first and the
     product list will show only what that warehouse has in stock.
+    Leave this section empty for a labor-only job; the amount will be the
+    labor / service charges alone.
 </p>
 
 <!-- Parts Table: warehouse + product are chosen per row -->

@@ -167,7 +167,6 @@
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
@@ -226,14 +225,6 @@ dom: 'Blfrtip',
                     columns: ':not(:last-child)'
                 }
             },
-            {
-                extend: 'excelHtml5',
-                className: 'd-none',
-                title: 'Accident Details Report',
-                exportOptions: {
-                    columns: ':not(:last-child)'
-                }
-            }
         ]
     });
     $('.dt-button .dt-down-arrow').remove();
@@ -241,7 +232,17 @@ dom: 'Blfrtip',
 
     $('#printBtn').click(() => table.button('.buttons-print').trigger());
     $('#pdfBtn').click(() => table.button('.buttons-pdf').trigger());
-    $('#excelBtn').click(() => table.button('.buttons-excel').trigger());
+
+    // Excel is generated server-side so the sheet always contains the FULL
+    // filtered dataset (the on-screen table only holds one page), works even
+    // after the live search swaps the table, and needs no CDN libraries.
+    $('#excelBtn').click(function () {
+        const params = new URLSearchParams({
+            search: $('#live-search').val() || '',
+            payment_status: $('#payment_status').val() || 'all'
+        });
+        window.location = "{{ route('accidentDetails.exportExcel') }}?" + params.toString();
+    });
 });
 
     </script>

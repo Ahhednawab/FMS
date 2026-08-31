@@ -169,18 +169,18 @@
             const row = $(`
                 <tr>
                     <td>
-                        <select class="form-control part-warehouse" data-field="warehouse_id" required>
+                        <select class="form-control part-warehouse" data-field="warehouse_id">
                             ${warehouseOptions(rowWarehouse)}
                         </select>
                     </td>
                     <td>
-                        <select class="form-control part-product" data-field="product_id" required>
+                        <select class="form-control part-product" data-field="product_id">
                             <option value="">--Select warehouse first--</option>
                         </select>
                         <small class="text-muted stock-label"></small>
                     </td>
                     <td>
-                        <input type="number" min="0.01" step="0.01" class="form-control part-quantity" data-field="quantity" value="${part.quantity || 1}" required>
+                        <input type="number" min="0.01" step="0.01" class="form-control part-quantity" data-field="quantity" value="${part.quantity || 1}">
                     </td>
                     <td><input type="text" class="form-control part-unit" value="" readonly></td>
                     <td><input type="number" min="0" step="0.01" class="form-control part-unit-price" data-field="unit_price" value="${part.unit_price || 0}" readonly></td>
@@ -415,6 +415,17 @@
         });
 
         $('#work_done').on('change', updatePredictivePreview);
+
+        // Products are optional. Rows where no product was chosen (including the
+        // automatically seeded blank row) are excluded from the POST, so the
+        // record saves as labor-only; rows WITH a product still validate fully.
+        $('#maintenance-form').on('submit', function() {
+            $('#parts-table tbody tr').each(function() {
+                const $row = $(this);
+                const hasProduct = !!$row.find('.part-product').val();
+                $row.find('[data-field]').prop('disabled', !hasProduct);
+            });
+        });
 
         // ── Initial state ──────────────────────────────────────────────────
         rebuildWorkDoneOptions();

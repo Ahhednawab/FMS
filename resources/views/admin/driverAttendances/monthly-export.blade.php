@@ -9,6 +9,12 @@
         <td colspan="2">{{ $driver->vehicle?->vehicle_no ?? 'N/A' }}</td>
     </tr>
     <tr>
+        <th>Station</th>
+        <td>{{ $driver->station_name }}</td>
+        <th>NIC</th>
+        <td colspan="2" style="mso-number-format:'\@';">{{ $driver->cnic_no ?: 'N/A' }}</td>
+    </tr>
+    <tr>
         <th>Month / Year</th>
         <td>{{ $monthLabel }}</td>
         <th>Total Working Days</th>

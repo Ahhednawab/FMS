@@ -102,7 +102,7 @@ class VehicleMaintenanceController extends Controller
 
             $maintenance->workDones()->sync($workDones->pluck('id')->all());
 
-            $total = $this->deductParts($maintenance, $validated['parts']);
+            $total = $this->deductParts($maintenance, $validated['parts'] ?? []);
             $maintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($maintenance);
@@ -164,7 +164,7 @@ class VehicleMaintenanceController extends Controller
 
             $vehicleMaintenance->workDones()->sync($workDones->pluck('id')->all());
 
-            $total = $this->deductParts($vehicleMaintenance, $validated['parts']);
+            $total = $this->deductParts($vehicleMaintenance, $validated['parts'] ?? []);
             $vehicleMaintenance->update(['service_cost' => $total + (float) ($validated['labor_cost'] ?? 0)]);
 
             $summary = $this->vehicleMaintenanceScheduleService->recordMaintenance($vehicleMaintenance);
@@ -357,7 +357,10 @@ class VehicleMaintenanceController extends Controller
             'workshop_id'      => 'required|exists:workshops,id',
             'labor_cost'       => 'nullable|numeric|min:0',
             'remarks'          => 'nullable|string',
-            'parts'            => 'required|array|min:1',
+            // Products are optional — a maintenance record can be labor-only
+            // (e.g. an outsourced job). Rows that ARE submitted are still
+            // validated in full by the parts.* rules below.
+            'parts'            => 'nullable|array',
             // Only active sub warehouses may be used — never the master warehouse.
             'parts.*.warehouse_id' => [
                 'required',
@@ -601,6 +604,16 @@ class VehicleMaintenanceController extends Controller
                 ->orderBy('name')
                 ->pluck('name')
                 ->each(fn ($name) => Workshop::firstOrCreate(['name' => $name], ['is_active' => true]));
+        }
+
+        // Standard options that must always be selectable, regardless of what
+        // the workshops table was seeded with. Created as real rows so the
+        // workshop_id foreign key and exists-validation keep working.
+        foreach (['Inhouse', 'Outsource'] as $name) {
+            $workshop = Workshop::firstOrCreate(['name' => $name], ['is_active' => true]);
+            if (! $workshop->is_active) {
+                $workshop->update(['is_active' => true]);
+            }
         }
 
         return Workshop::where('is_active', 1)->orderBy('name')->pluck('name', 'id');

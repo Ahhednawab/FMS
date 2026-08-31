@@ -39,8 +39,15 @@
 @push('scripts')
     <script>
         $(function() {
-            // Searchable dropdowns; tags allow a brand-new Make/Model to be added.
+            // Make: searchable, and tags allow a brand-new Make to be typed in.
             $('.select2-tags').select2({ width: '100%', tags: true });
+
+            // Model years: searchable multi-select, restricted to the offered years.
+            $('.select2-multi').select2({
+                width: '100%',
+                closeOnSelect: false,
+                placeholder: $('#config_model').data('placeholder')
+            });
         });
     </script>
 @endpush

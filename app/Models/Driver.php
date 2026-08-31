@@ -152,6 +152,19 @@ class Driver extends Model
         return $this->hasMany(DriversAttendance::class, 'driver_id');
     }
 
+    /**
+     * Operating station name for the driver.
+     *
+     * Regular drivers are stationed through their assigned vehicle, while pool
+     * drivers carry a station of their own, so fall back between the two. Used
+     * by the attendance table and the attendance exports.
+     */
+    public function getStationNameAttribute(): string
+    {
+        return $this->vehicle?->station?->area
+            ?: ($this->station?->area ?: 'N/A');
+    }
+
     public function scopeRegular($query)
     {
         return $query->where('driver_type', 'regular');

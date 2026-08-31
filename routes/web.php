@@ -221,6 +221,7 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
     // Accidents
     Route::resource('accidentDetails', AccidentDetailController::class);
     Route::get('accidentDetails/get-vehicle-info/{vehicleNo}', [AccidentDetailController::class, 'getVehicleInfo'])->name('accidentDetails.getVehicleInfo');
+    Route::get('accidentDetails-export/excel', [AccidentDetailController::class, 'exportExcel'])->name('accidentDetails.exportExcel');
     Route::delete('accidentDetails/delete-file/{fileId}', [AccidentDetailController::class, 'deleteFile'])->name('accidentDetails.deleteFile');
     Route::resource('accidentReports', AccidentReportController::class);
 
@@ -388,6 +389,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
     // Accidents
     Route::resource('accidentDetails', AccidentDetailController::class);
     Route::get('accidentDetails/get-vehicle-info/{vehicleNo}', [AccidentDetailController::class, 'getVehicleInfo'])->name('accidentDetails.getVehicleInfo');
+    Route::get('accidentDetails-export/excel', [AccidentDetailController::class, 'exportExcel'])->name('accidentDetails.exportExcel');
     Route::resource('accidentReports', AccidentReportController::class);
 
     // Accounts

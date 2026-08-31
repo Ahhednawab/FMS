@@ -2,9 +2,11 @@
     $config = $configuration ?? null;
     $isEdit = (bool) $config;
     $makes = $makes ?? collect();
-    $models = $models ?? collect();
+    $modelYears = $modelYears ?? collect();
     $currentMake = old('make', $config?->make);
-    $currentModel = old('model', $config?->model);
+    // Model is a multi-select on create, so old input comes back as an array.
+    $selectedModels = collect((array) old('model', $config ? [$config->model] : []))
+        ->map(fn ($value) => (string) $value);
 @endphp
 
 {{--
@@ -38,26 +40,30 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-8">
         <div class="form-group">
             <label>Vehicle Model @unless ($isEdit)<span class="text-danger">*</span>@endunless</label>
 
             @if ($isEdit)
                 <input type="text" class="form-control" value="{{ $config->model }}" readonly>
             @else
-                <select name="model" id="config_model" class="form-control select2-tags"
-                    data-placeholder="Select or type a Model">
-                    <option value="">--Select--</option>
-                    @foreach ($models as $model)
-                        <option value="{{ $model }}" {{ $currentModel == $model ? 'selected' : '' }}>{{ $model }}</option>
+                <select name="model[]" id="config_model" class="form-control select2-multi" multiple
+                    data-placeholder="Select one or more model years">
+                    @foreach ($modelYears as $year)
+                        <option value="{{ $year }}" {{ $selectedModels->contains((string) $year) ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
                     @endforeach
-                    @if ($currentModel && !$models->contains($currentModel))
-                        <option value="{{ $currentModel }}" selected>{{ $currentModel }}</option>
-                    @endif
                 </select>
+                <small class="text-muted d-block mt-1">
+                    Pick every model year these intervals apply to — a configuration is saved for each year.
+                </small>
             @endif
 
             @error('model')
+                <small class="text-danger d-block">{{ $message }}</small>
+            @enderror
+            @error('model.*')
                 <small class="text-danger d-block">{{ $message }}</small>
             @enderror
         </div>

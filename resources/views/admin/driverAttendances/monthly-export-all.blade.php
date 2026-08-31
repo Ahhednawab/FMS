@@ -19,6 +19,7 @@
             <th rowspan="2">S.No</th>
             <th rowspan="2">Station</th>
             <th rowspan="2">Driver Name</th>
+            <th rowspan="2">NIC</th>
             <th colspan="{{ $daysInMonth->count() }}">Dates of {{ $monthLabel }}</th>
             <th rowspan="2">P</th>
             <th rowspan="2">A</th>
@@ -40,6 +41,7 @@
                 <td style="text-align:center;">{{ $sheet['serial_no'] }}</td>
                 <td>{{ $sheet['station'] }}</td>
                 <td>{{ $sheet['driver']->full_name }}</td>
+                <td style="mso-number-format:'\@';">{{ $sheet['nic'] }}</td>
                 @foreach ($sheet['days'] as $day)
                     <td
                         @if($day['is_absent'])
