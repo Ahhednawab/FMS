@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\DailyMileagesExport;
 use App\Http\Controllers\Controller;
 use App\Models\DailyMileageReport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Draft;
 use App\Models\MileageStatus;
 use App\Models\Station;
@@ -67,6 +69,14 @@ class DailyMileageController extends Controller
         $vehicles = Vehicle::where('is_active', 1)->get();
 
         return view('admin.dailyMileages.index', compact('dailyMileages', 'vehicles'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        return Excel::download(
+            new DailyMileagesExport($request),
+            'daily-mileage-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 
     public function create(Request $request)

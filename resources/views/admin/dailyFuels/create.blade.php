@@ -23,6 +23,21 @@
             display: none !important;
             background: none !important;
         }
+
+        /* Placeholder text for the multi-select filters (the bootstrap4 theme
+           only styles it for single selects) */
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__placeholder {
+            color: #6c757d;
+            float: left;
+            margin-top: 5px;
+            margin-left: 6px;
+            list-style: none;
+        }
+
+        /* Keep the field a comfortable height when empty */
+        .select2-container--bootstrap4 .select2-selection--multiple {
+            min-height: calc(1.5em + .75rem + 2px);
+        }
     </style>
 
     <div class="page-header page-header-light">
@@ -57,11 +72,10 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Station</strong></label>
-                                <select class="custom-select select2" name="station_id" id="station_id">
-                                    <option value="">ALL</option>
+                                <select class="custom-select select2" name="station_id[]" id="station_id" multiple>
                                     @foreach ($stations as $key => $value)
                                         <option value="{{ $key }}"
-                                            {{ (string) $selectedStation === (string) $key ? 'selected' : '' }}>
+                                            {{ in_array((string) $key, $selectedStations ?? [], true) ? 'selected' : '' }}>
                                             {{ $value }} </option>
                                     @endforeach
                                 </select>
@@ -71,8 +85,7 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label class="form-label"><strong>Vehicle No</strong></label>
-                                <select class="custom-select select2" id="vehicle_no_filter">
-                                    <option value="">ALL</option>
+                                <select class="custom-select select2" id="vehicle_no_filter" multiple>
                                     @foreach ($vehicleData as $vehicle)
                                         <option value="{{ $vehicle['vehicle_no'] }}">{{ $vehicle['vehicle_no'] }}</option>
                                     @endforeach
@@ -93,11 +106,18 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{ route('dailyFuels.store') }}" method="POST">
+                <div class="alert alert-info py-2 mb-3">
+                    Enter Current KMs and Fuel Taken only for vehicles that took fuel. Vehicles left blank are saved
+                    automatically with their Previous KMs carried forward (no fuel, no mileage).
+                </div>
+
+                <form action="{{ route('dailyFuels.store') }}" method="POST" id="fuelForm">
                     @csrf
 
                     <!-- Hidden report date field for form submission -->
                     <input type="hidden" name="report_date" id="report_date" value="{{ $selectedDate ?? date('Y-m-d') }}">
+                    <!-- Row count lets the server detect a truncated submission (PHP max_input_vars) -->
+                    <input type="hidden" name="row_count" id="row_count" value="{{ count($vehicleData) }}">
 
                     @php
                         $groupedByStation = collect($vehicleData)->groupBy('station');
@@ -115,15 +135,17 @@
                             </div>
 
                             @foreach ($vehicles as $value)
-                                <div class="row kilometer" data-vehicle-id="{{ $value['vehicle_id'] }}">
-                                    <input type="hidden" class="form-control" name="vehicle_id[]"
+                                <div class="row kilometer" data-vehicle-id="{{ $value['vehicle_id'] }}"
+                                    data-vehicle-no="{{ $value['vehicle_no'] }}"
+                                    data-has-history="{{ !empty($value['has_history']) ? 1 : 0 }}">
+                                    <input type="hidden" class="form-control vehicle_id_input" name="vehicle_id[{{ $globalIndex }}]"
                                         value="{{ $value['vehicle_id'] }}">
 
                                     <!-- Vehicle No -->
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <strong>Vehicle No</strong>
-                                            <input type="text" class="form-control" name="vehicle_no"
+                                            <input type="text" class="form-control"
                                                 value="{{ $value['vehicle_no'] }}" readonly tabindex="-1">
                                         </div>
                                     </div>
@@ -133,7 +155,7 @@
                                         <div class="form-group">
                                             <strong>Previous KMs</strong>
                                             <input type="number" min="0" step="1"
-                                                class="form-control previous_km" name="previous_km[]"
+                                                class="form-control previous_km"
                                                 value="{{ $value['previous_km'] }}" readonly tabindex="-1">
                                         </div>
                                     </div>
@@ -148,6 +170,9 @@
                                             @error('current_km.' . $globalIndex)
                                                 <label class="text-danger">{{ $message }}</label>
                                             @enderror
+                                            @error('vehicle_id.' . $globalIndex)
+                                                <label class="text-danger">{{ $message }}</label>
+                                            @enderror
                                         </div>
                                     </div>
 
@@ -155,8 +180,8 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <strong>Mileage KM</strong>
-                                            <input type="number" min="0" step="1" class="form-control"
-                                                name="mileage[]" value="{{ old('mileage.' . $globalIndex) }}" readonly tabindex="-1">
+                                            <input type="number" min="0" step="1" class="form-control mileage"
+                                                readonly tabindex="-1">
                                         </div>
                                     </div>
 
@@ -177,8 +202,7 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <strong>Fuel Avg. (KM/Ltr.)</strong>
-                                            <input type="number" min="0" step="0.1" class="form-control"
-                                                name="fuel_average[]" value="{{ old('fuel_average.' . $globalIndex) }}"
+                                            <input type="number" min="0" step="0.1" class="form-control fuel_average"
                                                 readonly tabindex="-1">
                                         </div>
                                     </div>
@@ -210,11 +234,11 @@
                 var current_km = parseFloat($row.find('.current_km').val()) || 0;
                 var mileage = current_km - previous_km;
                 if (mileage < 0) mileage = 0;
-                $row.find('input[name="mileage[]"]').val(mileage.toFixed(0));
+                $row.find('.mileage').val(mileage.toFixed(0));
 
                 var fuel_taken = parseFloat($row.find('.fuel_taken').val()) || 0;
                 var fuel_avg = fuel_taken > 0 ? (mileage / fuel_taken) : 0;
-                $row.find('input[name="fuel_average[]"]').val(fuel_avg.toFixed(1));
+                $row.find('.fuel_average').val(fuel_avg.toFixed(1));
             }
 
             // Initialize all rows on page load
@@ -228,21 +252,56 @@
                 recalcRow($row);
             });
 
-            // Initialize Select2 for filters
-            $('#station_id, #vehicle_no_filter').select2({
-                theme: 'bootstrap4',
-                placeholder: "Select option",
-                allowClear: true
+            // Initialize Select2 for filters (both are multi-select).
+            // Stock multi-select moves the search box inline into the field;
+            // compose the adapters explicitly so the search input stays inside
+            // the dropdown (same UX as the old single-select) while selected
+            // items render as chips in the field above. The dropdown stays
+            // open while picking; click outside or press Esc to close it.
+            $.fn.select2.amd.require([
+                'select2/utils',
+                'select2/selection/multiple',
+                'select2/selection/placeholder',
+                'select2/selection/allowClear',
+                'select2/selection/eventRelay',
+                'select2/dropdown',
+                'select2/dropdown/search',
+                'select2/dropdown/attachBody'
+            ], function(Utils, MultipleSelection, Placeholder, AllowClear, EventRelay,
+                Dropdown, DropdownSearch, AttachBody) {
+
+                var SelectionAdapter = Utils.Decorate(MultipleSelection, Placeholder);
+                SelectionAdapter = Utils.Decorate(SelectionAdapter, AllowClear);
+                SelectionAdapter = Utils.Decorate(SelectionAdapter, EventRelay);
+
+                var DropdownAdapter = Utils.Decorate(
+                    Utils.Decorate(Dropdown, DropdownSearch),
+                    AttachBody
+                );
+
+                function initFilter($el, placeholderText) {
+                    $el.select2({
+                        theme: 'bootstrap4',
+                        width: '100%',
+                        placeholder: placeholderText,
+                        allowClear: true,
+                        selectionAdapter: SelectionAdapter,
+                        dropdownAdapter: DropdownAdapter
+                    });
+                }
+
+                initFilter($('#station_id'), 'All stations');
+                initFilter($('#vehicle_no_filter'), 'All vehicles');
             });
 
-            // Vehicle No filter logic
+            // Vehicle No filter logic (client-side show/hide, multi-select)
             $('#vehicle_no_filter').on('change', function() {
-                var selectedVehicle = $(this).val();
+                var selectedVehicles = $(this).val() || [];
 
                 $('.kilometer').each(function() {
-                    var vehicleNo = $(this).find('input[name="vehicle_no"]').val();
+                    var vehicleNo = $(this).data('vehicle-no');
 
-                    if (!selectedVehicle || vehicleNo === selectedVehicle) {
+                    if (selectedVehicles.length === 0 || selectedVehicles.indexOf(String(vehicleNo)) !== -1) {
                         $(this).show();
                     } else {
                         $(this).hide();
@@ -289,51 +348,101 @@
                 });
             });
 
-            // Form submit validation for duplicates
-            $('form[action="{{ route('dailyFuels.store') }}"]').on('submit', function(e) {
-                var vehicleNos = [];
-                var duplicates = [];
+            // Submit: validate only rows the user actually filled in.
+            // Blank rows are fine — the server carries their Previous KMs forward.
+            $('#fuelForm').on('submit', function(e) {
                 var invalidCurrentKmVehicles = [];
+                var missingFuelVehicles = [];
+                var missingKmVehicles = [];
+                var enteredCount = 0;
+                var carriedCount = 0;
 
-                $('.kilometer:visible').each(function() {
-                    var vehicleNo = $(this).find('input[name="vehicle_no"]').val();
-                    var currentKm = $(this).find('.current_km').val();
-                    var fuelTaken = $(this).find('.fuel_taken').val();
+                $('.kilometer').each(function() {
+                    var $row = $(this);
+                    var vehicleNo = String($row.data('vehicle-no'));
+                    var currentKm = $row.find('.current_km').val();
+                    var fuelTaken = $row.find('.fuel_taken').val();
 
-                    // Check if currentKm is empty or less than previous km (optional)
-                    var previousKm = parseFloat($(this).find('.previous_km').val()) || 0;
+                    var hasCurr = currentKm !== '' && currentKm !== null;
+                    var hasFuel = fuelTaken !== '' && fuelTaken !== null;
+
+                    // Untouched row: nothing to validate (carried forward server-side)
+                    if (!hasCurr && !hasFuel) {
+                        return;
+                    }
+
+                    var previousKm = parseFloat($row.find('.previous_km').val()) || 0;
                     var currentKmNum = parseFloat(currentKm);
 
-                    // Validate currentKm: it can equal previous km, but cannot be lower.
-                    if (!currentKm || isNaN(currentKmNum) || currentKmNum < previousKm) {
+                    if (hasCurr && (isNaN(currentKmNum) || currentKmNum < previousKm)) {
                         invalidCurrentKmVehicles.push(vehicleNo);
+                        return;
+                    }
+                    if (hasCurr && !hasFuel) {
+                        missingFuelVehicles.push(vehicleNo);
+                        return;
+                    }
+                    if (hasFuel && !hasCurr) {
+                        missingKmVehicles.push(vehicleNo);
+                        return;
                     }
 
-                    // Only check vehicles that have data entered for duplicate validation
-                    if (currentKm || fuelTaken) {
-                        if (vehicleNos.includes(vehicleNo)) {
-                            duplicates.push(vehicleNo);
-                        } else {
-                            vehicleNos.push(vehicleNo);
-                        }
-                    }
+                    enteredCount++;
                 });
 
                 if (invalidCurrentKmVehicles.length > 0) {
                     e.preventDefault();
-                    alert(
-                        'Please enter a valid Current KM greater than or equal to Previous KM for these vehicles before saving: \n' +
-                        invalidCurrentKmVehicles.join(', ')
-                    );
-                    $('#saveBtn').prop('disabled', false).text('Save');
+                    alert('Current KMs must be greater than or equal to Previous KMs for: \n' +
+                        invalidCurrentKmVehicles.join(', '));
+                    return false;
+                }
+                if (missingFuelVehicles.length > 0) {
+                    e.preventDefault();
+                    alert('Fuel Taken is required when Current KMs is entered. Missing for: \n' +
+                        missingFuelVehicles.join(', '));
+                    return false;
+                }
+                if (missingKmVehicles.length > 0) {
+                    e.preventDefault();
+                    alert('Current KMs is required when Fuel Taken is entered. Missing for: \n' +
+                        missingKmVehicles.join(', '));
                     return false;
                 }
 
-                if (duplicates.length > 0) {
+                // Rows hidden by the Vehicle No filter that were left EMPTY are
+                // excluded from the save entirely (their inputs are disabled),
+                // so filtering + saving only affects the vehicles on screen.
+                // Hidden rows that were filled in before filtering still submit.
+                $('.kilometer:hidden').each(function() {
+                    var $row = $(this);
+                    var hasData = $row.find('.current_km').val() || $row.find('.fuel_taken').val();
+                    if (!hasData) {
+                        $row.find('input').prop('disabled', true);
+                    }
+                });
+
+                // Blank rows still submitting = carried forward (vehicles with
+                // no fuel history yet are skipped by the server — not counted)
+                $('.kilometer').each(function() {
+                    var $row = $(this);
+                    if ($row.find('.vehicle_id_input').prop('disabled')) return;
+                    if (String($row.data('has-history')) !== '1') return;
+                    var hasData = $row.find('.current_km').val() || $row.find('.fuel_taken').val();
+                    if (!hasData) carriedCount++;
+                });
+
+                // Keep the server-side truncation guard in sync with the rows
+                // that are actually being submitted.
+                $('#row_count').val($('.kilometer').filter(function() {
+                    return !$(this).find('.vehicle_id_input').prop('disabled');
+                }).length);
+
+                var summary = enteredCount + ' vehicle(s) entered, ' + carriedCount +
+                    ' vehicle(s) will be saved with Previous KMs carried forward.\n\nContinue?';
+                if (!confirm(summary)) {
                     e.preventDefault();
-                    alert('Duplicate vehicle entries found for: ' + duplicates.join(', ') +
-                        '\nEach vehicle can only be entered once per date.');
-                    $('#saveBtn').prop('disabled', false).text('Save');
+                    // Re-enable anything we disabled so the form stays editable
+                    $('.kilometer input').prop('disabled', false);
                     return false;
                 }
 

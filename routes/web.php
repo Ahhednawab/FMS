@@ -150,6 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     // Fleet Transactions
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
+    Route::get('dailyMileages-export/excel', [DailyMileageController::class, 'exportExcel'])->name('dailyMileages.exportExcel');
     Route::resource('dailyMileages', DailyMileageController::class);
     Route::get('/daily-mileage', [TrackingController::class, 'index'])->name('daily-mileage.index');
     Route::get('trackingData', [TrackingController::class, 'index'])->name('trackingData.index');
@@ -344,6 +345,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
 
     // Fleet Transactions
     Route::post('dailyMileages/destroyMultiple', [DailyMileageController::class, 'destroyMultiple'])->name('dailyMileages.destroyMultiple');
+    Route::get('dailyMileages-export/excel', [DailyMileageController::class, 'exportExcel'])->name('dailyMileages.exportExcel');
     Route::resource('dailyMileages', DailyMileageController::class);
     Route::get('dailyMileages/fetch-previous-mileage', [DailyMileageController::class, 'fetchPreviousMileageByVehicleAndDate'])->name('dailyMileages.fetchPreviousMileage');
     Route::resource('dailyMileageReports', DailyMileageReportController::class);

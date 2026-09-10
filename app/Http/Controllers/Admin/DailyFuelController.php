@@ -12,6 +12,7 @@ use App\Models\DailyFuelReport;
 
 use App\Models\DailyMileageReport;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class DailyFuelController extends Controller
 {
@@ -77,8 +78,11 @@ class DailyFuelController extends Controller
 
         $vehicles = Vehicle::with('station');
         $vehicles = $vehicles->where('is_active', 1);
-        if (isset($request->station_id)) {
-            $vehicles = $vehicles->where('station_id', $request->station_id);
+
+        // Station filter accepts one or many stations (multi-select).
+        $stationIds = array_filter((array) $request->input('station_id', []));
+        if (!empty($stationIds)) {
+            $vehicles = $vehicles->whereIn('station_id', $stationIds);
         }
         $vehicles = $vehicles->orderBy(Station::select('area')->whereColumn('stations.id', 'vehicles.station_id')->limit(1));
         $vehicles = $vehicles->orderBy('vehicle_no');
@@ -102,7 +106,8 @@ class DailyFuelController extends Controller
                 'vehicle_id' => $vehicle->id,
                 'station' => $vehicle->station->area,
                 'vehicle_no' => $vehicle->vehicle_no,
-                'previous_km' => $previous_km
+                'previous_km' => $previous_km,
+                'has_history' => (bool) $previousRecord,
             );
         }
 
@@ -114,9 +119,9 @@ class DailyFuelController extends Controller
         $stations = $stations->unique();
         $stations = $stations->toArray();
 
-        $selectedStation = $request->station_id ?? '';
+        $selectedStations = array_map('strval', $stationIds);
 
-        return view('admin.dailyFuels.create', compact('vehicles', 'vehicleData', 'stations', 'selectedStation', 'selectedDate'));
+        return view('admin.dailyFuels.create', compact('vehicles', 'vehicleData', 'stations', 'selectedStations', 'selectedDate'));
     }
 
     public function fetchPreviousKmByDate(Request $request)
@@ -187,27 +192,18 @@ class DailyFuelController extends Controller
         );
 
         $validator->after(function ($validator) use ($request) {
-            $prevs = $request->input('previous_km', []);
             $currs = $request->input('current_km', []);
             $fuels = $request->input('fuel_taken', []);
 
-            $max = max(count($prevs), count($currs), count($fuels));
-            for ($i = 0; $i < $max; $i++) {
-                $prev = $prevs[$i] ?? null;
+            // The current-vs-previous KM check runs in the save loop below
+            // against the database, not against posted values.
+            $indexes = array_unique(array_merge(array_keys($currs), array_keys($fuels)));
+            foreach ($indexes as $i) {
                 $curr = $currs[$i] ?? null;
                 $fuel = $fuels[$i] ?? null;
 
                 $hasCurr = !(is_null($curr) || $curr === '');
                 $hasFuel = !(is_null($fuel) || $fuel === '');
-
-                // current_km can match previous_km, but cannot be lower.
-                if ($hasCurr && $prev !== null && $prev !== '') {
-                    if (is_numeric($curr) && is_numeric($prev)) {
-                        if ((float) $curr < (float) $prev) {
-                            $validator->errors()->add("current_km.$i", 'Current KMs cannot be less than Previous KMs.');
-                        }
-                    }
-                }
 
                 // If one of current_km or fuel_taken is provided, the other is required
                 if ($hasCurr && !$hasFuel) {
@@ -224,75 +220,155 @@ class DailyFuelController extends Controller
         }
 
         $vehicleIds = $request->input('vehicle_id', []);
-        $previousKms = $request->input('previous_km', []);
         $currentKms = $request->input('current_km', []);
-        $mileages = $request->input('mileage', []);
         $fuelTakens = $request->input('fuel_taken', []);
-        $fuelAverages = $request->input('fuel_average', []);
+        $reportDate = $request->report_date;
 
-        $count = count($vehicleIds);
-        for ($i = 0; $i < $count; $i++) {
-            $vehicleId = $vehicleIds[$i] ?? null;
-            // $prevKm      = $previousKms[$i] ?? null;
-            $currKm = $currentKms[$i] ?? null;
-            $mileage = $mileages[$i] ?? null;
-            $fuelTaken = $fuelTakens[$i] ?? null;
-            $fuelAverage = $fuelAverages[$i] ?? null;
+        // Guard against PHP max_input_vars truncation: the form reports how
+        // many vehicle rows it rendered; if fewer arrived, refuse to save a
+        // partial batch (same failure class as the attendance module fix).
+        $expectedRows = (int) $request->input('row_count', 0);
+        if ($expectedRows > 0 && count($vehicleIds) < $expectedRows) {
+            return redirect()->back()->withInput()->withErrors([
+                'report_date' => 'The submission arrived incomplete (' . count($vehicleIds) . ' of ' . $expectedRows
+                    . ' vehicles received) — nothing was saved. Please ask the administrator to raise PHP max_input_vars.',
+            ]);
+        }
 
-            $currEmpty = is_null($currKm) || $currKm === '';
-            $fuelEmpty = is_null($fuelTaken) || $fuelTaken === '';
+        $errors = [];
+        $creates = [];
+        $placeholderUpdates = [];
+        $touchedVehicleIds = [];
+        $enteredCount = 0;
+        $carriedCount = 0;
 
-            if ($currEmpty && $fuelEmpty) {
+        // Iterate by key: rows excluded on the client (hidden + empty under a
+        // vehicle filter) leave gaps in the posted arrays.
+        foreach ($vehicleIds as $i => $postedVehicleId) {
+            $vehicleId = (int) $postedVehicleId;
+            if ($vehicleId <= 0) {
                 continue;
             }
 
-            // ✅ GET PREVIOUS KM BASED ON REPORT DATE
+            $currKm = $currentKms[$i] ?? null;
+            $fuelTaken = $fuelTakens[$i] ?? null;
+
+            $currEmpty = is_null($currKm) || $currKm === '';
+            $fuelEmpty = is_null($fuelTaken) || $fuelTaken === '';
+            $entered = !($currEmpty && $fuelEmpty);
+
             $lastReport = DailyFuelReport::where('vehicle_id', $vehicleId)
-                ->where('report_date', '<', $request->report_date)
+                ->where('report_date', '<', $reportDate)
                 ->where('is_active', 1)
                 ->orderBy('report_date', 'desc')
                 ->orderBy('id', 'desc')
                 ->first();
 
-            $prevKmFromDB = $lastReport ? $lastReport->current_km : 0;
+            $prevKmFromDB = $lastReport ? (float) $lastReport->current_km : 0.0;
 
-            if ((float) $currKm < (float) $prevKmFromDB) {
-                return redirect()->back()
-                    ->withErrors([
-                        "current_km.$i" => "Current KMs cannot be less than Previous KMs ($prevKmFromDB)."
-                    ])
-                    ->withInput();
-            }
-
-            $exists = DailyFuelReport::where('vehicle_id', $vehicleId)
-                ->where('report_date', $request->report_date)
+            $existing = DailyFuelReport::where('vehicle_id', $vehicleId)
+                ->where('report_date', $reportDate)
                 ->where('is_active', 1)
-                ->exists();
+                ->first();
 
-            if ($exists) {
-                return redirect()->back()
-                    ->withErrors([
-                        "vehicle_id.$i" => "Fuel entry already exists for this vehicle on selected date."
-                    ])
-                    ->withInput();
+            if (! $entered) {
+                // Row left blank: carry the previous KMs forward as the day's
+                // reading (vehicle assumed parked / no fuel taken) — but never
+                // touch a record that already exists for this date, and skip
+                // vehicles with no fuel history (nothing to carry forward).
+                if ($existing || ! $lastReport) {
+                    continue;
+                }
+
+                $creates[] = [
+                    'vehicle_id' => $vehicleId,
+                    'previous_km' => $prevKmFromDB,
+                    'current_km' => $prevKmFromDB,
+                    'mileage' => 0,
+                    'fuel_taken' => 0,
+                    'fuel_average' => 0,
+                ];
+                $touchedVehicleIds[] = $vehicleId;
+                $carriedCount++;
+                continue;
             }
 
+            if ((float) $currKm < $prevKmFromDB) {
+                $errors["current_km.$i"] = "Current KMs cannot be less than Previous KMs ($prevKmFromDB).";
+                continue;
+            }
 
-            $dailyFuel = new DailyFuelReport();
-            $dailyFuel->vehicle_id = $vehicleId;
-            $dailyFuel->report_date = $request->report_date;
-            $dailyFuel->previous_km = $prevKmFromDB;
-            $dailyFuel->current_km = $currKm;
-            $dailyFuel->mileage = $mileage;
-            $dailyFuel->fuel_taken = $fuelTaken;
-            $dailyFuel->fuel_average = $fuelAverage;
-            $dailyFuel->is_active = 1;
-            $dailyFuel->save();
+            $mileage = (float) $currKm - $prevKmFromDB;
+            $rowValues = [
+                'vehicle_id' => $vehicleId,
+                'previous_km' => $prevKmFromDB,
+                'current_km' => $currKm,
+                'mileage' => $mileage,
+                'fuel_taken' => $fuelTaken,
+                'fuel_average' => ((float) $fuelTaken > 0) ? round($mileage / (float) $fuelTaken, 1) : 0,
+            ];
+
+            if ($existing) {
+                // A carried-forward placeholder (no fuel, no movement) may be
+                // upgraded with real figures; a genuine earlier entry may not.
+                $isPlaceholder = (float) ($existing->fuel_taken ?? 0) == 0.0
+                    && (float) $existing->current_km == (float) $existing->previous_km;
+
+                if ($isPlaceholder) {
+                    $placeholderUpdates[] = ['id' => $existing->id] + $rowValues;
+                    $touchedVehicleIds[] = $vehicleId;
+                    $enteredCount++;
+                } else {
+                    $errors["vehicle_id.$i"] = 'Fuel entry already exists for this vehicle on selected date.';
+                }
+                continue;
+            }
+
+            $creates[] = $rowValues;
+            $touchedVehicleIds[] = $vehicleId;
+            $enteredCount++;
         }
-        foreach ($vehicleIds as $vehicleId) {
+
+        if (! empty($errors)) {
+            return redirect()->back()->withErrors($errors)->withInput();
+        }
+
+        DB::transaction(function () use ($creates, $placeholderUpdates, $reportDate) {
+            foreach ($creates as $row) {
+                $dailyFuel = new DailyFuelReport();
+                $dailyFuel->vehicle_id = $row['vehicle_id'];
+                $dailyFuel->report_date = $reportDate;
+                $dailyFuel->previous_km = $row['previous_km'];
+                $dailyFuel->current_km = $row['current_km'];
+                $dailyFuel->mileage = $row['mileage'];
+                $dailyFuel->fuel_taken = $row['fuel_taken'];
+                $dailyFuel->fuel_average = $row['fuel_average'];
+                $dailyFuel->is_active = 1;
+                $dailyFuel->save();
+            }
+
+            foreach ($placeholderUpdates as $row) {
+                DailyFuelReport::where('id', $row['id'])->update([
+                    'previous_km' => $row['previous_km'],
+                    'current_km' => $row['current_km'],
+                    'mileage' => $row['mileage'],
+                    'fuel_taken' => $row['fuel_taken'],
+                    'fuel_average' => $row['fuel_average'],
+                ]);
+            }
+        });
+
+        foreach (array_unique($touchedVehicleIds) as $vehicleId) {
             $this->recalculateVehicleReports($vehicleId);
         }
-        return redirect()->route('dailyFuels.index')->with('success', 'Daily Fuel created successfully.');
+
+        $message = 'Daily Fuel saved successfully — ' . $enteredCount . ' entered';
+        if ($carriedCount > 0) {
+            $message .= ', ' . $carriedCount . ' carried forward from Previous KMs';
+        }
+        $message .= '.';
+
+        return redirect()->route('dailyFuels.index')->with('success', $message);
     }
 
     public function edit(DailyFuelReport $dailyFuel)

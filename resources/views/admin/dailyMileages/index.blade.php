@@ -108,7 +108,7 @@
                         <!-- To -->
                         <div class="col-md-2">
                             <label><strong>To</strong></label>
-                            <input type="date" name="to_date" class="form-control" value="{{ request('from_date') }}">
+                            <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
                         </div>
 
                         <!-- Buttons -->
@@ -323,7 +323,6 @@
 
     <script src="{{ asset('assets/js/plugins/tables/datatables/datatables.min.js') }}"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
@@ -411,16 +410,6 @@
                                 page: 'all'
                             }
                         }
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Excel',
-                        className: 'd-none',
-                        exportOptions: {
-                            modifier: {
-                                page: 'all'
-                            }
-                        }
                     }
                 ]
             });
@@ -447,9 +436,24 @@
                 table.button('.buttons-pdf').trigger();
             });
 
-            // Excel button
+            // Excel is generated server-side so the sheet always contains the
+            // FULL filtered dataset (the on-screen table only holds one page),
+            // and vehicles with no entry on a filtered date are included with
+            // Mileage = 0 ("Not Recorded").
             $('#excelBtn').on('click', function() {
-                table.button('.buttons-excel').trigger();
+                const params = new URLSearchParams(window.location.search);
+                params.delete('page');
+                params.delete('per_page');
+
+                const q = $('#tableSearch').val();
+                if (q) {
+                    params.set('search', q);
+                } else {
+                    params.delete('search');
+                }
+
+                const qs = params.toString();
+                window.location = "{{ route('dailyMileages.exportExcel') }}" + (qs ? '?' + qs : '');
             });
 
             // Initialize select2
