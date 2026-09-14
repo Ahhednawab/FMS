@@ -187,44 +187,12 @@ class VehiclesAttendanceController extends Controller
         $monthStart = $monthDate->copy()->startOfMonth();
         $monthEnd = $monthDate->copy()->endOfMonth();
 
-        $attendanceStatuses = AttendanceStatus::where('is_active', 1)->get()
-            ->keyBy(fn (AttendanceStatus $status) => strtolower((string) $status->name));
-
-        $presentStatusId = optional($attendanceStatuses->get('present'))->id;
-        $absentStatusId = optional($attendanceStatuses->get('absent'))->id;
-
         $vehicles = Vehicle::with(['station', 'shiftHours'])
             ->where('is_active', 1)
             ->whereHas('vehicleAttendances', function ($query) use ($monthStart, $monthEnd) {
                 $query->where('is_active', 1)
                     ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
             })
-            ->withCount([
-                'vehicleAttendances as total_working_days' => function ($query) use ($monthStart, $monthEnd) {
-                    $query->where('is_active', 1)
-                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
-                },
-                'vehicleAttendances as total_present' => function ($query) use ($monthStart, $monthEnd, $presentStatusId) {
-                    $query->where('is_active', 1)
-                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
-
-                    if ($presentStatusId) {
-                        $query->where('status', $presentStatusId);
-                    } else {
-                        $query->whereRaw('1 = 0');
-                    }
-                },
-                'vehicleAttendances as total_absent' => function ($query) use ($monthStart, $monthEnd, $absentStatusId) {
-                    $query->where('is_active', 1)
-                        ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
-
-                    if ($absentStatusId) {
-                        $query->where('status', $absentStatusId);
-                    } else {
-                        $query->whereRaw('1 = 0');
-                    }
-                },
-            ])
             ->orderBy('vehicle_no')
             ->get();
 
@@ -250,72 +218,68 @@ class VehiclesAttendanceController extends Controller
 
         $vehicleSheets = $vehicles->values()->map(function (Vehicle $vehicle, int $index) use ($attendanceRecords, $daysInMonth) {
             $rowsByDate = $attendanceRecords->get($vehicle->id, collect());
-            $offDaysCount = $daysInMonth->where('is_sunday', true)->count();
-            $presentCount = (int) $vehicle->total_present;
-            $absentCount = (int) $vehicle->total_absent;
-            $underMaintenanceCount = $rowsByDate->filter(function (VehiclesAttendance $attendance) {
-                $statusKey = strtolower(trim((string) optional($attendance->attendanceStatus)->name));
 
-                return in_array($statusKey, ['under maintenance', 'under maintanance'], true);
-            })->count();
-            $inspectionCount = $rowsByDate->filter(function (VehiclesAttendance $attendance) {
-                $statusKey = strtolower(trim((string) optional($attendance->attendanceStatus)->name));
+            $days = $daysInMonth->map(function (array $dayMeta) use ($rowsByDate) {
+                $row = $rowsByDate->get($dayMeta['date']);
+                $statusKey = strtolower(trim((string) optional(optional($row)->attendanceStatus)->name));
 
-                return $statusKey === 'inspection';
-            })->count();
+                if (in_array($statusKey, ['under maintenance', 'under maintanance'], true)) {
+                    return array_merge($dayMeta, [
+                        'code' => 'UM',
+                        'is_absent' => false,
+                        'is_under_maintenance' => true,
+                        'is_inspection' => false,
+                    ]);
+                }
+
+                if ($statusKey === 'inspection') {
+                    return array_merge($dayMeta, [
+                        'code' => 'IN',
+                        'is_absent' => false,
+                        'is_under_maintenance' => false,
+                        'is_inspection' => true,
+                    ]);
+                }
+
+                $code = match ($statusKey) {
+                    'present' => 'P',
+                    'absent' => 'A',
+                    'off' => 'Off',
+                    default => '',
+                };
+
+                // Sundays are off by default, but attendance marked on a Sunday
+                // (Present, Absent or OFF) replaces the default "Off".
+                if ($code === '' && $dayMeta['is_sunday']) {
+                    $code = 'Off';
+                }
+
+                return array_merge($dayMeta, [
+                    'code' => $code,
+                    'is_absent' => $code === 'A',
+                    'is_under_maintenance' => false,
+                    'is_inspection' => false,
+                ]);
+            });
+
+            // Every total is counted from the codes shown in the day cells, so
+            // each column matches the sheet: all "Off" days (unmarked Sundays
+            // and days marked OFF) under Off, "P" under P and "A" under A.
+            $presentCount = $days->where('code', 'P')->count();
+            $offDaysCount = $days->where('code', 'Off')->count();
 
             return [
                 'serial_no' => $index + 1,
                 'station' => $vehicle->station?->area ?? 'N/A',
                 'vehicle_name' => $vehicle->vehicle_no,
                 'shift' => $this->resolveVehicleShiftLabel($vehicle),
-                'days' => $daysInMonth->map(function (array $dayMeta) use ($rowsByDate) {
-                    $row = $rowsByDate->get($dayMeta['date']);
-                    $statusKey = strtolower(trim((string) optional(optional($row)->attendanceStatus)->name));
-
-                    if (in_array($statusKey, ['under maintenance', 'under maintanance'], true)) {
-                        return array_merge($dayMeta, [
-                            'code' => 'UM',
-                            'is_absent' => false,
-                            'is_under_maintenance' => true,
-                            'is_inspection' => false,
-                        ]);
-                    }
-
-                    if ($statusKey === 'inspection') {
-                        return array_merge($dayMeta, [
-                            'code' => 'IN',
-                            'is_absent' => false,
-                            'is_under_maintenance' => false,
-                            'is_inspection' => true,
-                        ]);
-                    }
-
-                    if ($dayMeta['is_sunday']) {
-                        return array_merge($dayMeta, [
-                            'code' => 'Off',
-                            'is_absent' => false,
-                            'is_under_maintenance' => false,
-                            'is_inspection' => false,
-                        ]);
-                    }
-
-                    return array_merge($dayMeta, [
-                        'code' => match ($statusKey) {
-                            'present' => 'P',
-                            'absent' => 'A',
-                            default => '',
-                        },
-                        'is_absent' => $statusKey === 'absent',
-                        'is_under_maintenance' => false,
-                        'is_inspection' => false,
-                    ]);
-                }),
+                'days' => $days,
                 'present_count' => $presentCount,
-                'absent_count' => $absentCount,
-                'under_maintenance_count' => $underMaintenanceCount,
-                'inspection_count' => $inspectionCount,
+                'absent_count' => $days->where('code', 'A')->count(),
+                'under_maintenance_count' => $days->where('code', 'UM')->count(),
+                'inspection_count' => $days->where('code', 'IN')->count(),
                 'off_days_count' => $offDaysCount,
+                // Total Present Days = Presents + Offs
                 'total_present_days' => $presentCount + $offDaysCount,
                 'total_days_in_month' => $daysInMonth->count(),
             ];
@@ -337,8 +301,7 @@ class VehiclesAttendanceController extends Controller
 
     public function create(Request $request)
     {
-        $excludeStatuses = ['OFF'];
-        $attendanceStatus = AttendanceStatus::where('is_active', 1)->where('id', '!=', 3)->whereNotIn('name', $excludeStatuses)->orderBy('id')->pluck('name', 'id');
+        $attendanceStatus = AttendanceStatus::where('is_active', 1)->where('id', '!=', 3)->orderBy('id')->pluck('name', 'id');
         $vehicles = Vehicle::with(['station', 'shiftHours', 'ibcCenter']);
         $poolvehicles = Vehicle::where('pool_vehicle', 1)->get();
         $vehicles = $vehicles->where('is_active', 1);
@@ -444,7 +407,10 @@ class VehiclesAttendanceController extends Controller
                 'status'     => (int) $statusId,
             ];
 
-            if ($poolId) { // If pool_id is provided, include it in the data
+            // A pool vehicle only applies to Under Maintenance / Inspection (same
+            // rule as update()); a hidden, previously picked pool vehicle must
+            // not be saved with any other status.
+            if ($poolId && in_array((int) $statusId, [5, 6], true)) {
                 $attendanceData['pool_id'] = $poolId;
             }
 

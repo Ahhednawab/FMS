@@ -107,8 +107,8 @@
         <div class="card">
             <div class="card-body">
                 <div class="alert alert-info py-2 mb-3">
-                    Enter Current KMs and Fuel Taken only for vehicles that took fuel. Vehicles left blank are saved
-                    automatically with their Previous KMs carried forward (no fuel, no mileage).
+                    Enter Current KMs and Fuel Taken only for the vehicles that took fuel. Vehicles left blank are
+                    skipped — no entry is created for them.
                 </div>
 
                 <form action="{{ route('dailyFuels.store') }}" method="POST" id="fuelForm">
@@ -136,8 +136,7 @@
 
                             @foreach ($vehicles as $value)
                                 <div class="row kilometer" data-vehicle-id="{{ $value['vehicle_id'] }}"
-                                    data-vehicle-no="{{ $value['vehicle_no'] }}"
-                                    data-has-history="{{ !empty($value['has_history']) ? 1 : 0 }}">
+                                    data-vehicle-no="{{ $value['vehicle_no'] }}">
                                     <input type="hidden" class="form-control vehicle_id_input" name="vehicle_id[{{ $globalIndex }}]"
                                         value="{{ $value['vehicle_id'] }}">
 
@@ -348,14 +347,13 @@
                 });
             });
 
-            // Submit: validate only rows the user actually filled in.
-            // Blank rows are fine — the server carries their Previous KMs forward.
+            // Submit: validate only the rows the user filled in. Blank rows are
+            // skipped — no entry is created for them.
             $('#fuelForm').on('submit', function(e) {
                 var invalidCurrentKmVehicles = [];
                 var missingFuelVehicles = [];
                 var missingKmVehicles = [];
                 var enteredCount = 0;
-                var carriedCount = 0;
 
                 $('.kilometer').each(function() {
                     var $row = $(this);
@@ -366,7 +364,7 @@
                     var hasCurr = currentKm !== '' && currentKm !== null;
                     var hasFuel = fuelTaken !== '' && fuelTaken !== null;
 
-                    // Untouched row: nothing to validate (carried forward server-side)
+                    // Untouched row: nothing to validate (it is not saved)
                     if (!hasCurr && !hasFuel) {
                         return;
                     }
@@ -409,48 +407,37 @@
                     return false;
                 }
 
-                // Rows hidden by the Vehicle No filter that were left EMPTY are
-                // excluded from the save entirely (their inputs are disabled),
-                // so filtering + saving only affects the vehicles on screen.
-                // Hidden rows that were filled in before filtering still submit.
-                $('.kilometer:hidden').each(function() {
+                if (enteredCount === 0) {
+                    e.preventDefault();
+                    alert('Enter Current KMs and Fuel Taken for at least one vehicle before saving.');
+                    return false;
+                }
+
+                // Post only the rows that were filled in: blank rows are
+                // disabled so the browser leaves them out. This also keeps the
+                // request far below PHP's max_input_vars limit as the fleet grows.
+                $('.kilometer').each(function() {
                     var $row = $(this);
-                    var hasData = $row.find('.current_km').val() || $row.find('.fuel_taken').val();
-                    if (!hasData) {
+                    if (!$row.find('.current_km').val() && !$row.find('.fuel_taken').val()) {
                         $row.find('input').prop('disabled', true);
                     }
                 });
 
-                // Blank rows still submitting = carried forward (vehicles with
-                // no fuel history yet are skipped by the server — not counted)
-                $('.kilometer').each(function() {
-                    var $row = $(this);
-                    if ($row.find('.vehicle_id_input').prop('disabled')) return;
-                    if (String($row.data('has-history')) !== '1') return;
-                    var hasData = $row.find('.current_km').val() || $row.find('.fuel_taken').val();
-                    if (!hasData) carriedCount++;
-                });
-
-                // Keep the server-side truncation guard in sync with the rows
-                // that are actually being submitted.
-                $('#row_count').val($('.kilometer').filter(function() {
-                    return !$(this).find('.vehicle_id_input').prop('disabled');
-                }).length);
-
-                var summary = enteredCount + ' vehicle(s) entered, ' + carriedCount +
-                    ' vehicle(s) will be saved with Previous KMs carried forward.\n\nContinue?';
-                if (!confirm(summary)) {
-                    e.preventDefault();
-                    // Re-enable anything we disabled so the form stays editable
-                    $('.kilometer input').prop('disabled', false);
-                    return false;
-                }
+                // Tell the server how many rows were sent (truncation guard).
+                $('#row_count').val(enteredCount);
 
                 $('#saveBtn')
                     .prop('disabled', true)
                     .text('Saving...');
 
                 return true;
+            });
+
+            // Coming back with the browser's Back button can restore this page
+            // with the blank rows still disabled from the last save.
+            $(window).on('pageshow', function() {
+                $('.kilometer input').prop('disabled', false);
+                $('#saveBtn').prop('disabled', false).text('Save');
             });
 
         });

@@ -243,6 +243,8 @@
 @endsection
 
 @push('scripts')
+    <!-- Noty shows the bulk-action and pool-vehicle messages below -->
+    <script src="{{ asset('assets/js/plugins/notifications/noty.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             $('#station_id_filter, #vehicle_no_filter').select2({
