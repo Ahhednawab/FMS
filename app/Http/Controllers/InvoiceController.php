@@ -95,6 +95,12 @@ class InvoiceController extends Controller
         return view('admin.invoices.show', compact('invoice'));
     }
 
+    /** Printable invoice, laid out to be printed on the company letterhead. */
+    public function printInvoice(Invoice $invoice)
+    {
+        return view('admin.invoices.print', compact('invoice'));
+    }
+
     public function edit(Invoice $invoice)
     {
         return view('admin.invoices.edit', [

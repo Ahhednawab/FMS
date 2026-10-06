@@ -246,6 +246,7 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
         ->name('vehicleMaintenances.predictiveAlertTitles');
     Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
         ->name('vehicleMaintenances.workDones.destroy');
+    Route::get('vehicleMaintenances-export/excel', [VehicleMaintenanceController::class, 'exportExcel'])->name('vehicleMaintenances.exportExcel');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceConfigurations', VehicleMaintenanceConfigurationController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);
@@ -294,6 +295,7 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
     Route::post('advances/store', [EmployeeAdvanceController::class, 'store'])->name('advance.store');
 
 
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'printInvoice'])->name('invoices.print');
     Route::resource('invoices', InvoiceController::class);
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDelete'])
     ->name('invoices.bulkDelete');
@@ -414,6 +416,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth', 'role:admin')->group(
         ->name('vehicleMaintenances.predictiveAlertTitles');
     Route::delete('vehicleMaintenances/work-dones/{workDone}', [VehicleMaintenanceController::class, 'destroyWorkDone'])
         ->name('vehicleMaintenances.workDones.destroy');
+    Route::get('vehicleMaintenances-export/excel', [VehicleMaintenanceController::class, 'exportExcel'])->name('vehicleMaintenances.exportExcel');
     Route::resource('vehicleMaintenances', VehicleMaintenanceController::class);
     Route::resource('vehicleMaintenanceConfigurations', VehicleMaintenanceConfigurationController::class);
     Route::resource('vehicleMaintenanceReports', VehicleMaintenanceReportController::class);

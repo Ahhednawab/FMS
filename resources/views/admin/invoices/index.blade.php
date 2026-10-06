@@ -113,6 +113,11 @@
                                 <a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-warning btn-sm">
                                     <i class="icon-pencil7"></i>
                                 </a>
+
+                                <a href="{{ route('invoices.print', $invoice->id) }}" target="_blank"
+                                    class="btn btn-primary btn-sm" title="Print Invoice">
+                                    <i class="icon-printer"></i>
+                                </a>
                             </td>
                         </tr>
                     @empty

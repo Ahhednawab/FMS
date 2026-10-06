@@ -12,9 +12,14 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Invoice Details</h5>
-            <a href="{{ route('invoices.index') }}" class="btn btn-secondary">
-                <i class="icon-arrow-left52 mr-1"></i> Back
-            </a>
+            <div>
+                <a href="{{ route('invoices.print', $invoice->id) }}" target="_blank" class="btn btn-primary mr-1">
+                    <i class="icon-printer mr-1"></i> Print Invoice
+                </a>
+                <a href="{{ route('invoices.index') }}" class="btn btn-secondary">
+                    <i class="icon-arrow-left52 mr-1"></i> Back
+                </a>
+            </div>
         </div>
 
         <div class="card-body">
@@ -131,6 +136,12 @@
                 <tr>
                     <th>Inclusive Sales Tax</th>
                     <td>{{ $invoice->inclusive_sales_tax }}</td>
+                </tr>
+                <tr>
+                    <th>Inclusive Sales Tax (in words)</th>
+                    <td class="font-weight-bold">
+                        {{ \App\Services\AmountInWords::rupees($invoice->inclusive_sales_tax) }}
+                    </td>
                 </tr>
                 <tr>
                     <th>Tax Value</th>

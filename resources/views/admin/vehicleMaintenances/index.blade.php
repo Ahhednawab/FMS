@@ -37,37 +37,33 @@
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Vehicle Number</label>
-                            <select name="vehicle_id" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="vehicle_id[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($vehicles as $id => $name)
-                                    <option value="{{ $id }}" {{ request('vehicle_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('vehicle_id'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Vehicle Make</label>
-                            <select name="vehicle_make" @class(['form-control'])>
-                                <option value="">All</option>
+                            <select name="vehicle_make[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($vehicleMakes as $make)
-                                    <option value="{{ $make }}" {{ request('vehicle_make') == $make ? 'selected' : '' }}>{{ $make }}</option>
+                                    <option value="{{ $make }}" {{ collect(request('vehicle_make'))->contains($make) ? 'selected' : '' }}>{{ $make }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Vehicle Model</label>
-                            <select name="vehicle_model" @class(['form-control'])>
-                                <option value="">All</option>
+                            <select name="vehicle_model[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($vehicleModels as $model)
-                                    <option value="{{ $model }}" {{ request('vehicle_model') == $model ? 'selected' : '' }}>{{ $model }}</option>
+                                    <option value="{{ $model }}" {{ collect(request('vehicle_model'))->contains($model) ? 'selected' : '' }}>{{ $model }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Maintenance Type</label>
-                            <select name="maintenance_type" @class(['form-control'])>
-                                <option value="">All</option>
+                            <select name="maintenance_type[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($maintenanceTypes as $key => $label)
-                                    <option value="{{ $key }}" {{ request('maintenance_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    <option value="{{ $key }}" {{ collect(request('maintenance_type'))->contains($key) ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -76,37 +72,33 @@
                     <div @class(['row'])>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Work Done</label>
-                            <select name="work_done_id" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="work_done_id[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($workDones as $id => $name)
-                                    <option value="{{ $id }}" {{ request('work_done_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('work_done_id'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Warehouse</label>
-                            <select name="warehouse_id" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="warehouse_id[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($warehouses as $id => $name)
-                                    <option value="{{ $id }}" {{ request('warehouse_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('warehouse_id'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Workshop</label>
-                            <select name="workshop_id" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="workshop_id[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($workshops as $id => $name)
-                                    <option value="{{ $id }}" {{ request('workshop_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('workshop_id'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div @class(['col-md-2', 'form-group'])>
                             <label>Product / Part Used</label>
-                            <select name="product_id" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="product_id[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($products as $id => $name)
-                                    <option value="{{ $id }}" {{ request('product_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('product_id'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -123,10 +115,9 @@
                     <div @class(['row', 'align-items-end'])>
                         <div @class(['col-md-3', 'form-group'])>
                             <label>Created By</label>
-                            <select name="created_by" @class(['form-control', 'select2'])>
-                                <option value="">All</option>
+                            <select name="created_by[]" multiple @class(['form-control', 'select2-multiple'])>
                                 @foreach ($createdByUsers as $id => $name)
-                                    <option value="{{ $id }}" {{ request('created_by') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                    <option value="{{ $id }}" {{ collect(request('created_by'))->contains($id) ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -137,8 +128,11 @@
                         <div @class(['col-md-6', 'form-group', 'text-right'])>
                             <button type="submit" @class(['btn', 'btn-primary'])>Search</button>
                             <a href="{{ route('vehicleMaintenances.index') }}" @class(['btn', 'btn-light'])>Clear Filters</a>
-                            {{-- <button type="button" id="excelBtn" @class(['btn', 'btn-success'])>Excel</button>
-                            <button type="button" id="pdfBtn" @class(['btn', 'btn-danger'])>PDF</button>
+                            {{-- Downloads every record matching the filters above, across all pages --}}
+                            <button type="submit" formaction="{{ route('vehicleMaintenances.exportExcel') }}" @class(['btn', 'btn-success'])>
+                                <i @class(['icon-file-excel', 'mr-1'])></i> Download Excel
+                            </button>
+                            {{-- <button type="button" id="pdfBtn" @class(['btn', 'btn-danger'])>PDF</button>
                             <button type="button" id="printBtn" @class(['btn', 'btn-secondary'])>Print</button> --}}
                         </div>
                     </div>
@@ -280,8 +274,64 @@ $(document).on('click', '.dt-button.buttons-colvis', function () {
         });
     }, 10);
 });
+
+// Every dropdown filter accepts several values at once. Stock select2 moves
+// the search box inline into the field for multi-selects, so the adapters are
+// composed explicitly to keep the search input inside the dropdown while the
+// chosen values show as chips in the field above.
+$(function () {
+    $.fn.select2.amd.require([
+        'select2/utils',
+        'select2/selection/multiple',
+        'select2/selection/placeholder',
+        'select2/selection/allowClear',
+        'select2/selection/eventRelay',
+        'select2/dropdown',
+        'select2/dropdown/search',
+        'select2/dropdown/attachBody'
+    ], function (Utils, MultipleSelection, Placeholder, AllowClear, EventRelay, Dropdown, DropdownSearch, AttachBody) {
+        var SelectionAdapter = Utils.Decorate(MultipleSelection, Placeholder);
+        SelectionAdapter = Utils.Decorate(SelectionAdapter, AllowClear);
+        SelectionAdapter = Utils.Decorate(SelectionAdapter, EventRelay);
+
+        var DropdownAdapter = Utils.Decorate(Utils.Decorate(Dropdown, DropdownSearch), AttachBody);
+
+        $('.maintenance-filter-card select.select2-multiple').select2({
+            width: '100%',
+            placeholder: 'All',
+            allowClear: true,
+            selectionAdapter: SelectionAdapter,
+            dropdownAdapter: DropdownAdapter
+        });
+    });
+});
     </script>
     <style>
+    /* Multi-select filters: same height and border as the other inputs
+       (select2 keeps its darker border while a field has keyboard focus) */
+    .maintenance-filter-card .select2-container--default .select2-selection--multiple {
+        position: relative;
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    .maintenance-filter-card .select2-container--default:not(.select2-container--focus) .select2-selection--multiple {
+        border-color: #ddd;
+    }
+
+    /* "All" placeholder lined up with the other inputs' placeholder text:
+       14px in from the left edge and centred in the 32px inside the border.
+       Positioned absolutely so it can never change the field's height. */
+    .maintenance-filter-card .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+        position: absolute;
+        top: 0;
+        left: 14px;
+        margin: 0;
+        line-height: 32px;
+        color: #999;
+        list-style: none;
+    }
+
     .datatable-colvis-basic {
         font-size: 12px;
     }

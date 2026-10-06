@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\VehicleMaintenancesExport;
 use App\Http\Controllers\Controller;
 use App\Models\DailyMileageReport;
 use App\Models\InventoryLargerReport;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VehicleMaintenanceController extends Controller
 {
@@ -526,6 +528,35 @@ class VehicleMaintenanceController extends Controller
         ]);
     }
 
+    /**
+     * Excel download of the maintenance list. Built from the list's own
+     * filtered query, so the sheet matches the filters and holds every
+     * matching record — not only the 25 shown on one page.
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = $this->maintenanceQuery($request)
+            ->latest('vehicle_maintenances.created_at')
+            ->orderByDesc('vehicle_maintenances.id');
+
+        return Excel::download(
+            new VehicleMaintenancesExport($query, $this->maintenanceTypes()),
+            'vehicle-maintenance-' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Values chosen in a list filter. The dropdown filters are multi-selects;
+     * a single value (e.g. from an older link) is accepted too, blanks ignored.
+     */
+    private function filterValues(Request $request, string $key): array
+    {
+        return array_values(array_filter(
+            (array) $request->input($key, []),
+            fn ($value) => $value !== null && $value !== ''
+        ));
+    }
+
     private function maintenanceQuery(Request $request)
     {
         return VehicleMaintenance::query()
@@ -533,25 +564,27 @@ class VehicleMaintenanceController extends Controller
             ->where('vehicle_maintenances.is_active', 1)
             ->when($request->filled('from_date'), fn ($query) => $query->whereDate('service_date', '>=', $request->from_date))
             ->when($request->filled('to_date'), fn ($query) => $query->whereDate('service_date', '<=', $request->to_date))
-            ->when($request->filled('vehicle_id'), fn ($query) => $query->where('vehicle_id', $request->vehicle_id))
-            ->when($request->filled('vehicle_make'), fn ($query) => $query->where('vehicle_make', $request->vehicle_make))
-            ->when($request->filled('vehicle_model'), fn ($query) => $query->where('model', $request->vehicle_model))
-            ->when($request->filled('maintenance_type'), fn ($query) => $query->where('maintenance_type', $request->maintenance_type))
-            ->when($request->filled('work_done_id'), fn ($query) => $query->where(function ($inner) use ($request) {
-                $inner->where('work_done_id', $request->work_done_id)
-                    ->orWhereHas('workDones', fn ($workDones) => $workDones->where('vehicle_maintenance_work_dones.id', $request->work_done_id));
+            // Dropdown filters are multi-selects: a record matches a filter when
+            // it has ANY of the chosen values, and it must match every filter.
+            ->when($this->filterValues($request, 'vehicle_id'), fn ($query, $ids) => $query->whereIn('vehicle_id', $ids))
+            ->when($this->filterValues($request, 'vehicle_make'), fn ($query, $makes) => $query->whereIn('vehicle_make', $makes))
+            ->when($this->filterValues($request, 'vehicle_model'), fn ($query, $models) => $query->whereIn('model', $models))
+            ->when($this->filterValues($request, 'maintenance_type'), fn ($query, $types) => $query->whereIn('maintenance_type', $types))
+            ->when($this->filterValues($request, 'work_done_id'), fn ($query, $ids) => $query->where(function ($inner) use ($ids) {
+                $inner->whereIn('work_done_id', $ids)
+                    ->orWhereHas('workDones', fn ($workDones) => $workDones->whereIn('vehicle_maintenance_work_dones.id', $ids));
             }))
             // Warehouse now lives on each product row, so match any maintenance
-            // record that drew a part from the selected warehouse.
-            ->when($request->filled('warehouse_id'), fn ($query) => $query->whereHas(
+            // record that drew a part from one of the selected warehouses.
+            ->when($this->filterValues($request, 'warehouse_id'), fn ($query, $ids) => $query->whereHas(
                 'maintenanceParts',
-                fn ($parts) => $parts->where('vehicle_maintenance_parts.warehouse_id', $request->warehouse_id)
+                fn ($parts) => $parts->whereIn('vehicle_maintenance_parts.warehouse_id', $ids)
             ))
-            ->when($request->filled('workshop_id'), fn ($query) => $query->where('workshop_id', $request->workshop_id))
-            ->when($request->filled('created_by'), fn ($query) => $query->where('created_by', $request->created_by))
+            ->when($this->filterValues($request, 'workshop_id'), fn ($query, $ids) => $query->whereIn('workshop_id', $ids))
+            ->when($this->filterValues($request, 'created_by'), fn ($query, $ids) => $query->whereIn('created_by', $ids))
             ->when($request->filled('amount_min'), fn ($query) => $query->where('service_cost', '>=', $request->amount_min))
             ->when($request->filled('amount_max'), fn ($query) => $query->where('service_cost', '<=', $request->amount_max))
-            ->when($request->filled('product_id'), fn ($query) => $query->whereHas('maintenanceParts', fn ($parts) => $parts->where('product_id', $request->product_id)))
+            ->when($this->filterValues($request, 'product_id'), fn ($query, $ids) => $query->whereHas('maintenanceParts', fn ($parts) => $parts->whereIn('product_id', $ids)))
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = '%' . $request->search . '%';
                 $query->where(function ($inner) use ($search) {
