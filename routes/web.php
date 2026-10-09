@@ -303,6 +303,9 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
     Route::resource('roles', RoleController::class);
 
 
+    Route::get('alerts/settings', [AlertController::class, 'settings'])->name('alerts.settings');
+    Route::get('alerts/export', [AlertController::class, 'export'])->name('alerts.export');
+    Route::post('alerts/mark-done', [AlertController::class, 'markDone'])->name('alerts.markDone');
     Route::resource('alerts', AlertController::class);
 });
 

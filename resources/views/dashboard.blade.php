@@ -162,11 +162,19 @@
 
                     <div class="col-6">
                         <div class="page-header page-header-light">
-                            <div class="page-header-content">
-                                <h5>
+                            <div class="page-header-content d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
                                     <i class="icon-database mr-2"></i>
                                     <span class="font-weight-semibold">Master Data Notifications</span>
                                 </h5>
+                                <div class="d-flex align-items-center">
+                                    <a href="{{ route('alerts.export', ['type' => 'master_data']) }}"
+                                        class="btn btn-sm btn-success mr-1 js-export-alerts" data-alert-type="master_data">
+                                        <i class="icon-file-excel mr-1"></i> Export Report
+                                    </a>
+                                    <a href="{{ route('alerts.index', ['type' => 'master_data']) }}"
+                                        class="btn btn-sm btn-info js-view-all-alerts" data-alert-type="master_data">View All</a>
+                                </div>
                             </div>
                         </div>
 
@@ -219,11 +227,19 @@
 
                     <div class="col-6">
                         <div class="page-header page-header-light">
-                            <div class="page-header-content">
-                                <h5>
+                            <div class="page-header-content d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
                                     <i class="icon-wrench mr-2"></i>
                                     <span class="font-weight-semibold">Maintenance Alerts</span>
                                 </h5>
+                                <div class="d-flex align-items-center">
+                                    <a href="{{ route('alerts.export', ['type' => 'maintenance']) }}"
+                                        class="btn btn-sm btn-success mr-1 js-export-alerts" data-alert-type="maintenance">
+                                        <i class="icon-file-excel mr-1"></i> Export Report
+                                    </a>
+                                    <a href="{{ route('alerts.index', ['type' => 'maintenance']) }}"
+                                        class="btn btn-sm btn-info js-view-all-alerts" data-alert-type="maintenance">View All</a>
+                                </div>
                             </div>
                         </div>
 
@@ -276,11 +292,19 @@
 
                     <div class="col-6 mt-4">
                         <div class="page-header page-header-light">
-                            <div class="page-header-content">
-                                <h5>
+                            <div class="page-header-content d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
                                     <i class="icon-user mr-2"></i>
                                     <span class="font-weight-semibold">Driver Notifications</span>
                                 </h5>
+                                <div class="d-flex align-items-center">
+                                    <a href="{{ route('alerts.export', ['type' => 'driver']) }}"
+                                        class="btn btn-sm btn-success mr-1 js-export-alerts" data-alert-type="driver">
+                                        <i class="icon-file-excel mr-1"></i> Export Report
+                                    </a>
+                                    <a href="{{ route('alerts.index', ['type' => 'driver']) }}"
+                                        class="btn btn-sm btn-info js-view-all-alerts" data-alert-type="driver">View All</a>
+                                </div>
                             </div>
                         </div>
 
@@ -365,29 +389,21 @@
             };
         }
 
-        function loadExpiredDrivers(page = 1, options = {}) {
+        function loadExpiredDrivers(page = 1) {
             $.get("{{ route('dashboard.expiredDrivers') }}", {
                 ...getExpiredDriversFilters(),
                 page
             }, function(res) {
                 $('#expired-drivers-wrapper').html(res.html);
-
-                if (options.openModal) {
-                    $('#allDriversModal').modal('show');
-                }
             });
         }
 
-        function loadExpiredVehicles(page = 1, options = {}) {
+        function loadExpiredVehicles(page = 1) {
             $.get("{{ route('dashboard.expiredVehicles') }}", {
                 ...getExpiredVehiclesFilters(),
                 page
             }, function(res) {
                 $('#expired-vehicles-wrapper').html(res.html);
-
-                if (options.openModal) {
-                    $('#allVehiclesModal').modal('show');
-                }
             });
         }
 
@@ -604,14 +620,6 @@
             loadExpiredDrivers(url.searchParams.get('page') || 1);
         });
 
-        $(document).on('click', '#expired-drivers-wrapper .expired-drivers-modal-pagination a', function(e) {
-            e.preventDefault();
-            const url = new URL($(this).attr('href'));
-            loadExpiredDrivers(url.searchParams.get('page') || 1, {
-                openModal: true
-            });
-        });
-
         $(document).on('change', '#expired-vehicles-wrapper .js-vehicle-reason', function() {
             loadExpiredVehicles(1);
         });
@@ -633,13 +641,37 @@
             loadExpiredVehicles(url.searchParams.get('page') || 1);
         });
 
-        $(document).on('click', '#expired-vehicles-wrapper .expired-vehicles-modal-pagination a', function(e) {
-            e.preventDefault();
-            const url = new URL($(this).attr('href'));
-            loadExpiredVehicles(url.searchParams.get('page') || 1, {
-                openModal: true
+        // Keep each panel's "View All" and "Export Report" links pointing at the
+        // same filters the panel itself is showing, so the Alerts page opens on
+        // that exact list and the export holds exactly those rows.
+        function alertsUrl(base, type, title, referenceId) {
+            const params = new URLSearchParams({
+                type
             });
-        });
+            if (title) params.set('title', title);
+            if (referenceId) params.set('reference_id', referenceId);
+            return base + '?' + params.toString();
+        }
+
+        function syncAlertLinks() {
+            const panels = [
+                ['master_data', $('#master_title').val(), $('#master_vehicle').val()],
+                ['maintenance', $('#maintenance_alert').val(), $('#maintenance_vehicle').val()],
+                ['driver', $('#driver_title').val(), $('#driver_id').val()]
+            ];
+
+            panels.forEach(function (panel) {
+                const type = panel[0], title = panel[1], referenceId = panel[2];
+
+                $('.js-view-all-alerts[data-alert-type="' + type + '"]')
+                    .attr('href', alertsUrl("{{ route('alerts.index') }}", type, title, referenceId));
+                $('.js-export-alerts[data-alert-type="' + type + '"]')
+                    .attr('href', alertsUrl("{{ route('alerts.export') }}", type, title, referenceId));
+            });
+        }
+
+        $('#master_vehicle, #master_title, #maintenance_vehicle, #maintenance_alert, #driver_id, #driver_title')
+            .on('change', syncAlertLinks);
 
         // INIT
         $(document).ready(function() {
@@ -655,6 +687,7 @@
             loadMasterDataAlerts();
             loadDrivers();
             loadDriverAlerts();
+            syncAlertLinks();
         });
     </script>
 

@@ -18,10 +18,10 @@
                         <i class="icon-file-excel mr-1"></i> Export Report
                     </a>
 
-                    <button type="button" class="btn btn-sm btn-info js-open-all-vehicles-modal" data-toggle="modal"
-                        data-target="#allVehiclesModal">
+                    <a href="{{ route('alerts.index', ['type' => 'expired_vehicles', 'title' => $filters['reason'] ?? '', 'search' => $filters['search'] ?? '']) }}"
+                        class="btn btn-sm btn-info">
                         View All
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -154,60 +154,4 @@
         @endif
     </div>
 
-    <div class="modal fade" id="allVehiclesModal" tabindex="-1" role="dialog" aria-labelledby="allVehiclesModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="allVehiclesModalLabel">Expired Vehicles List</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
-
-                <div class="modal-body p-0" style="overflow-x: auto; max-height: 70vh;">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-sm mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Serial No</th>
-                                    <th>Vehicle No</th>
-                                    <th>Model</th>
-                                    <th>Type</th>
-                                    <th>Station</th>
-                                    <th>Reason</th>
-                                    <th>Expiry Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($expiredVehicles as $vehicle)
-                                    <tr>
-                                        <td>{{ str_pad($vehicle->id, 9, '0', STR_PAD_LEFT) }}</td>
-                                        <td>{{ $vehicle->vehicle_no }}</td>
-                                        <td>{{ $vehicle->model }}</td>
-                                        <td>{{ $vehicle->vehicle_type_name }}</td>
-                                        <td>{{ $vehicle->station_area }}</td>
-                                        <td class="text-danger">{{ $vehicle->reason }}</td>
-                                        <td class="text-danger">{{ $vehicle->date }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">No expired dates found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-center my-3 expired-vehicles-modal-pagination">
-                        {{ $expiredVehicles->links('vendor.pagination.ajax-short') }}
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
