@@ -26,6 +26,7 @@ class Invoice extends Model
         'invoice_date',
         'submission_date',
         'po_no',
+        'description',
         'vehicle_qty',
         'days',
         'vehicle_rent',

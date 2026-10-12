@@ -59,6 +59,16 @@
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label>Description</label>
+                        <textarea name="description" rows="3"
+                            class="form-control @error('description') is-invalid @enderror"
+                            placeholder="Enter invoice description...">{{ old('description', $invoice->description) }}</textarea>
+                        @error('description')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 {{-- DATES --}}

@@ -155,6 +155,7 @@ class InvoiceController extends Controller
             'invoice_date' => 'required|date',
             'submission_date' => 'nullable|date',
             'po_no' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
             'vehicles' => 'required|array|min:1',
             'vehicles.*.vehicle_qty' => 'required|numeric|min:0',
             'vehicles.*.days' => 'required|numeric|min:0',

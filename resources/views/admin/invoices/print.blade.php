@@ -31,10 +31,22 @@
 
     $region = 'Karachi Region';
     $vehicleRowLabel = 'MTL Vehicles';
-    $serviceDescription = [
-        'Transport Services (MTL vehicles) at K-Electric',
-        'Karachi as per PO & attendance attached',
-    ];
+
+    // Use the invoice description saved in DB.
+    // If empty, fall back to the original hardcoded text so old invoices still print correctly.
+    if (!empty(trim((string) $invoice->description))) {
+        // Split on newlines so each line prints on its own <div>
+        $serviceDescription = array_filter(
+            array_map('trim', explode("\n", $invoice->description)),
+            fn($line) => $line !== ''
+        );
+        $serviceDescription = array_values($serviceDescription);
+    } else {
+        $serviceDescription = [
+            'Transport Services (MTL vehicles) at K-Electric',
+            'Karachi as per PO & attendance attached',
+        ];
+    }
 
     // Kept in step with the tax engine so the note can never drift from the rate
     // actually charged on the invoice.

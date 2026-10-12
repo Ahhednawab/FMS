@@ -44,6 +44,10 @@
                     <td>{{ $invoice->po_no }}</td>
                 </tr>
                 <tr>
+                    <th>Description</th>
+                    <td>{!! nl2br(e($invoice->description)) !!}</td>
+                </tr>
+                <tr>
                     <th>Clearance Indication</th>
                     <td>
                         <span class="badge badge-{{ $clearanceColors[$clearanceKey] ?? 'secondary' }} px-3 py-2">
