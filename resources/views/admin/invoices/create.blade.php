@@ -56,10 +56,10 @@
                     </div>
 
                     <div class="col-md-12 mb-3">
-                        <label>Description</label>
+                        <label>Remarks</label>
                         <textarea name="description" rows="3"
                             class="form-control @error('description') is-invalid @enderror"
-                            placeholder="Enter invoice description...">{{ old('description') }}</textarea>
+                            placeholder="Enter remarks (optional)...">{{ old('description') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -115,6 +115,7 @@
                         $vehicleRows = old('vehicles');
                         if (!is_array($vehicleRows) || count($vehicleRows) === 0) {
                             $vehicleRows = [[
+                                'description' => '',
                                 'vehicle_qty' => '',
                                 'days' => '',
                                 'vehicle_rent' => '',
@@ -126,6 +127,16 @@
                     @foreach ($vehicleRows as $i => $vehicleRow)
                         @php $vehicleRow = is_array($vehicleRow) ? $vehicleRow : []; @endphp
                         <div class="row vehicle-row mb-2" data-index="{{ $i }}">
+                            <div class="col-md-3">
+                                <input type="text" name="vehicles[{{ $i }}][description]"
+                                    class="form-control @error("vehicles.$i.description") is-invalid @enderror"
+                                    placeholder="Description"
+                                    value="{{ old("vehicles.$i.description", $vehicleRow['description'] ?? '') }}">
+                                @error("vehicles.$i.description")
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="col-md-2">
                                 <input type="number" step="any" min="0" name="vehicles[{{ $i }}][vehicle_qty]"
                                     class="form-control invoice-vehicle-qty @error("vehicles.$i.vehicle_qty") is-invalid @enderror"
@@ -136,7 +147,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <input type="number" step="any" min="0" name="vehicles[{{ $i }}][days]"
                                     class="form-control @error("vehicles.$i.days") is-invalid @enderror"
                                     placeholder="Days"
@@ -146,7 +157,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="number" step="any" name="vehicles[{{ $i }}][vehicle_rent]"
                                     class="form-control invoice-vehicle-rent @error("vehicles.$i.vehicle_rent") is-invalid @enderror"
                                     placeholder="Vehicle Rent"
@@ -156,7 +167,7 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="number" step="any" name="vehicles[{{ $i }}][monthly_rent]"
                                     class="form-control invoice-monthly-rent @error("vehicles.$i.monthly_rent") is-invalid @enderror"
                                     readonly
@@ -183,11 +194,31 @@
                 <h6 class="font-weight-bold mb-3">Charges</h6>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label>Sunday Gazette</label>
-                        <input type="number" step="0.01" name="sunday_gazette"
-                            class="form-control invoice-sunday-gazette @error('sunday_gazette') is-invalid @enderror"
-                            value="{{ old('sunday_gazette') }}">
-                        @error('sunday_gazette')
+                        <label>Sunday</label>
+                        <input type="number" step="0.01" name="sunday"
+                            class="form-control invoice-sunday @error('sunday') is-invalid @enderror"
+                            value="{{ old('sunday') }}">
+                        @error('sunday')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label>Gazetted 12 hr</label>
+                        <input type="number" step="0.01" name="gazetted_12hr"
+                            class="form-control invoice-gazetted-12 @error('gazetted_12hr') is-invalid @enderror"
+                            value="{{ old('gazetted_12hr') }}">
+                        @error('gazetted_12hr')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label>Gazetted 24 hr</label>
+                        <input type="number" step="0.01" name="gazetted_24hr"
+                            class="form-control invoice-gazetted-24 @error('gazetted_24hr') is-invalid @enderror"
+                            value="{{ old('gazetted_24hr') }}">
+                        @error('gazetted_24hr')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -359,12 +390,14 @@
                 totalMonthlyRent += monthlyRent;
             });
 
-            const sundayGazette = toNumber(document.querySelector('.invoice-sunday-gazette')?.value);
+            const sunday = toNumber(document.querySelector('.invoice-sunday')?.value);
+            const gazetted12 = toNumber(document.querySelector('.invoice-gazetted-12')?.value);
+            const gazetted24 = toNumber(document.querySelector('.invoice-gazetted-24')?.value);
             const controlRoomCharges = toNumber(document.querySelector('.invoice-control-room')?.value);
             const agreedDeduction = toNumber(document.querySelector('.invoice-agreed-deduction')?.value);
             const paymentReceived = toNumber(document.querySelector('.invoice-payment-received')?.value);
 
-            const totalClaim = roundMoney(totalMonthlyRent + sundayGazette + controlRoomCharges);
+            const totalClaim = roundMoney(totalMonthlyRent + sunday + gazetted12 + gazetted24 + controlRoomCharges);
             const salesTax = roundMoney(totalClaim * INVOICE_RATES.salesTax);
             const inclusiveTotal = roundMoney(totalClaim + salesTax);
             const taxValue = roundMoney(inclusiveTotal * INVOICE_RATES.taxValue);
@@ -416,7 +449,7 @@
         });
 
         document.addEventListener('input', function(e) {
-                if (e.target.matches('.invoice-vehicle-qty, .invoice-vehicle-rent, .invoice-sunday-gazette, .invoice-control-room, .invoice-agreed-deduction, .invoice-payment-received')) {
+                if (e.target.matches('.invoice-vehicle-qty, .invoice-vehicle-rent, .invoice-sunday, .invoice-gazetted-12, .invoice-gazetted-24, .invoice-control-room, .invoice-agreed-deduction, .invoice-payment-received')) {
                     recalculateInvoice();
                 }
             });

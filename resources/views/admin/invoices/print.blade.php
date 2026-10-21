@@ -30,23 +30,14 @@
     ];
 
     $region = 'Karachi Region';
-    $vehicleRowLabel = 'MTL Vehicles';
 
-    // Use the invoice description saved in DB.
-    // If empty, fall back to the original hardcoded text so old invoices still print correctly.
-    if (!empty(trim((string) $invoice->description))) {
-        // Split on newlines so each line prints on its own <div>
-        $serviceDescription = array_filter(
-            array_map('trim', explode("\n", $invoice->description)),
-            fn($line) => $line !== ''
-        );
-        $serviceDescription = array_values($serviceDescription);
-    } else {
-        $serviceDescription = [
-            'Transport Services (MTL vehicles) at K-Electric',
-            'Karachi as per PO & attendance attached',
-        ];
-    }
+    // Remarks wahi chhapte hain jo invoice mein likhe hon; na likhe hon to
+    // jagah khali rehti hai (koi default text nahi).
+    $remarkLines = array_values(array_filter(
+        array_map('trim', explode("
+", (string) $invoice->description)),
+        fn ($line) => $line !== ''
+    ));
 
     // Kept in step with the tax engine so the note can never drift from the rate
     // actually charged on the invoice.
@@ -72,6 +63,7 @@
     $daysList = $toArray($invoice->days);
     $rentList = $toArray($invoice->vehicle_rent);
     $monthlyList = $toArray($invoice->monthly_rent);
+    $descriptionList = $toArray($invoice->vehicle_description);
 
     $rows = [];
     foreach ($qtyList as $i => $qty) {
@@ -80,7 +72,7 @@
             continue; // empty row on the form
         }
         $rows[] = [
-            'description' => $vehicleRowLabel,
+            'description' => trim((string) ($descriptionList[$i] ?? '')),
             'days' => $daysList[$i] ?? null,
             'qty' => $qty,
             'rate' => $rentList[$i] ?? null,
@@ -88,8 +80,9 @@
         ];
     }
 
-    if ((float) $invoice->sunday_gazette != 0.0) {
-        $rows[] = ['description' => 'Sunday / Gazetted', 'days' => null, 'qty' => null, 'rate' => null, 'amount' => $invoice->sunday_gazette];
+    // Ye teen rows hamesha chhapti hain, chahe amount 0 ho.
+    foreach (['Sunday' => $invoice->sunday, 'Gazetted 12 hr' => $invoice->gazetted_12hr, 'Gazetted 24 hr' => $invoice->gazetted_24hr] as $label => $amount) {
+        $rows[] = ['description' => $label, 'days' => null, 'qty' => null, 'rate' => null, 'amount' => (float) $amount];
     }
 
     if ((float) $invoice->control_room_charges != 0.0) {
@@ -311,14 +304,15 @@
         }
 
         @media print {
-            @page {
-                size: A4;
-                margin: var(--printer-margin);
-            }
-
             body {
                 background: #fff;
                 padding: 0;
+            }
+
+            /* Letterhead ki jagah ab @page margin se aati hai (printPageRules),
+               taake har page par chhute — sirf pehle page par nahi. */
+            .letterhead-space {
+                display: none;
             }
 
             .sheet {
@@ -326,7 +320,7 @@
                 max-width: none;
                 min-height: 0;
                 margin: 0;
-                padding: 0 var(--side-margin);
+                padding: 0;
                 box-shadow: none;
             }
 
@@ -344,6 +338,8 @@
             }
         }
     </style>
+    <!-- @page ke andar CSS variables chalte nahi, is liye ye rule JS se likha jata hai -->
+    <style id="printPageRules"></style>
 </head>
 <body>
 
@@ -439,8 +435,8 @@
     <table class="footer-block">
         <tr>
             <td>
-                <div class="underline-head">Description</div>
-                @foreach ($serviceDescription as $line)
+                <div class="underline-head">Remarks</div>
+                @foreach ($remarkLines as $line)
                     <div>{{ $line }}</div>
                 @endforeach
             </td>
@@ -465,10 +461,29 @@
     // Letterhead gap and side margin are physical measurements, so they are
     // adjustable here and remembered in this browser for the next print.
     (function () {
+        var BOTTOM_MARGIN_MM = 12;
+
         var settings = [
             { input: 'letterheadSpace', variable: '--letterhead-space', store: 'invoiceLetterheadSpace', fallback: 40 },
             { input: 'sideMargin', variable: '--side-margin', store: 'invoiceSideMargin', fallback: 14 }
         ];
+
+        var pageRules = document.getElementById('printPageRules');
+
+        function valueOf(setting) {
+            var mm = parseFloat(document.getElementById(setting.input).value);
+            return (isNaN(mm) || mm < 0) ? setting.fallback : mm;
+        }
+
+        // Har page ki margins: upar letterhead ki jagah, dono taraf side margin.
+        // Ye @page rule hai, is liye doosre aur teesre page par bhi lagti hai.
+        function applyPageRules() {
+            var top = valueOf(settings[0]);
+            var side = valueOf(settings[1]);
+
+            pageRules.textContent = '@page { size: A4; margin: ' + top + 'mm ' + side + 'mm '
+                + BOTTOM_MARGIN_MM + 'mm ' + side + 'mm; }';
+        }
 
         settings.forEach(function (setting) {
             var input = document.getElementById(setting.input);
@@ -485,11 +500,10 @@
             }
 
             function apply() {
-                var mm = parseFloat(input.value);
-                if (isNaN(mm) || mm < 0) {
-                    mm = setting.fallback;
-                }
+                var mm = valueOf(setting);
+                input.value = mm;
                 document.documentElement.style.setProperty(setting.variable, mm + 'mm');
+                applyPageRules();
                 try {
                     localStorage.setItem(setting.store, String(mm));
                 } catch (e) {

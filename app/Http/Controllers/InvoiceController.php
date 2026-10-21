@@ -157,11 +157,14 @@ class InvoiceController extends Controller
             'po_no' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'vehicles' => 'required|array|min:1',
+            'vehicles.*.description' => 'nullable|string|max:255',
             'vehicles.*.vehicle_qty' => 'required|numeric|min:0',
             'vehicles.*.days' => 'required|numeric|min:0',
             'vehicles.*.vehicle_rent' => 'required|numeric|min:0',
             'vehicles.*.monthly_rent' => 'nullable|numeric|min:0',
-            'sunday_gazette' => 'nullable|numeric|min:0',
+            'sunday' => 'nullable|numeric|min:0',
+            'gazetted_12hr' => 'nullable|numeric|min:0',
+            'gazetted_24hr' => 'nullable|numeric|min:0',
             'control_room_charges' => 'nullable|numeric|min:0',
             'total_claim' => 'nullable|numeric|min:0',
             'sales_tax' => 'nullable|numeric|min:0',
@@ -186,6 +189,7 @@ class InvoiceController extends Controller
     {
         $vehicles = $validated['vehicles'];
 
+        $validated['vehicle_description'] = array_column($vehicles, 'description');
         $validated['vehicle_qty'] = array_column($vehicles, 'vehicle_qty');
         $validated['days'] = array_column($vehicles, 'days');
         $validated['vehicle_rent'] = array_column($vehicles, 'vehicle_rent');
@@ -215,17 +219,21 @@ class InvoiceController extends Controller
             $monthlyRent[] = $qty * ($vehicleRentNumbers[$index] ?? 0);
         }
 
-        $sundayGazette = $this->normalizeDecimalValue($validated['sunday_gazette'] ?? 0);
+        $sunday = $this->normalizeDecimalValue($validated['sunday'] ?? 0);
+        $gazetted12 = $this->normalizeDecimalValue($validated['gazetted_12hr'] ?? 0);
+        $gazetted24 = $this->normalizeDecimalValue($validated['gazetted_24hr'] ?? 0);
         $controlRoomCharges = $this->normalizeDecimalValue($validated['control_room_charges'] ?? 0);
         $agreedDeduction = $this->normalizeDecimalValue($validated['agreed_deduction'] ?? 0);
         $paymentReceived = $this->normalizeDecimalValue($validated['payment_received'] ?? 0);
-        $sundayGazetteNumber = $this->toFloat($sundayGazette);
+        $sundayNumber = $this->toFloat($sunday);
+        $gazetted12Number = $this->toFloat($gazetted12);
+        $gazetted24Number = $this->toFloat($gazetted24);
         $controlRoomChargesNumber = $this->toFloat($controlRoomCharges);
         $agreedDeductionNumber = $this->toFloat($agreedDeduction);
         $paymentReceivedNumber = $this->toFloat($paymentReceived);
 
         $totalMonthlyRent = array_sum($monthlyRent);
-        $totalClaim = $totalMonthlyRent + $sundayGazetteNumber + $controlRoomChargesNumber;
+        $totalClaim = $totalMonthlyRent + $sundayNumber + $gazetted12Number + $gazetted24Number + $controlRoomChargesNumber;
         $salesTax = $totalClaim * self::SALES_TAX_RATE;
         $inclusiveTotal = $totalClaim + $salesTax;
         $taxValue = $inclusiveTotal * self::TAX_VALUE_RATE;
@@ -236,7 +244,9 @@ class InvoiceController extends Controller
         $validated['days'] = $days;
         $validated['vehicle_rent'] = $vehicleRent;
         $validated['monthly_rent'] = $monthlyRent;
-        $validated['sunday_gazette'] = $sundayGazette;
+        $validated['sunday'] = $sunday;
+        $validated['gazetted_12hr'] = $gazetted12;
+        $validated['gazetted_24hr'] = $gazetted24;
         $validated['control_room_charges'] = $controlRoomCharges;
         $validated['total_claim'] = $totalClaim;
         $validated['sales_tax'] = $salesTax;

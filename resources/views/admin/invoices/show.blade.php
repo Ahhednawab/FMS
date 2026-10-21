@@ -44,7 +44,7 @@
                     <td>{{ $invoice->po_no }}</td>
                 </tr>
                 <tr>
-                    <th>Description</th>
+                    <th>Remarks</th>
                     <td>{!! nl2br(e($invoice->description)) !!}</td>
                 </tr>
                 <tr>
@@ -89,6 +89,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th>#</th>
+                        <th>Description</th>
                         <th>Vehicle Qty</th>
                         <th>Days</th>
                         <th>Vehicle Rent</th>
@@ -103,6 +104,7 @@
                     @foreach ($vehicles as $i => $qty)
                         <tr>
                             <td>{{ $i + 1 }}</td>
+                            <td>{{ $invoice->vehicle_description[$i] ?? '-' }}</td>
                             <td>{{ $qty }}</td>
                             <td>{{ $invoice->days[$i] ?? '-' }}</td>
                             <td>{{ $invoice->vehicle_rent[$i] ?? 0 }}</td>
@@ -117,8 +119,16 @@
             <h6 class="font-weight-bold mt-4 mb-3">Charges</h6>
             <table class="table table-sm table-bordered">
                 <tr>
-                    <th width="25%">Sunday Gazette</th>
-                    <td>{{ $invoice->sunday_gazette }}</td>
+                    <th width="25%">Sunday</th>
+                    <td>{{ $invoice->sunday }}</td>
+                </tr>
+                <tr>
+                    <th>Gazetted 12 hr</th>
+                    <td>{{ $invoice->gazetted_12hr }}</td>
+                </tr>
+                <tr>
+                    <th>Gazetted 24 hr</th>
+                    <td>{{ $invoice->gazetted_24hr }}</td>
                 </tr>
                 <tr>
                     <th>Control Room Charges</th>
