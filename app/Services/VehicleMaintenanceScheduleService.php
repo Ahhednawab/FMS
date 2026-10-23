@@ -36,6 +36,23 @@ class VehicleMaintenanceScheduleService
     }
 
     /**
+     * Agla due reading: interval ka agla multiple jo reference se upar ho.
+     *
+     * Configuration ki reading hi due hoti hai (1,000 / 2,000 / 3,000 … ya
+     * 5,000 / 10,000 / 15,000 …), aur alert us se UPCOMING_ALERT_KM pehle.
+     * Maintenance ke baad reference us maintenance ki odometer reading hoti
+     * hai, warna wo reading jahan se monitoring shuru hui.
+     */
+    private function nextDueFrom(int $reference, int $interval): int
+    {
+        if ($interval <= 0) {
+            return $reference;
+        }
+
+        return (intdiv(max(0, $reference), $interval) + 1) * $interval;
+    }
+
+    /**
      * Latest recorded mileage (KM) for a vehicle, or null when unknown.
      */
     public function currentMileage(int $vehicleId): ?int
@@ -87,7 +104,7 @@ class VehicleMaintenanceScheduleService
                     $schedule->update([
                         'service_interval_km' => $interval,
                         'alert_before_km'     => VehicleMaintenanceConfiguration::UPCOMING_ALERT_KM,
-                        'next_due_km'         => (int) $schedule->last_service_km + $interval,
+                        'next_due_km'         => $this->nextDueFrom((int) $schedule->last_service_km, $interval),
                     ]);
                 }
                 continue;
@@ -106,7 +123,7 @@ class VehicleMaintenanceScheduleService
                 'alert_before_km'     => VehicleMaintenanceConfiguration::UPCOMING_ALERT_KM,
                 'last_service_km'     => $baseline,
                 'last_service_date'   => $lastDate,
-                'next_due_km'         => $baseline + $interval,
+                'next_due_km'         => $this->nextDueFrom($baseline, $interval),
                 'last_alerted_at'     => null,
             ]);
         }
@@ -164,7 +181,7 @@ class VehicleMaintenanceScheduleService
                 continue; // item not configured for this make/model
             }
 
-            $nextDue = $baseline + $interval;
+            $nextDue = $this->nextDueFrom($baseline, $interval);
 
             VehicleMaintenanceSchedule::updateOrCreate(
                 [
