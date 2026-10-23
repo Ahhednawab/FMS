@@ -484,8 +484,10 @@ XML;
                 $isTwentyFourHourVehicle = $this->isTwentyFourHourVehicle($vehicle);
 
                 if ($isTwentyFourHourVehicle) {
-                    $offPeak = $peakKms;
-                    $totalKms = $peakKms;
+                    // 24 ghante chalne wali gari ka poora din ginna hai,
+                    // is liye Peak ke sath Off Peak bhi shamil hota hai.
+                    $offPeak = $peakKms + $offPeakKms;
+                    $totalKms = $peakKms + $offPeakKms;
                 } else {
                     $offPeak = $peakKms + $offPeakKms;
                     $totalKms = abs($ams) < 0.001 ? $peakKms : $ams + $parking;

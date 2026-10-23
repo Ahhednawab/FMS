@@ -98,7 +98,8 @@
     <style>
         :root {
             /* Both are physical measurements, so the toolbar can adjust them */
-            --letterhead-space: 40mm;
+            --letterhead-space: 45mm;
+            --footer-space: 20mm;
             --side-margin: 14mm;
             --printer-margin: 8mm;
         }
@@ -129,6 +130,11 @@
         /* Blank space left for the pre-printed letterhead */
         .letterhead-space {
             height: var(--letterhead-space);
+        }
+
+        /* Letterhead ke neeche wale hisse ke liye jagah (screen preview) */
+        .footer-space {
+            height: var(--footer-space);
         }
 
         .top-line {
@@ -311,7 +317,8 @@
 
             /* Letterhead ki jagah ab @page margin se aati hai (printPageRules),
                taake har page par chhute — sirf pehle page par nahi. */
-            .letterhead-space {
+            .letterhead-space,
+            .footer-space {
                 display: none;
             }
 
@@ -350,12 +357,17 @@
         <input type="number" id="letterheadSpace" min="0" max="120" step="1" value="40"> mm
     </label>
     <label>
+        Footer space:
+        <input type="number" id="footerSpace" min="0" max="80" step="1" value="20"> mm
+    </label>
+    <label>
         Side margin:
         <input type="number" id="sideMargin" min="0" max="40" step="1" value="14"> mm
     </label>
     <a href="{{ route('invoices.show', $invoice->id) }}">Back</a>
     <p class="hint">
-        Letterhead par ek test print nikal kar ye dono settings apne hisab se set karein — browser inhein yaad rakhega.
+        Letterhead par ek test print nikal kar ye settings apne hisab se set karein — browser inhein yaad rakhega.
+        Upar wali jagah letterhead ke header ke liye hai aur "Footer space" neeche wale hisse ke liye.
     </p>
 </div>
 
@@ -455,16 +467,16 @@
         As per SROSRB-3-4/14/2014 dated 01/07/2014, kindly deduct over {{ $withholdingPercent }}%<br>
         of {{ $salesTaxPercent }}% Tax amount mentioned on the invoice.
     </div>
+    <div class="footer-space" id="footerSpacer"></div>
 </div>
 
 <script>
     // Letterhead gap and side margin are physical measurements, so they are
     // adjustable here and remembered in this browser for the next print.
     (function () {
-        var BOTTOM_MARGIN_MM = 12;
-
         var settings = [
-            { input: 'letterheadSpace', variable: '--letterhead-space', store: 'invoiceLetterheadSpace', fallback: 40 },
+            { input: 'letterheadSpace', variable: '--letterhead-space', store: 'invoiceLetterheadSpace', fallback: 45 },
+            { input: 'footerSpace', variable: '--footer-space', store: 'invoiceFooterSpace', fallback: 20 },
             { input: 'sideMargin', variable: '--side-margin', store: 'invoiceSideMargin', fallback: 14 }
         ];
 
@@ -479,10 +491,11 @@
         // Ye @page rule hai, is liye doosre aur teesre page par bhi lagti hai.
         function applyPageRules() {
             var top = valueOf(settings[0]);
-            var side = valueOf(settings[1]);
+            var bottom = valueOf(settings[1]);
+            var side = valueOf(settings[2]);
 
             pageRules.textContent = '@page { size: A4; margin: ' + top + 'mm ' + side + 'mm '
-                + BOTTOM_MARGIN_MM + 'mm ' + side + 'mm; }';
+                + bottom + 'mm ' + side + 'mm; }';
         }
 
         settings.forEach(function (setting) {
