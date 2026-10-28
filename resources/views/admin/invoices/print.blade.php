@@ -109,8 +109,8 @@
             padding: 0 0 24px;
             background: #e9e9e9;
             font-family: "Times New Roman", Times, serif;
-            font-size: 12pt;
-            line-height: 1.35;
+            font-size: 10.5pt;
+            line-height: 1.25;
             color: #000;
         }
 
@@ -127,6 +127,11 @@
             box-sizing: border-box;
         }
 
+        /* Jo hissa ek page par fit karna hai (auto-fit yahan zoom lagata hai) */
+        .fit-area {
+            transform-origin: top left;
+        }
+
         /* Blank space left for the pre-printed letterhead */
         .letterhead-space {
             height: var(--letterhead-space);
@@ -139,7 +144,7 @@
 
         .top-line {
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         table {
@@ -154,10 +159,10 @@
         .parties td {
             border: 1px solid #000;
             vertical-align: top;
-            padding: 7px 10px;
+            padding: 4px 7px;
             width: 50%;
-            font-size: 10.5pt; /* small enough for the IBAN to stay on one line */
-            line-height: 1.45;
+            font-size: 9pt; /* small enough for the IBAN to stay on one line */
+            line-height: 1.3;
         }
 
         .parties .party-name {
@@ -166,11 +171,11 @@
 
         .doc-title {
             text-align: center;
-            margin: 20px 0 4px;
+            margin: 12px 0 2px;
         }
 
         .doc-title h1 {
-            font-size: 15pt;
+            font-size: 13pt;
             font-weight: bold;
             text-decoration: underline;
             margin: 0 0 4px;
@@ -178,21 +183,21 @@
         }
 
         .doc-title .sub {
-            font-size: 10.5pt;
+            font-size: 9pt;
             font-weight: bold;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         .items {
-            margin-top: 14px;
+            margin-top: 8px;
             table-layout: fixed;
         }
 
         .items th,
         .items td {
             border: 1px solid #000;
-            padding: 5px 8px;
-            font-size: 11.5pt;
+            padding: 2px 5px;
+            font-size: 9.5pt;
         }
 
         .items th {
@@ -223,7 +228,7 @@
         }
 
         .footer-block {
-            margin-top: 32px;
+            margin-top: 16px;
         }
 
         .footer-block td {
@@ -239,7 +244,7 @@
 
         .total-amount-box {
             border: 1px solid #000;
-            padding: 5px 14px;
+            padding: 3px 10px;
             text-align: center;
             font-weight: bold;
             min-width: 120px;
@@ -248,14 +253,14 @@
 
         .amount-words {
             font-weight: bold;
-            margin-top: 26px;
-            line-height: 1.5;
+            margin-top: 14px;
+            line-height: 1.4;
         }
 
         .sro-note {
-            margin-top: 30px;
-            font-size: 10.5pt;
-            line-height: 1.55;
+            margin-top: 16px;
+            font-size: 9pt;
+            line-height: 1.4;
         }
 
         /* Screen-only controls */
@@ -301,6 +306,11 @@
             padding: 5px;
             border: 1px solid #bbb;
             border-radius: 3px;
+        }
+
+        .toolbar .fit-info {
+            color: #2e7d32;
+            font-weight: bold;
         }
 
         .toolbar .hint {
@@ -364,6 +374,7 @@
         Side margin:
         <input type="number" id="sideMargin" min="0" max="40" step="1" value="14"> mm
     </label>
+    <span id="fitInfo" class="fit-info"></span>
     <a href="{{ route('invoices.show', $invoice->id) }}">Back</a>
     <p class="hint">
         Letterhead par ek test print nikal kar ye settings apne hisab se set karein — browser inhein yaad rakhega.
@@ -374,8 +385,10 @@
 <div class="sheet">
     <div class="letterhead-space" id="letterheadSpacer"></div>
 
+    <div class="fit-area" id="fitArea">
+
     <div class="top-line">{{ optional($invoice->invoice_date)->format('M, d Y') }}</div>
-    <div class="top-line" style="margin-bottom: 18px;">Inv. No. {{ $invoice->invoice_no }}</div>
+    <div class="top-line" style="margin-bottom: 10px;">Inv. No. {{ $invoice->invoice_no }}</div>
 
     <table class="parties">
         <tr>
@@ -467,6 +480,8 @@
         As per SROSRB-3-4/14/2014 dated 01/07/2014, kindly deduct over {{ $withholdingPercent }}%<br>
         of {{ $salesTaxPercent }}% Tax amount mentioned on the invoice.
     </div>
+    </div><!-- /fit-area -->
+
     <div class="footer-space" id="footerSpacer"></div>
 </div>
 
@@ -498,6 +513,39 @@
                 + bottom + 'mm ' + side + 'mm; }';
         }
 
+        // A4 ki lambai minus upar/neeche ki margins = ek page par bachi hui jagah.
+        // Content us se bara ho to use utna chhota kar dete hain ke ek page par aa jaye.
+        var MM_TO_PX = 96 / 25.4;
+        var A4_HEIGHT_MM = 297;
+        var MIN_SCALE = 0.6;
+
+        function applyOnePageFit() {
+            var area = document.getElementById('fitArea');
+            var info = document.getElementById('fitInfo');
+            if (!area) {
+                return;
+            }
+
+            area.style.zoom = 1;
+
+            var availableMm = A4_HEIGHT_MM - valueOf(settings[0]) - valueOf(settings[1]);
+            var availablePx = availableMm * MM_TO_PX;
+            var contentPx = area.scrollHeight;
+            var scale = contentPx > availablePx ? Math.floor((availablePx / contentPx) * 100) / 100 : 1;
+
+            if (scale < MIN_SCALE) {
+                scale = MIN_SCALE;
+            }
+
+            area.style.zoom = scale;
+
+            if (info) {
+                info.textContent = scale < 1
+                    ? 'Ek page par fit: ' + Math.round(scale * 100) + '%'
+                    : 'Ek page par aa raha hai';
+            }
+        }
+
         settings.forEach(function (setting) {
             var input = document.getElementById(setting.input);
             var saved = null;
@@ -517,6 +565,7 @@
                 input.value = mm;
                 document.documentElement.style.setProperty(setting.variable, mm + 'mm');
                 applyPageRules();
+                applyOnePageFit();
                 try {
                     localStorage.setItem(setting.store, String(mm));
                 } catch (e) {
@@ -527,6 +576,9 @@
             input.addEventListener('input', apply);
             apply();
         });
+
+        applyOnePageFit();
+        window.addEventListener('beforeprint', applyOnePageFit);
     })();
 </script>
 
