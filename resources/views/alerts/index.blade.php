@@ -101,11 +101,13 @@
                     <table class="table table-sm table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th style="width: 18%;">Alert</th>
+                                <th style="width: 15%;">Alert</th>
                                 <th>Message</th>
-                                <th style="width: 14%;">{{ $referenceLabel }}</th>
-                                <th style="width: 16%;">Date / Reading</th>
-                                <th style="width: 16%;" class="text-center">Action</th>
+                                <th style="width: 12%;">{{ $referenceLabel }}</th>
+                                <th style="width: 9%;">Current</th>
+                                <th style="width: 9%;">Due</th>
+                                <th style="width: 10%;">Difference</th>
+                                <th style="width: 13%;" class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,7 +116,9 @@
                                     <td><span class="badge badge-{{ $row['badge'] }}">{{ $row['title'] }}</span></td>
                                     <td>{{ $row['message'] }}</td>
                                     <td>{{ $row['reference'] }}</td>
-                                    <td>{{ $row['detail'] }}</td>
+                                    <td>{{ $row['current'] }}</td>
+                                    <td>{{ $row['due'] }}</td>
+                                    <td>{{ $row['difference'] }}</td>
                                     <td class="text-center">
                                         @if ($row['action_url'])
                                             <a href="{{ $row['action_url'] }}" class="btn btn-primary btn-sm mb-1">
@@ -139,7 +143,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
+                                    <td colspan="7" class="text-center text-muted py-4">
                                         No alerts found for this filter.
                                     </td>
                                 </tr>

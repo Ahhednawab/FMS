@@ -35,7 +35,7 @@ class AlertsExport implements FromCollection, WithHeadings, WithMapping, WithTit
 
     public function headings(): array
     {
-        return ['Alert', 'Message', $this->referenceLabel, 'Date / Reading'];
+        return ['Alert', 'Message', $this->referenceLabel, 'Current', 'Due', 'Difference'];
     }
 
     public function map($row): array
@@ -44,7 +44,9 @@ class AlertsExport implements FromCollection, WithHeadings, WithMapping, WithTit
             $row['title'],
             $row['message'],
             $row['reference'],
-            $row['detail'],
+            $row['current'],
+            $row['due'],
+            $row['difference'],
         ];
     }
 

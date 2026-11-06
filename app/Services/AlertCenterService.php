@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Vehicle;
 use App\Services\Dashboard\ExpiredDriversDashboardService;
 use App\Services\Dashboard\ExpiredVehiclesDashboardService;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Collection;
@@ -148,7 +149,9 @@ class AlertCenterService
             'badge' => $alert['stage'] === 'due' ? 'danger' : 'warning',
             'message' => $alert['message'],
             'reference' => $alert['vehicle_no'],
-            'detail' => 'Current ' . number_format($alert['current_km']) . ' KM / Due ' . number_format($alert['due_km']) . ' KM',
+            'current' => number_format($alert['current_km']) . ' KM',
+            'due' => number_format($alert['due_km']) . ' KM',
+            'difference' => $this->kmDifference((int) $alert['current_km'], (int) $alert['due_km']),
             'action_url' => route('vehicleMaintenances.index', ['vehicle_id' => [$alert['vehicle_id']]]),
             'action_label' => 'View Maintenance',
             'mark_done' => null,
@@ -169,7 +172,9 @@ class AlertCenterService
             'message' => 'Driver ' . $driver['name'] . ' (CNIC ' . ($driver['cnic_no'] ?: 'N/A') . '), status '
                 . $driver['status'] . '. Expiry: ' . $driver['date'] . '.',
             'reference' => $driver['name'],
-            'detail' => $driver['date'],
+            'current' => now()->format('d-M-Y'),
+            'due' => $driver['date'],
+            'difference' => $this->dayDifference($driver['date']),
             'action_url' => route('drivers.edit', $driver['id']),
             'action_label' => 'View Driver',
             'mark_done' => null,
@@ -188,7 +193,9 @@ class AlertCenterService
             'message' => 'Vehicle ' . $vehicle->vehicle_no . ' (' . $vehicle->vehicle_type_name . ', '
                 . $vehicle->station_area . '). Expiry: ' . $vehicle->date . '.',
             'reference' => $vehicle->vehicle_no,
-            'detail' => $vehicle->date,
+            'current' => now()->format('d-M-Y'),
+            'due' => $vehicle->date,
+            'difference' => $this->dayDifference($vehicle->date),
             'action_url' => route('vehicles.edit', $vehicle->id),
             'action_label' => 'View Vehicle',
             'mark_done' => null,
@@ -233,7 +240,9 @@ class AlertCenterService
                 'badge' => 'info',
                 'message' => $notification->message,
                 'reference' => $reference,
-                'detail' => optional($notification->created_at)->format('d-M-Y'),
+                'current' => '-',
+                'due' => optional($notification->created_at)->format('d-M-Y'),
+                'difference' => '-',
                 'action_url' => $this->notificationActionUrl($type, $notification->ref_id),
                 'action_label' => $type === self::TYPE_DRIVER ? 'View Driver' : 'View Vehicle',
                 'mark_done' => [
@@ -246,6 +255,43 @@ class AlertCenterService
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /** Due tak kitne KM baqi hain, ya kitne KM guzar chuke. */
+    private function kmDifference(int $current, int $due): string
+    {
+        $difference = $due - $current;
+
+        if ($difference >= 0) {
+            return number_format($difference) . ' KM';
+        }
+
+        return number_format(abs($difference)) . ' KM over';
+    }
+
+    /** Expiry tak kitne din baqi hain (ya kitne din guzar gaye). */
+    private function dayDifference(?string $date): string
+    {
+        $date = trim((string) $date);
+
+        if ($date === '' || $date === '-') {
+            return '-';
+        }
+
+        // Kai dates ek sath ho sakti hain ("12-Oct-2026, 03-Nov-2026") - pehli lete hain.
+        $first = trim(explode(',', $date)[0]);
+
+        try {
+            $days = (int) now()->startOfDay()->diffInDays(Carbon::parse($first)->startOfDay(), false);
+        } catch (\Throwable) {
+            return '-';
+        }
+
+        if ($days > 0) {
+            return $days . ' days';
+        }
+
+        return $days === 0 ? 'Today' : abs($days) . ' days over';
+    }
 
     private function notificationActionUrl(string $type, $referenceId): ?string
     {
