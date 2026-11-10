@@ -54,8 +54,9 @@ class AlertsExport implements FromCollection, WithHeadings, WithMapping, WithTit
     {
         $sheet->freezePane('A2');
 
-        // Messages are long sentences: give them a fixed, wrapped column.
-        $sheet->getColumnDimension('B')->setAutoSize(false)->setWidth(80);
+        // The message holds the alert names only, but a row can carry several
+        // of them, so the column is fixed and wrapped rather than auto-sized.
+        $sheet->getColumnDimension('B')->setAutoSize(false)->setWidth(40);
         $sheet->getStyle('B')->getAlignment()->setWrapText(true);
 
         return [

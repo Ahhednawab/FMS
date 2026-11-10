@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Driver;
 use App\Models\Notification;
 use App\Models\Vehicle;
+use App\Models\VehicleMaintenanceConfiguration;
 use App\Services\Dashboard\ExpiredDriversDashboardService;
 use App\Services\Dashboard\ExpiredVehiclesDashboardService;
 use Carbon\Carbon;
@@ -87,6 +88,18 @@ class AlertCenterService
         };
     }
 
+    /**
+     * The alert names the search box offers (Engine Oil, Oil Filter, ...) - the
+     * same names the Message column shows. Only maintenance alerts have such a
+     * list; the other types keep a free-text search instead.
+     */
+    public function itemOptions(string $type): array
+    {
+        return $type === self::TYPE_MAINTENANCE
+            ? $this->selfKeyed(array_keys(VehicleMaintenanceConfiguration::ITEMS))
+            : [];
+    }
+
     public function paginate(string $type, array $filters, int $perPage = 25): LengthAwarePaginator
     {
         return match ($type) {
@@ -134,20 +147,31 @@ class AlertCenterService
     {
         $alerts = $this->maintenanceSchedule->dashboardAlerts([
             'vehicle_id' => $filters['reference_id'] ?? null,
-            'title' => $filters['title'] ?? null,
         ]);
+
+        // Alert filter = the stage, search box = the alert names picked.
+        $titles = $this->titles($filters);
+        $items = $this->values($filters, 'item');
+
+        if ($titles !== []) {
+            $alerts = $alerts->whereIn('title', $titles);
+        }
+
+        if ($items !== []) {
+            $alerts = $alerts->whereIn('item', $items);
+        }
 
         $search = $this->search($filters);
         if ($search !== '') {
             $alerts = $alerts->filter(
                 fn (array $alert) => stripos($alert['vehicle_no'] . ' ' . $alert['item'] . ' ' . $alert['message'], $search) !== false
-            )->values();
+            );
         }
 
-        $rows = $alerts->map(fn (array $alert) => [
+        $rows = $alerts->values()->map(fn (array $alert) => [
             'title' => $alert['title'],
             'badge' => $alert['stage'] === 'due' ? 'danger' : 'warning',
-            'message' => $alert['message'],
+            'message' => $alert['item'],
             'reference' => $alert['vehicle_no'],
             'current' => number_format($alert['current_km']) . ' KM',
             'due' => number_format($alert['due_km']) . ' KM',
@@ -163,14 +187,13 @@ class AlertCenterService
     private function expiredDriverAlerts(array $filters, int $perPage): LengthAwarePaginator
     {
         return $this->expiredDrivers->paginate([
-            'filter_reason' => (string) ($filters['title'] ?? ''),
+            'filter_reason' => $this->titles($filters),
             'search' => $this->search($filters),
             'page' => $this->page($filters),
         ], $perPage)->through(fn (array $driver) => [
             'title' => $driver['reason'] !== '-' ? $driver['reason'] : 'Document Expiry',
             'badge' => str_contains((string) $driver['reason'], 'Expired') ? 'danger' : 'warning',
-            'message' => 'Driver ' . $driver['name'] . ' (CNIC ' . ($driver['cnic_no'] ?: 'N/A') . '), status '
-                . $driver['status'] . '. Expiry: ' . $driver['date'] . '.',
+            'message' => $driver['reason'] !== '-' ? $driver['reason'] : 'Document Expiry',
             'reference' => $driver['name'],
             'current' => now()->format('d-M-Y'),
             'due' => $driver['date'],
@@ -184,14 +207,13 @@ class AlertCenterService
     private function expiredVehicleAlerts(array $filters, int $perPage): LengthAwarePaginator
     {
         return $this->expiredVehicles->paginate([
-            'reason' => (string) ($filters['title'] ?? ''),
+            'reason' => $this->titles($filters),
             'search' => $this->search($filters),
             'page' => $this->page($filters),
         ], $perPage)->through(fn ($vehicle) => [
             'title' => $vehicle->reason !== '-' ? $vehicle->reason : 'Document Expiry',
             'badge' => 'warning',
-            'message' => 'Vehicle ' . $vehicle->vehicle_no . ' (' . $vehicle->vehicle_type_name . ', '
-                . $vehicle->station_area . '). Expiry: ' . $vehicle->date . '.',
+            'message' => $vehicle->reason !== '-' ? $vehicle->reason : 'Document Expiry',
             'reference' => $vehicle->vehicle_no,
             'current' => now()->format('d-M-Y'),
             'due' => $vehicle->date,
@@ -204,14 +226,14 @@ class AlertCenterService
 
     private function notificationAlerts(string $type, array $filters, int $perPage): LengthAwarePaginator
     {
-        $title = (string) ($filters['title'] ?? '');
+        $titles = $this->titles($filters);
         $referenceId = (string) ($filters['reference_id'] ?? '');
         $search = $this->search($filters);
 
-        $conditions = function ($query) use ($type, $title, $referenceId, $search) {
+        $conditions = function ($query) use ($type, $titles, $referenceId, $search) {
             $query->where('type', $type)
                 ->where('is_read', false)
-                ->when($title !== '', fn ($q) => $q->where('title', $title))
+                ->when($titles !== [], fn ($q) => $q->whereIn('title', $titles))
                 ->when($referenceId !== '', fn ($q) => $q->where('ref_id', $referenceId))
                 ->when($search !== '', fn ($q) => $q->where(function ($inner) use ($search) {
                     $inner->where('title', 'like', '%' . $search . '%')
@@ -238,7 +260,7 @@ class AlertCenterService
             return [
                 'title' => $notification->title,
                 'badge' => 'info',
-                'message' => $notification->message,
+                'message' => $notification->title,
                 'reference' => $reference,
                 'current' => '-',
                 'due' => optional($notification->created_at)->format('d-M-Y'),
@@ -329,6 +351,27 @@ class AlertCenterService
     private function selfKeyed(array $values): array
     {
         return empty($values) ? [] : array_combine($values, $values);
+    }
+
+    /** @return array<int, string> */
+    private function titles(array $filters): array
+    {
+        return $this->values($filters, 'title');
+    }
+
+    /**
+     * One filter's chosen values. A multi-select sends an array and a single
+     * dropdown (or a dashboard link) sends one string, so both are accepted.
+     *
+     * @return array<int, string>
+     */
+    private function values(array $filters, string $key): array
+    {
+        $values = $filters[$key] ?? [];
+        $values = is_array($values) ? $values : [$values];
+        $values = array_map(fn ($value) => trim((string) $value), $values);
+
+        return array_values(array_filter($values, fn (string $value) => $value !== ''));
     }
 
     private function search(array $filters): string

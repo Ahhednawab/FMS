@@ -40,7 +40,7 @@
                                 <option value="">All</option>
                                 @foreach ($titleOptions as $value => $label)
                                     <option value="{{ $value }}"
-                                        {{ (string) $filters['title'] === (string) $value ? 'selected' : '' }}>
+                                        {{ in_array((string) $value, $filters['title'], true) ? 'selected' : '' }}>
                                         {{ $label }}
                                     </option>
                                 @endforeach
@@ -64,8 +64,21 @@
 
                         <div class="col-md-3 form-group">
                             <label><strong>Search</strong></label>
-                            <input type="text" name="search" value="{{ $filters['search'] }}" class="form-control"
-                                placeholder="Vehicle, driver or message...">
+                            @if ($itemOptions)
+                                {{-- Maintenance alerts have a fixed list of alert names, so the
+                                     search box offers them instead of free text. --}}
+                                <select name="item[]" class="form-control select2-multiple" multiple>
+                                    @foreach ($itemOptions as $value => $label)
+                                        <option value="{{ $value }}"
+                                            {{ in_array((string) $value, $filters['item'], true) ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input type="text" name="search" value="{{ $filters['search'] }}" class="form-control"
+                                    placeholder="Vehicle, driver or message...">
+                            @endif
                         </div>
 
                         <div class="col-md-2 form-group">
@@ -80,7 +93,7 @@
                         <div class="col-md-4 form-group d-flex align-items-end">
                             <button type="submit" class="btn btn-primary mr-2">Search</button>
                             <a href="{{ route('alerts.index', ['type' => $type]) }}" class="btn btn-light mr-2">Clear Filters</a>
-                            <a href="{{ route('alerts.export', array_filter(['type' => $type, 'title' => $filters['title'], 'reference_id' => $filters['reference_id'], 'search' => $filters['search']])) }}"
+                            <a href="{{ route('alerts.export', array_filter(['type' => $type, 'title' => $filters['title'], 'item' => $filters['item'], 'reference_id' => $filters['reference_id'], 'search' => $filters['search']])) }}"
                                 class="btn btn-success">
                                 <i class="icon-file-excel mr-1"></i> Export Report
                             </a>
@@ -168,14 +181,39 @@
                 allowClear: false
             });
 
-            // Changing the type loads that type's own list: the other filters
-            // belong to the previous type, so they are cleared first.
-            $('#alertType').on('change', function () {
-                const form = document.getElementById('alertFilterForm');
-                form.querySelectorAll('[name="title"], [name="reference_id"], [name="search"]').forEach(function (field) {
-                    field.value = '';
+            // The search box lists the alert names and takes several at once.
+            // Stock select2 moves the search input inline into the field for
+            // multi-selects, so the adapters are composed explicitly to keep it
+            // inside the dropdown while the chosen alerts show as chips above.
+            $.fn.select2.amd.require([
+                'select2/utils',
+                'select2/selection/multiple',
+                'select2/selection/placeholder',
+                'select2/selection/allowClear',
+                'select2/selection/eventRelay',
+                'select2/dropdown',
+                'select2/dropdown/search',
+                'select2/dropdown/attachBody'
+            ], function (Utils, MultipleSelection, Placeholder, AllowClear, EventRelay, Dropdown, DropdownSearch, AttachBody) {
+                var SelectionAdapter = Utils.Decorate(MultipleSelection, Placeholder);
+                SelectionAdapter = Utils.Decorate(SelectionAdapter, AllowClear);
+                SelectionAdapter = Utils.Decorate(SelectionAdapter, EventRelay);
+
+                var DropdownAdapter = Utils.Decorate(Utils.Decorate(Dropdown, DropdownSearch), AttachBody);
+
+                $('.alert-filter-card select.select2-multiple').select2({
+                    width: '100%',
+                    placeholder: 'Search alerts...',
+                    allowClear: true,
+                    selectionAdapter: SelectionAdapter,
+                    dropdownAdapter: DropdownAdapter
                 });
-                form.submit();
+            });
+
+            // Changing the type loads that type's own list: the other filters
+            // belong to the previous type, so none of them are carried over.
+            $('#alertType').on('change', function () {
+                window.location = '{{ route('alerts.index') }}?type=' + encodeURIComponent(this.value);
             });
 
             setTimeout(() => $('#alert-message').fadeOut(), 4000);
@@ -198,6 +236,30 @@
 
         .alert-filter-card .select2-container--default .select2-selection--single {
             padding-top: 3px;
+        }
+
+        /* Multi-select filter: same height and border as the other inputs
+           (select2 keeps its darker border while a field has keyboard focus) */
+        .alert-filter-card .select2-container--default .select2-selection--multiple {
+            position: relative;
+            min-height: 36px;
+            font-size: 13px;
+        }
+
+        .alert-filter-card .select2-container--default:not(.select2-container--focus) .select2-selection--multiple {
+            border-color: #ddd;
+        }
+
+        /* "All" placeholder lined up with the other inputs' placeholder text,
+           positioned absolutely so it can never change the field's height. */
+        .alert-filter-card .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+            position: absolute;
+            top: 0;
+            left: 14px;
+            margin: 0;
+            line-height: 34px;
+            color: #999;
+            list-style: none;
         }
     </style>
 @endsection

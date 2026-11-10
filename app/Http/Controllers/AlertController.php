@@ -25,7 +25,8 @@ class AlertController extends Controller
         $type = $alertCenter->normalizeType($request->query('type'));
 
         $filters = [
-            'title' => (string) $request->query('title', ''),
+            'title' => $this->listFilter($request, 'title'),
+            'item' => $this->listFilter($request, 'item'),
             'reference_id' => (string) $request->query('reference_id', ''),
             'search' => (string) $request->query('search', ''),
             'page' => (int) $request->query('page', 1),
@@ -44,6 +45,7 @@ class AlertController extends Controller
             'perPage' => $perPage,
             'titleLabel' => $alertCenter->titleLabel($type),
             'titleOptions' => $alertCenter->titleOptions($type),
+            'itemOptions' => $alertCenter->itemOptions($type),
             'referenceFilter' => $referenceFilter,
             'referenceLabel' => $alertCenter->referenceLabel($type),
             'referenceOptions' => match ($referenceFilter) {
@@ -54,13 +56,30 @@ class AlertController extends Controller
         ]);
     }
 
+    /**
+     * One filter's chosen values. The search box is a multi-select (?item[]=...)
+     * while the Alert dropdown and the dashboard links send a single value, so
+     * a plain string is accepted too.
+     *
+     * @return array<int, string>
+     */
+    private function listFilter(Request $request, string $key): array
+    {
+        $values = $request->query($key, []);
+        $values = is_array($values) ? $values : [$values];
+        $values = array_map(fn ($value) => trim((string) $value), $values);
+
+        return array_values(array_filter($values, fn (string $value) => $value !== ''));
+    }
+
     /** Excel export of the list on screen, with the same filters applied. */
     public function export(Request $request, AlertCenterService $alertCenter)
     {
         $type = $alertCenter->normalizeType($request->query('type'));
 
         $rows = $alertCenter->export($type, [
-            'title' => (string) $request->query('title', ''),
+            'title' => $this->listFilter($request, 'title'),
+            'item' => $this->listFilter($request, 'item'),
             'reference_id' => (string) $request->query('reference_id', ''),
             'search' => (string) $request->query('search', ''),
         ]);

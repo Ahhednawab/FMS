@@ -69,23 +69,24 @@ class ExpiredVehiclesDashboardService
             ->where('is_active', 1)
             ->with(['vehicleType', 'station']);
 
-        if (!empty($filters['reason']) && array_key_exists($filters['reason'], $reasonList)) {
-            $query->whereNotNull($filters['reason'])
-                ->whereDate($filters['reason'], '<=', $nextMonthEnd);
-        } else {
-            $query->where(function (Builder $query) use ($nextMonthEnd) {
-                $fields = array_keys($this->reasonList());
+        // No reason picked means every expiry column counts; one or more
+        // picked narrows it to those columns.
+        $selected = array_filter(
+            $this->selectedReasons($filters['reason'] ?? ''),
+            fn (string $reason) => array_key_exists($reason, $reasonList)
+        );
+        $fields = $selected !== [] ? array_values($selected) : array_keys($reasonList);
 
-                foreach ($fields as $index => $field) {
-                    $method = $index === 0 ? 'where' : 'orWhere';
+        $query->where(function (Builder $query) use ($fields, $nextMonthEnd) {
+            foreach ($fields as $index => $field) {
+                $method = $index === 0 ? 'where' : 'orWhere';
 
-                    $query->{$method}(function (Builder $subQuery) use ($field, $nextMonthEnd) {
-                        $subQuery->whereNotNull($field)
-                            ->whereDate($field, '<=', $nextMonthEnd);
-                    });
-                }
-            });
-        }
+                $query->{$method}(function (Builder $subQuery) use ($field, $nextMonthEnd) {
+                    $subQuery->whereNotNull($field)
+                        ->whereDate($field, '<=', $nextMonthEnd);
+                });
+            }
+        });
 
         if (!empty($filters['search'])) {
             $search = trim((string) $filters['search']);
@@ -98,9 +99,24 @@ class ExpiredVehiclesDashboardService
         return $query->orderBy('vehicle_no');
     }
 
-    protected function reasonLabel(Vehicle $vehicle, string $selectedReason = ''): array
+    /**
+     * Normalise the reason filter: one reason (dashboard panel) or several
+     * (Alerts page multi-select) both arrive here.
+     *
+     * @return array<int, string>
+     */
+    protected function selectedReasons(array|string|null $reason): array
+    {
+        $reasons = is_array($reason) ? $reason : [$reason];
+        $reasons = array_map(fn ($value) => trim((string) $value), $reasons);
+
+        return array_values(array_filter($reasons, fn (string $value) => $value !== ''));
+    }
+
+    protected function reasonLabel(Vehicle $vehicle, array|string $selectedReason = ''): array
     {
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+        $selected = $this->selectedReasons($selectedReason);
 
         $labels = [
             'next_inspection_date' => 'Next Inspection Expiry',
@@ -114,7 +130,7 @@ class ExpiredVehiclesDashboardService
         $dates = [];
 
         foreach ($labels as $field => $label) {
-            if ($selectedReason !== '' && $selectedReason !== $field) {
+            if ($selected !== [] && !in_array($field, $selected, true)) {
                 continue;
             }
 

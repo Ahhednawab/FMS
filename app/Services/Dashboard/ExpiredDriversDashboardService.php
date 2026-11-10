@@ -79,16 +79,23 @@ class ExpiredDriversDashboardService
                 $query->where('name', '!=', 'Left');
             });
 
-        if (!empty($filters['filter_reason'])) {
-            $query->where(function (Builder $query) use ($filters, $nextMonthEnd) {
-                if ($filters['filter_reason'] === 'CNIC Expiry') {
-                    $query->whereNotNull('cnic_expiry_date')
-                        ->whereDate('cnic_expiry_date', '<=', $nextMonthEnd);
-                }
+        $reasons = $this->selectedReasons($filters['filter_reason'] ?? '');
 
-                if ($filters['filter_reason'] === 'License Expiry') {
-                    $query->whereNotNull('license_expiry_date')
-                        ->whereDate('license_expiry_date', '<=', $nextMonthEnd);
+        if ($reasons !== []) {
+            $columns = ['CNIC Expiry' => 'cnic_expiry_date', 'License Expiry' => 'license_expiry_date'];
+
+            $query->where(function (Builder $query) use ($reasons, $columns, $nextMonthEnd) {
+                foreach ($reasons as $reason) {
+                    if (!isset($columns[$reason])) {
+                        continue;
+                    }
+
+                    $column = $columns[$reason];
+
+                    $query->orWhere(function (Builder $subQuery) use ($column, $nextMonthEnd) {
+                        $subQuery->whereNotNull($column)
+                            ->whereDate($column, '<=', $nextMonthEnd);
+                    });
                 }
             });
         }
@@ -105,10 +112,25 @@ class ExpiredDriversDashboardService
         return $query->orderBy('full_name');
     }
 
-    protected function reasonLabel(Driver $driver, string $filterReason = ''): array
+    /**
+     * Normalise the reason filter: one reason (dashboard panel) or several
+     * (Alerts page multi-select) both arrive here.
+     *
+     * @return array<int, string>
+     */
+    protected function selectedReasons(array|string|null $filterReason): array
+    {
+        $reasons = is_array($filterReason) ? $filterReason : [$filterReason];
+        $reasons = array_map(fn ($reason) => trim((string) $reason), $reasons);
+
+        return array_values(array_filter($reasons, fn (string $reason) => $reason !== ''));
+    }
+
+    protected function reasonLabel(Driver $driver, array|string $filterReason = ''): array
     {
         $today = Carbon::today();
         $nextMonthEnd = Carbon::now()->addMonth()->endOfMonth();
+        $selected = $this->selectedReasons($filterReason);
         $reasons = [];
         $dates = [];
 
@@ -118,7 +140,7 @@ class ExpiredDriversDashboardService
         ];
 
         foreach ($checks as $reason => $config) {
-            if ($filterReason !== '' && $filterReason !== $reason) {
+            if ($selected !== [] && !in_array($reason, $selected, true)) {
                 continue;
             }
 
