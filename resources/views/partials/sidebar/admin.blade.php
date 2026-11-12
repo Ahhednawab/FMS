@@ -519,19 +519,21 @@
                         </ul>
                     </li>
                 @endif
-                @if (auth()->user()->hasPermission('driver_attendances') || auth()->user()->hasPermission('vehicle_attendances'))
-                    <li
-                        class="nav-item nav-item-submenu
-          {{ request()->routeIs('driverAttendances.*') || request()->routeIs('vehicleAttendances.*')
-              ? 'nav-item-open'
-              : '' }}">
+                @if (auth()->user()->hasPermission('driver_attendances') || auth()->user()->hasPermission('vehicle_attendances') || auth()->user()->hasPermission('whatsapp_attendance'))
+                    @php
+                        // One expression for "is this menu's section open", used
+                        // for both the open class and the submenu's own display.
+                        $attendanceSectionOpen =
+                            request()->routeIs('driverAttendances.*') ||
+                            request()->routeIs('vehicleAttendances.*') ||
+                            request()->routeIs('whatsappAttendance.*');
+                    @endphp
+                    <li class="nav-item nav-item-submenu {{ $attendanceSectionOpen ? 'nav-item-open' : '' }}">
 
                         <a href="#" class="nav-link"><i class="icon-copy"></i> <span>Attendence</span></a>
 
                         <ul class="nav nav-group-sub" data-submenu-title="Layouts"
-                            style="{{ request()->routeIs('driverAttendances.*') || request()->routeIs('vehicleAttendances.*')
-                                ? 'display:block;'
-                                : '' }}">
+                            style="{{ $attendanceSectionOpen ? 'display:block;' : '' }}">
                             @if (auth()->user()->hasPermission('driver_attendances'))
                                 <li class="nav-item"><a href="{{ route('driverAttendances.index') }}"
                                         class="nav-link {{ request()->routeIs('driverAttendances.*') ? 'active' : '' }}">Driver
@@ -540,6 +542,11 @@
                             @if (auth()->user()->hasPermission('vehicle_attendances'))
                                 <li class="nav-item"><a href="{{ route('vehicleAttendances.index') }}"
                                         class="nav-link {{ request()->routeIs('vehicleAttendances.*') ? 'active' : '' }}">Vehicle
+                                        Attendance</a></li>
+                            @endif
+                            @if (auth()->user()->hasPermission('whatsapp_attendance'))
+                                <li class="nav-item"><a href="{{ route('whatsappAttendance.index') }}"
+                                        class="nav-link {{ request()->routeIs('whatsappAttendance.*') ? 'active' : '' }}">WhatsApp
                                         Attendance</a></li>
                             @endif
                         </ul>

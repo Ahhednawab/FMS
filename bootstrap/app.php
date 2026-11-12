@@ -16,6 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        // Meta posts to the WhatsApp webhook with no session and no CSRF
+        // token. It is authenticated instead by the X-Hub-Signature-256 HMAC
+        // over the raw body, which WhatsAppWebhookController checks on every
+        // request before it reads anything.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/whatsapp',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

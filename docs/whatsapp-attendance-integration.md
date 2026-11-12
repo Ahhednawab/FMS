@@ -4,7 +4,9 @@ Supervisors send their drivers' daily attendance on WhatsApp. Those messages are
 automatically, turned into a **draft list inside FMS**, and only become real attendance
 when a person reviews and confirms them.
 
-Branch: `whatsapp`. Nothing is built yet — this is the agreed plan.
+Branch: `whatsapp`. Everything that does not need Meta credentials is built and
+verified against the live database — see **What is built** at the end for what
+is still outstanding.
 
 ---
 
@@ -93,36 +95,86 @@ A new page under Attendance: **WhatsApp Attendance**.
 Confirming writes with `updateOrCreate` on (`driver_id`, `date`), records who confirmed
 it and when, and links the draft to the row it created.
 
+### Why the review step is not optional
+
+Three things in the live data mean some lines cannot be resolved by any amount
+of parsing. They are the reason a person has to be in the loop:
+
+| In the data today | What the reviewer sees |
+|---|---|
+| **9 vehicles carry two active drivers** (JZ-9641, JV-9148, JZ-9788, JZ-9782, JZ-9809, JV-8188, JZ-9790, LE-9920, NW-0009) | "2 drivers are on JZ-9641 — choose one", with the driver dropdown narrowed to those two |
+| **`LE-9937` exists on two vehicle rows** | "2 vehicles share the number LE-9937" |
+| **Some vehicles have no active driver** | "No active driver is assigned to JZ-8942" |
+
+Guessing in any of these cases would mark the wrong man present. The row is
+flagged instead and waits.
+
+### One thing this screen will not do
+
+A **Replace** line (`R`) is read and shown, but cannot be confirmed here. A
+replace entry also needs the pool driver who stood in, and a WhatsApp line does
+not carry that. Rather than save half a record, the row is refused with
+"Replace needs a pool driver — mark this one on the Driver Attendance screen"
+and stays pending. Every other status writes normally.
+
 ---
 
 ## 4. Database changes
 
 | Change | Why |
 |---|---|
-| `whatsapp_senders` — name, whatsapp_number, station_id, is_active | Only known numbers may post attendance. Kept separate from `users` because a supervisor is not necessarily a system user — there are only 6 users today |
-| `whatsapp_messages` — wa_message_id (unique), from_number, body, payload JSON, received_at, state, error | Audit trail. The unique id also means Meta's retries cannot create the same message twice |
-| `whatsapp_attendance_drafts` — message_id, date, raw_line, vehicle_id, driver_id, status, state, error, confirmed_by, confirmed_at, drivers_attendance_id | The review queue itself |
-| Unique index on `drivers_attendances` (`driver_id`, `date`) | The table has **no** unique index today, so the same driver could get two rows for one day |
+| `whatsapp_senders` — name, whatsapp_number, station_id, is_active, notes | Only known numbers may post attendance. Kept separate from `users` because a supervisor is not necessarily a system user — there are only 6 users today |
+| `whatsapp_messages` — wa_message_id (unique), from_number, whatsapp_sender_id, wa_profile_name, body, payload JSON, received_at, state, error | Audit trail. The unique id also means Meta's retries cannot create the same message twice |
+| `whatsapp_attendance_drafts` — message_id, line_no, raw_line, attendance_date, vehicle_token, status_token, vehicle_id, driver_id, status, state, error, confirmed_by, confirmed_at, drivers_attendance_id | The review queue itself |
+| A `whatsapp_attendance` row in `permissions`, granted to Admin | The menu item and the page are gated the same way every other module is |
 
-Existing columns cover the rest: `driver_id`, `vehicle_id`, `date`, `status` and
-`is_active` already carry everything an entry needs.
+`drivers_attendances` is not altered. Its existing columns already carry
+everything an entry needs, and nothing is added to it.
+
+### No unique index, for now
+
+The plan originally called for a unique index on `drivers_attendances`
+(`driver_id`, `date`). It has not been added, because the live table **already
+holds 23 duplicate pairs** — 2026-08-20 has several drivers with two or three
+rows each. Adding the index would fail outright.
+
+This is a pre-existing data problem, not one WhatsApp introduces. Confirming a
+draft uses `updateOrCreate` on (`driver_id`, `date`), so this module never adds
+a duplicate of its own; it just cannot promise the table has none. Cleaning the
+23 up is a separate decision, and the index can go on afterwards.
 
 ---
 
-## 5. What gets built
+## 5. The code
 
 | Piece | File |
 |---|---|
 | Config read from `.env` | `config/whatsapp.php` |
-| Webhook (verify + receive) | `app/Http/Controllers/WhatsAppWebhookController.php` |
-| Signature check, 200, queue | same controller |
-| Parser (no HTTP, unit-testable) | `app/Services/WhatsApp/AttendanceMessageParser.php` |
-| Background parsing | `app/Jobs/ParseWhatsAppAttendance.php` |
+| Webhook (verify + receive, signature check, 200) | `app/Http/Controllers/WhatsAppWebhookController.php` |
+| Parser — text only, no database, no HTTP | `app/Services/WhatsApp/AttendanceMessageParser.php` |
+| Resolving a vehicle number to a driver | `app/Services/WhatsApp/AttendanceDraftBuilder.php` |
+| Reading a message out of the request path | `app/Jobs/ParseWhatsAppAttendance.php` |
+| Catch-up for anything that never got read | `app/Console/Commands/ParsePendingWhatsAppMessages.php` |
 | Review screen + confirm/reject | `app/Http/Controllers/WhatsAppAttendanceController.php` + `resources/views/whatsapp/attendance.blade.php` |
+| Models | `app/Models/WhatsAppSender.php`, `WhatsAppMessage.php`, `WhatsAppAttendanceDraft.php` |
 | Optional reply to supervisor | `app/Services/WhatsApp/WhatsAppClient.php` |
-| Parser tests | `tests/Unit/AttendanceMessageParserTest.php` |
+| Parser tests (23, no database) | `tests/Unit/AttendanceMessageParserTest.php` |
 
-The queue is already `database`, so no new infrastructure is needed.
+The parser and the resolver are deliberately separate. The parser decides that
+a line says "JZ-9036 is present"; the resolver decides which driver that is.
+Splitting them is what lets every parsing rule be tested without a schema.
+
+### Where the parsing runs
+
+By default, straight after the webhook response, in the same process
+(`dispatchAfterResponse`). That needs no queue worker, which matters because
+nothing currently runs `php artisan queue:work` — with a plain queued job the
+drafts would simply never appear.
+
+Set `WHATSAPP_PARSE_QUEUE=true` once a worker is running; the queue retries on
+failure, which after-response dispatch cannot. Either way
+`php artisan whatsapp:parse-pending` reads anything left behind, so a process
+that died mid-request loses nothing.
 
 ---
 
@@ -228,3 +280,43 @@ category, so receiving attendance is free.
 At 15 supervisors × 1 reply/day the running cost is effectively zero. Confirm the
 Pakistan rate on Meta's official rate card before budgeting — third-party figures
 disagree with each other.
+
+---
+
+## 12. What is built
+
+Everything that does not need a Meta credential is done, and checked against the
+live database (all checks ran inside a transaction that was rolled back, so
+nothing was written):
+
+- The four migrations have run locally. **Note:** 51 older migrations in this
+  repo are still unrecorded, so `php artisan migrate` on its own would try to
+  recreate existing tables. These four were run with explicit `--path`
+  arguments, and the same is needed on any other machine.
+- 23 parser tests pass, covering lower case, missing spaces, numbered lines,
+  `JZ-9036P` with no space, full words, numeric codes, both spellings of
+  maintenance, Urdu `HAZRI`, four date formats, an unreadable date, a future
+  date, Windows line endings, and closing chatter.
+- The webhook refuses a missing, wrong, prefix-less or tampered signature
+  (403), echoes the challenge on a correct verify token, refuses the wrong one
+  (403), and returns 503 while `WHATSAPP_APP_SECRET` is unset. A redelivered
+  message id does not create a second row; a delivery-status callback creates
+  none.
+- An unknown number is stored and flagged, never turned into drafts. Ordinary
+  chat is marked ignored.
+- Confirming wrote exactly the expected `drivers_attendances` rows, with the
+  reviewer's corrections applied; confirming the same drafts twice wrote
+  nothing more; rejecting wrote nothing at all.
+- A truncated POST (PHP `max_input_vars`) is refused outright rather than
+  saving part of a list.
+
+### What is left
+
+1. The four values from Meta, in `.env`.
+2. The supervisor list — name, WhatsApp number, station — to seed
+   `whatsapp_senders`. Until a number is in that table its messages are stored
+   and flagged, not queued.
+3. A webhook host: a tunnel to this machine, or `formulaone.pk`.
+4. Pasting the webhook URL into the Meta dashboard and subscribing to
+   **messages**.
+5. The 23 duplicate `drivers_attendances` pairs, if the unique index is wanted.

@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\MileageAlertController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\WhatsAppAttendanceController;
+use App\Http\Controllers\WhatsAppWebhookController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StationController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -99,6 +101,19 @@ Route::post('/logout', function () {
     Auth::logout();
     return redirect()->route('login');
 })->name('logout');
+
+/*
+ * The WhatsApp Cloud API webhook. No login, because Meta has none to give:
+ * the GET is verified against WHATSAPP_VERIFY_TOKEN and every POST against the
+ * X-Hub-Signature-256 HMAC, and both are refused outright while the matching
+ * .env values are missing. It is also exempt from CSRF in bootstrap/app.php.
+ *
+ * Nothing it receives becomes attendance; it only queues lines for review.
+ */
+Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify'])
+    ->name('whatsapp.webhook.verify');
+Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'receive'])
+    ->name('whatsapp.webhook.receive');
 
 Route::get('/admin/dashboard', [AdminController::class, 'index'])
     ->middleware(['auth', 'can:access-admin-dashboard'])
@@ -302,6 +317,14 @@ Route::get('daily-fuels/fetch-previous-km-by-date', [DailyFuelController::class,
 
     Route::resource('roles', RoleController::class);
 
+
+    // Attendance that arrived over WhatsApp, waiting to be reviewed.
+    Route::get('whatsapp-attendance', [WhatsAppAttendanceController::class, 'index'])
+        ->name('whatsappAttendance.index');
+    Route::post('whatsapp-attendance/confirm', [WhatsAppAttendanceController::class, 'confirm'])
+        ->name('whatsappAttendance.confirm');
+    Route::post('whatsapp-attendance/reject', [WhatsAppAttendanceController::class, 'reject'])
+        ->name('whatsappAttendance.reject');
 
     Route::get('alerts/settings', [AlertController::class, 'settings'])->name('alerts.settings');
     Route::get('alerts/export', [AlertController::class, 'export'])->name('alerts.export');
