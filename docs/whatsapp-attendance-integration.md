@@ -155,6 +155,8 @@ a duplicate of its own; it just cannot promise the table has none. Cleaning the
 | Resolving a vehicle number to a driver | `app/Services/WhatsApp/AttendanceDraftBuilder.php` |
 | Reading a message out of the request path | `app/Jobs/ParseWhatsAppAttendance.php` |
 | Catch-up for anything that never got read | `app/Console/Commands/ParsePendingWhatsAppMessages.php` |
+| Registering supervisors | `app/Console/Commands/AddWhatsAppSender.php` |
+| Trying it without a Meta account | `app/Console/Commands/SimulateWhatsAppAttendance.php` |
 | Review screen + confirm/reject | `app/Http/Controllers/WhatsAppAttendanceController.php` + `resources/views/whatsapp/attendance.blade.php` |
 | Models | `app/Models/WhatsAppSender.php`, `WhatsAppMessage.php`, `WhatsAppAttendanceDraft.php` |
 | Optional reply to supervisor | `app/Services/WhatsApp/WhatsAppClient.php` |
@@ -222,7 +224,10 @@ Its limits, which shape the pilot:
   the URL could post attendance.
 - Only numbers in `whatsapp_senders` are accepted; anything else is stored and flagged,
   never turned into a draft.
-- A supervisor may only mark drivers at their own `station_id`.
+- A driver at a different `station_id` from the supervisor is flagged on the review
+  screen. **In practice this check is dormant:** 265 of the 271 drivers have no
+  `station_id` at all, and the code will not flag what it does not know. It starts
+  working as those are filled in; until then the sender list is the only gate.
 - Credentials (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`,
   `WHATSAPP_VERIFY_TOKEN`) live in `.env` only. `.env` and `.env.*` are gitignored and
   nothing goes in the repo.
@@ -257,10 +262,33 @@ set up.
 
 ## 10. Testing
 
-- Unit-test the parser on real supervisor messages, including messy ones: lower case,
-  extra spaces, unknown vehicle, duplicate line, wrong date, missing status.
-- End-to-end on the test number with your own phone first.
+### Today, with no Meta account
+
+The whole flow except the webhook itself can be exercised now:
+
+```
+php artisan whatsapp:add-sender --list                        # stations and who is registered
+php artisan whatsapp:add-sender "Imran Johar" 03001234567 --station=3
+php artisan whatsapp:simulate --dry-run                       # sample message, nothing saved
+php artisan whatsapp:simulate                                 # for real, then review in FMS
+php artisan whatsapp:simulate --text="ATT 12-11-2026
+JZ-9036 P
+JZ-9019 A"
+```
+
+`whatsapp:simulate` writes the same `whatsapp_messages` row the webhook would and
+queues the same drafts, so **Attendance > WhatsApp Attendance** fills up and the
+confirm and reject buttons can be tried against real drivers.
+
+### Once the credentials are in
+
+- End-to-end on Meta's test number with your own phone first.
 - Run one week alongside manual entry and compare, then switch over.
+
+### Automated
+
+- `php artisan test --filter=AttendanceMessageParserTest` — 23 parser tests, no
+  database needed.
 
 ---
 
