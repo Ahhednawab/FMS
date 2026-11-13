@@ -104,12 +104,14 @@
                                         <input type="checkbox" id="checkAll">
                                     </th>
                                     <th style="width: 13%;">Supervisor</th>
-                                    <th style="width: 11%;">Date</th>
-                                    <th style="width: 13%;">What was sent</th>
-                                    <th style="width: 10%;">Vehicle</th>
-                                    <th style="width: 17%;">Driver</th>
-                                    <th style="width: 13%;">Status</th>
-                                    <th>Notes</th>
+                                    <th style="width: 10%;">Date</th>
+                                    <th style="width: 12%;">What was sent</th>
+                                    <th style="width: 9%;">Vehicle</th>
+                                    <th style="width: 16%;">Driver</th>
+                                    <th style="width: 12%;">Status</th>
+                                    {{-- The notes carry the whole reason a row is flagged, so this
+                                         column gets a floor the others cannot squeeze it below. --}}
+                                    <th style="min-width: 200px;">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -299,8 +301,21 @@
             padding-top: 3px;
         }
 
-        .wa-draft-table td {
+        .wa-draft-table td,
+        .wa-draft-table th {
             vertical-align: middle;
+            padding: 6px 8px;
+        }
+
+        .wa-draft-table .form-control-sm {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        /* A native date input asks for far more room than it needs, and left
+           alone it takes the width the notes column has to live on. */
+        .wa-draft-table input[type="date"] {
+            max-width: 130px;
         }
 
         /* The line exactly as the supervisor typed it, so a stray character is
