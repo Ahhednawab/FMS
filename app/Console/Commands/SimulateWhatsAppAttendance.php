@@ -158,38 +158,66 @@ class SimulateWhatsAppAttendance extends Command
     }
 
     /**
-     * A sample built from real vehicle numbers, so the review screen shows
-     * something recognisable the first time it is opened.
+     * A sample in the shape the supervisors really use - bullets, the driver
+     * name beside the vehicle, and the P emoji for the status - built from
+     * this database's own vehicles so the review screen shows real people.
+     *
+     * The names are written the way a supervisor would write them, short and
+     * phonetic, so the matching is exercised rather than sidestepped.
      */
     private function sampleMessage(): string
     {
-        $numbers = Driver::query()
+        $present = "\u{1F17F}\u{FE0F}";
+        $absent = "\u{1F170}\u{FE0F}";
+
+        $drivers = Driver::query()
             ->where('is_active', 1)
             ->whereNotNull('vehicle_id')
             ->where('vehicle_id', '>', 0)
             ->orderBy('id')
             ->limit(4)
-            ->pluck('vehicle_id')
-            ->map(fn ($id) => Vehicle::where('id', $id)->value('vehicle_no'))
-            ->filter()
-            ->values();
+            ->get(['id', 'full_name', 'vehicle_id']);
 
-        if ($numbers->isEmpty()) {
-            $numbers = collect(['JZ-9036', 'JZ-9019', 'LE-9912', 'JZ-9020']);
+        if ($drivers->isEmpty()) {
+            return "Sample attendence\n1•JZ 9036 shahinsha " . $present;
         }
 
-        $codes = ['P', 'A', 'OFF', 'L'];
+        $lines = ['Sample station driver attendence'];
+        $index = 0;
 
-        $lines = ['ATT ' . now()->format('d-m-Y')];
+        foreach ($drivers as $driver) {
+            $number = Vehicle::where('id', $driver->vehicle_id)->value('vehicle_no');
 
-        foreach ($numbers as $index => $number) {
-            $lines[] = $number . ' ' . $codes[$index % count($codes)];
+            if (!$number) {
+                continue;
+            }
+
+            $index++;
+            $lines[] = $index . '•' . $number . ' ' . $this->asTyped($driver->full_name) . ' ' . $present;
         }
 
-        // One line nobody can resolve, so the flagging is visible too.
-        $lines[] = 'XX-0000 P';
+        // The cases a reviewer has to decide: a stand-in, a vehicle nobody
+        // knows, and a name that matches nobody.
+        $standIn = $drivers->first();
+        $standInNumber = Vehicle::where('id', $standIn->vehicle_id)->value('vehicle_no');
+
+        $lines[] = ++$index . '•' . $standInNumber . ' ' . $this->asTyped($standIn->full_name)
+            . ' ' . $absent . ' Imran akhtr ' . $present;
+        $lines[] = ++$index . '•XX 0000 someone ' . $present;
         $lines[] = 'Thanks sir';
 
         return implode("\n", $lines);
+    }
+
+    /** Shorten a registered name the way a supervisor would type it. */
+    private function asTyped(string $fullName): string
+    {
+        $words = preg_split('/\s+/', trim($fullName)) ?: [$fullName];
+        $words = array_values(array_filter(
+            $words,
+            static fn (string $word) => !in_array(strtolower($word), ['muhammad', 'mohammad', 'syed'], true)
+        ));
+
+        return strtolower($words[0] ?? $fullName);
     }
 }

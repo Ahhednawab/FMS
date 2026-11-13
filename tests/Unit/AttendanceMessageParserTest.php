@@ -9,12 +9,17 @@ use PHPUnit\Framework\TestCase;
 /**
  * The parser has no database behind it, so these run as plain unit tests.
  *
- * Most cases here are messy on purpose: a supervisor typing on a phone will
- * not produce clean input, and the point of the review screen is that nothing
- * is silently guessed at.
+ * Every message here is transcribed from the real supervisor groups rather
+ * than invented: the bullets, the equals signs, the emoji statuses, the names
+ * between vehicle and status, the lines with no status at all. Nothing in the
+ * parser may assume a format anybody was asked to adopt.
  */
 class AttendanceMessageParserTest extends TestCase
 {
+    /** 🅿️ and 🅰️ as WhatsApp actually sends them. */
+    private const P = "\u{1F17F}\u{FE0F}";
+    private const A = "\u{1F170}\u{FE0F}";
+
     private AttendanceMessageParser $parser;
 
     private CarbonImmutable $receivedAt;
@@ -32,228 +37,281 @@ class AttendanceMessageParserTest extends TestCase
         return $this->parser->parse($body, $this->receivedAt);
     }
 
-    public function test_it_reads_a_clean_message(): void
+    // -----------------------------------------------------------------
+    // Format A - Orangi & Garden: bullets, names, emoji statuses
+    // -----------------------------------------------------------------
+
+    public function test_it_reads_the_orangi_register(): void
     {
-        $result = $this->parse("ATT 12-11-2026\nJZ-9036 P\nJZ-9019 A\nLE-9912 OFF");
+        $result = $this->parse(
+            "Orengi & garden driver's attendence\n"
+            . '1•JZ 9785 shahinsha ' . self::P . "\n"
+            . '2•JZ 9787 Adnan khan ' . self::P . "\n"
+            . '4•JZ 9677 Rahat ' . self::P
+        );
 
         $this->assertTrue($result['is_attendance']);
-        $this->assertSame('2026-11-12', $result['date']);
-        $this->assertNull($result['date_error']);
+        $this->assertSame(AttendanceMessageParser::KIND_DRIVER, $result['kind']);
+        $this->assertSame("Orengi & garden driver's attendence", $result['header']);
         $this->assertCount(3, $result['lines']);
 
-        $this->assertSame('JZ-9036', $result['lines'][0]['vehicle_token']);
-        $this->assertSame(1, $result['lines'][0]['status']);
-        $this->assertNull($result['lines'][0]['error']);
-
-        $this->assertSame(2, $result['lines'][1]['status']);
-        $this->assertSame(7, $result['lines'][2]['status']);
+        $first = $result['lines'][0];
+        $this->assertSame('JZ 9785', $first['vehicle_token']);
+        $this->assertCount(1, $first['people']);
+        $this->assertSame('shahinsha', $first['people'][0]['name']);
+        $this->assertSame(1, $first['people'][0]['status']);
     }
 
-    public function test_line_numbers_point_at_the_original_message(): void
+    /** No date is sent, so the day the message arrived is used. */
+    public function test_a_register_with_no_date_uses_the_day_it_arrived(): void
     {
-        $result = $this->parse("ATT\nJZ-9036 P\nJZ-9019 A");
-
-        $this->assertSame(2, $result['lines'][0]['line_no']);
-        $this->assertSame(3, $result['lines'][1]['line_no']);
-    }
-
-    public function test_a_message_without_the_keyword_is_not_attendance(): void
-    {
-        $result = $this->parse("Salam sir\nJZ-9036 P");
-
-        $this->assertFalse($result['is_attendance']);
-        $this->assertSame([], $result['lines']);
-    }
-
-    /**
-     * Supervisors are Urdu speakers, so the Urdu word for attendance is
-     * accepted alongside the English one.
-     */
-    public function test_it_accepts_the_urdu_keyword(): void
-    {
-        $this->assertTrue($this->parse("HAZRI\nJZ-9036 P")['is_attendance']);
-        $this->assertTrue($this->parse("Attendance 12-11-2026\nJZ-9036 P")['is_attendance']);
-    }
-
-    public function test_a_missing_date_means_today(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036 P");
+        $result = $this->parse(
+            "Orengi & garden driver's attendence\n"
+            . '1•JZ 9785 shahinsha ' . self::P . "\n"
+            . '2•JZ 9787 Adnan khan ' . self::P . "\n"
+            . '3•JZ 9737 Umair jude ' . self::P
+        );
 
         $this->assertSame('2026-11-12', $result['date']);
         $this->assertNull($result['date_error']);
     }
 
-    public function test_it_accepts_the_date_formats_people_actually_use(): void
+    /**
+     * "13•LE 1963 Nizam 🅰️ Imran akhtr 🅿️" - the man on the vehicle is absent
+     * and the next name is who actually drove. Both have to survive.
+     */
+    public function test_an_absence_and_its_replacement_are_both_read(): void
     {
-        $this->assertSame('2026-11-10', $this->parse("ATT 10-11-2026\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-10', $this->parse("ATT 10/11/2026\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-10', $this->parse("ATT 2026-11-10\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-10', $this->parse("ATT 10.11.2026\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-01', $this->parse("ATT 1-11-2026\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-12', $this->parse("ATT today\nJZ-9036 P")['date']);
-        $this->assertSame('2026-11-11', $this->parse("ATT yesterday\nJZ-9036 P")['date']);
-    }
+        $result = $this->parse(
+            "Orengi attendence\n"
+            . '12•KP 9315 Imran ahemd ' . self::P . "\n"
+            . '13•LE 1963 Nizam ' . self::A . ' Imran akhtr ' . self::P . "\n"
+            . '14•LE 9927 A waseem & Habib ' . self::P
+        );
 
-    /** Day before month: 10-11-2026 is 10 November, not 11 October. */
-    public function test_the_day_comes_before_the_month(): void
-    {
-        $result = $this->parse("ATT 10-11-2026\nJZ-9036 P");
+        $line = $result['lines'][1];
+        $this->assertSame('LE 1963', $line['vehicle_token']);
+        $this->assertCount(2, $line['people']);
 
-        $this->assertSame('2026-11-10', $result['date']);
-    }
+        $this->assertSame('Nizam', $line['people'][0]['name']);
+        $this->assertSame(2, $line['people'][0]['status'], 'Nizam is absent');
 
-    public function test_a_station_name_after_the_date_is_ignored(): void
-    {
-        $result = $this->parse("ATT 10-11-2026 Johar\nJZ-9036 P");
-
-        $this->assertSame('2026-11-10', $result['date']);
-    }
-
-    public function test_an_unreadable_date_is_reported_and_not_guessed(): void
-    {
-        $result = $this->parse("ATT 32-13-2026\nJZ-9036 P");
-
-        $this->assertNull($result['date']);
-        $this->assertNotNull($result['date_error']);
-
-        // The lines are still read, so the reviewer only has to fix the date.
-        $this->assertCount(1, $result['lines']);
-    }
-
-    public function test_a_future_date_is_flagged_but_kept(): void
-    {
-        $result = $this->parse("ATT 20-11-2026\nJZ-9036 P");
-
-        $this->assertSame('2026-11-20', $result['date']);
-        $this->assertStringContainsString('future', $result['date_error']);
-    }
-
-    public function test_case_spacing_and_dashes_do_not_matter(): void
-    {
-        $result = $this->parse("att\njz-9036 p\n  JZ 9019   a \nJZ9020,P\nJZ-9021: P");
-
-        $this->assertCount(4, $result['lines']);
-
-        foreach ($result['lines'] as $line) {
-            $this->assertNull($line['error'], $line['raw'] . ' should have parsed');
-        }
-
-        $this->assertSame('JZ 9019', $result['lines'][1]['vehicle_token']);
-        $this->assertSame('JZ9020', $result['lines'][2]['vehicle_token']);
-    }
-
-    public function test_a_vehicle_and_status_written_without_a_space(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036P\nLE-9912OFF");
-
-        $this->assertSame('JZ-9036', $result['lines'][0]['vehicle_token']);
-        $this->assertSame(1, $result['lines'][0]['status']);
-        $this->assertSame('LE-9912', $result['lines'][1]['vehicle_token']);
-        $this->assertSame(7, $result['lines'][1]['status']);
-    }
-
-    public function test_a_numbered_list_is_accepted(): void
-    {
-        $result = $this->parse("ATT\n1. JZ-9036 P\n2) JZ-9019 A");
-
-        $this->assertCount(2, $result['lines']);
-        $this->assertSame('JZ-9036', $result['lines'][0]['vehicle_token']);
-        $this->assertSame('JZ-9019', $result['lines'][1]['vehicle_token']);
-    }
-
-    public function test_full_words_and_numbers_work_as_status_codes(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036 Present\nJZ-9019 absent\nJZ-9020 Leave\nJZ-9021 3");
-
-        $this->assertSame(1, $result['lines'][0]['status']);
-        $this->assertSame(2, $result['lines'][1]['status']);
-        $this->assertSame(3, $result['lines'][2]['status']);
-        $this->assertSame(3, $result['lines'][3]['status']);
-    }
-
-    /** Id 5 is spelled "Under maintanance" in the database; both spellings work. */
-    public function test_both_spellings_of_maintenance_resolve_to_the_same_status(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036 maintenance\nJZ-9019 maintanance\nJZ-9020 M");
-
-        $this->assertSame(5, $result['lines'][0]['status']);
-        $this->assertSame(5, $result['lines'][1]['status']);
-        $this->assertSame(5, $result['lines'][2]['status']);
+        $this->assertSame('Imran akhtr', $line['people'][1]['name']);
+        $this->assertSame(1, $line['people'][1]['status'], 'his replacement is present');
     }
 
     /**
-     * An unknown code is not dropped and not guessed at. It reaches the review
-     * screen with the vehicle intact, so only the status needs correcting.
+     * "14•LE 9927 A waseem & Habib 🅿️" - the leading "A" is an initial, not
+     * Absent. Reading it as a status would mark the wrong man away.
      */
-    public function test_an_unknown_status_is_kept_with_an_error(): void
+    public function test_an_initial_is_not_mistaken_for_absent(): void
     {
-        $result = $this->parse("ATT\nJZ-9036 X");
+        $result = $this->parse(
+            "Orengi attendence\n"
+            . '1•JZ 9785 shahinsha ' . self::P . "\n"
+            . '2•JZ 9787 Adnan khan ' . self::P . "\n"
+            . '14•LE 9927 A waseem & Habib ' . self::P
+        );
 
-        $this->assertCount(1, $result['lines']);
-        $this->assertSame('JZ-9036', $result['lines'][0]['vehicle_token']);
-        $this->assertNull($result['lines'][0]['status']);
-        $this->assertStringContainsString('not a known code', $result['lines'][0]['error']);
+        $line = $result['lines'][2];
+        $this->assertCount(1, $line['people']);
+        $this->assertSame('A waseem & Habib', $line['people'][0]['name']);
+        $this->assertSame(1, $line['people'][0]['status']);
     }
 
-    public function test_a_vehicle_with_no_status_is_kept_with_an_error(): void
+    // -----------------------------------------------------------------
+    // Format B - equals signs, names, no status marker at all
+    // -----------------------------------------------------------------
+
+    public function test_it_reads_a_register_with_no_status_markers(): void
     {
-        $result = $this->parse("ATT\nJZ-9036");
-
-        $this->assertCount(1, $result['lines']);
-        $this->assertSame('No status code on this line', $result['lines'][0]['error']);
-    }
-
-    /** Pleasantries at the end of a message are not errors. */
-    public function test_chatter_is_set_aside_rather_than_flagged(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036 P\nThanks\nDone sir");
-
-        $this->assertCount(1, $result['lines']);
-        $this->assertSame(['Thanks', 'Done sir'], $result['notes']);
-    }
-
-    public function test_a_duplicated_vehicle_is_left_for_the_reviewer_to_resolve(): void
-    {
-        $result = $this->parse("ATT\nJZ-9036 P\nJZ-9036 A");
-
-        // Both lines survive: deciding which one wins is a human judgement,
-        // not something the parser should silently make.
-        $this->assertCount(2, $result['lines']);
-        $this->assertSame(1, $result['lines'][0]['status']);
-        $this->assertSame(2, $result['lines'][1]['status']);
-    }
-
-    public function test_an_empty_message_produces_nothing(): void
-    {
-        $result = $this->parse('');
-
-        $this->assertFalse($result['is_attendance']);
-        $this->assertSame([], $result['lines']);
-    }
-
-    public function test_a_header_with_no_lines_is_still_attendance(): void
-    {
-        $result = $this->parse('ATT 12-11-2026');
+        $result = $this->parse("26=Jz-9640  Umair\n27=Jz-8959  Faizan\n37=Le-9907  Shabruk");
 
         $this->assertTrue($result['is_attendance']);
-        $this->assertSame([], $result['lines']);
+        $this->assertSame(AttendanceMessageParser::KIND_DRIVER, $result['kind']);
+        $this->assertCount(3, $result['lines']);
+
+        $first = $result['lines'][0];
+        $this->assertSame('Jz-9640', $first['vehicle_token']);
+        $this->assertSame('Umair', $first['people'][0]['name']);
+
+        // No marker means no status. What to assume is the builder's call,
+        // and the review screen says so on the row.
+        $this->assertNull($first['people'][0]['status']);
+    }
+
+    /** "33=Jz-9744  Gachi (L)Shaid hussain" - on leave, and who covered. */
+    public function test_an_inline_leave_marker_splits_the_two_names(): void
+    {
+        $result = $this->parse(
+            "26=Jz-9640  Umair\n"
+            . "33=Jz-9744  Gachi (L)Shaid hussain\n"
+            . '54=Lf-1068 Shahwazir( L)Shakeel'
+        );
+
+        foreach ([1, 2] as $index) {
+            $line = $result['lines'][$index];
+            $this->assertCount(2, $line['people'], $line['raw']);
+            $this->assertSame(3, $line['people'][0]['status'], 'first name is on leave');
+            $this->assertNull($line['people'][1]['status'], 'the stand-in carries no marker');
+        }
+
+        $this->assertSame('Gachi', $result['lines'][1]['people'][0]['name']);
+        $this->assertSame('Shaid hussain', $result['lines'][1]['people'][1]['name']);
+        $this->assertSame('Shahwazir', $result['lines'][2]['people'][0]['name']);
+        $this->assertSame('Shakeel', $result['lines'][2]['people'][1]['name']);
+    }
+
+    /** "34=Jz-9676.  Saud" - a stray full stop after the number. */
+    public function test_a_stray_full_stop_does_not_break_the_vehicle_number(): void
+    {
+        $result = $this->parse("26=Jz-9640  Umair\n34=Jz-9676.  Saud\n38=Le-9908.  Asaad");
+
+        $this->assertSame('Jz-9676', $result['lines'][1]['vehicle_token']);
+        $this->assertSame('Saud', $result['lines'][1]['people'][0]['name']);
+    }
+
+    /** The same vehicle on two lines with two drivers is left as two lines. */
+    public function test_one_vehicle_named_twice_stays_two_lines(): void
+    {
+        $result = $this->parse("30=Jz-9641  per rehman\n31=Jz-9641  Naveed\n32=Jz-9769  Javeed");
+
+        $this->assertCount(3, $result['lines']);
+        $this->assertSame('per rehman', $result['lines'][0]['people'][0]['name']);
+        $this->assertSame('Naveed', $result['lines'][1]['people'][0]['name']);
+    }
+
+    // -----------------------------------------------------------------
+    // Format C - the vehicle register
+    // -----------------------------------------------------------------
+
+    public function test_it_reads_the_vehicle_register_and_its_date(): void
+    {
+        $result = $this->parse(
+            "12- NOV -2026 KORANGI\nVEHICLES ATTENDANCE\n\n1= Jz 9673 (P)\n3= Jz 9782 (P)\n22= Le. 5764 (P)"
+        );
+
+        $this->assertTrue($result['is_attendance']);
+        $this->assertSame(AttendanceMessageParser::KIND_VEHICLE, $result['kind']);
+        $this->assertSame('2026-11-12', $result['date']);
+        $this->assertCount(3, $result['lines']);
+
+        $this->assertSame('Jz 9673', $result['lines'][0]['vehicle_token']);
+        $this->assertSame(1, $result['lines'][0]['people'][0]['status']);
+        $this->assertSame('Le. 5764', $result['lines'][2]['vehicle_token']);
+    }
+
+    /** "2= Jz 9741 (P" - the closing bracket is often missed. */
+    public function test_an_unclosed_bracket_still_reads_as_a_status(): void
+    {
+        $result = $this->parse("1= Jz 9673 (P)\n2= Jz 9741 (P\n3= Jz 9782 (P)");
+
+        $this->assertSame(1, $result['lines'][1]['people'][0]['status']);
+    }
+
+    /** "14=Jz-9670 (Day)" and "(Night)" are shifts, not statuses. */
+    public function test_a_shift_in_brackets_is_not_a_status(): void
+    {
+        $result = $this->parse("14=Jz-9670  (Day)\n15=Jz-9670  (Night)\n16=Jz-9669 ( Morning)");
+
+        $this->assertSame('Day', $result['lines'][0]['shift']);
+        $this->assertSame('Night', $result['lines'][1]['shift']);
+        $this->assertSame('Morning', $result['lines'][2]['shift']);
+
+        foreach ($result['lines'] as $line) {
+            foreach ($line['people'] as $person) {
+                $this->assertNull($person['status'], 'a shift must not set a status');
+            }
+        }
+    }
+
+    /** "8= Jz 9853 inspection replecment LE-1940 (P)" - a stand-in vehicle. */
+    public function test_a_replacement_vehicle_is_picked_up_separately(): void
+    {
+        $result = $this->parse(
+            "1= Jz 9673 (P)\n2= Jz 9741 (P)\n8= Jz 9853 inspection replecment LE-1940 (P)"
+        );
+
+        $line = $result['lines'][2];
+        $this->assertSame('Jz 9853', $line['vehicle_token']);
+        $this->assertSame('LE-1940', $line['second_vehicle_token']);
+        $this->assertContains('inspection', $line['keywords']);
+        $this->assertContains('replecment', $line['keywords']);
+    }
+
+    // -----------------------------------------------------------------
+    // Telling attendance from ordinary chat
+    // -----------------------------------------------------------------
+
+    /**
+     * No keyword is required, because the real registers carry none. What
+     * marks a message out is that it is mostly a list of vehicle numbers.
+     */
+    public function test_ordinary_chat_is_not_read_as_attendance(): void
+    {
+        $this->assertFalse($this->parse('Sir gaari kharab ho gayi hai')['is_attendance']);
+        $this->assertFalse($this->parse("Salam sir\nkal chutti hai?")['is_attendance']);
+        $this->assertFalse($this->parse('')['is_attendance']);
+    }
+
+    /** One or two vehicles mentioned in passing is a conversation, not a register. */
+    public function test_a_passing_mention_of_a_vehicle_is_not_a_register(): void
+    {
+        $result = $this->parse("Sir JZ-9036 workshop mein hai\nLE 1940 bhi kharab hai");
+
+        $this->assertFalse($result['is_attendance']);
+    }
+
+    public function test_closing_pleasantries_are_set_aside(): void
+    {
+        $result = $this->parse(
+            "26=Jz-9640  Umair\n27=Jz-8959  Faizan\n37=Le-9907  Shabruk\nThanks sir\nDone"
+        );
+
+        $this->assertCount(3, $result['lines']);
+        $this->assertSame(['Thanks sir', 'Done'], $result['notes']);
     }
 
     public function test_windows_line_endings_are_handled(): void
     {
-        $result = $this->parse("ATT\r\nJZ-9036 P\r\nJZ-9019 A");
+        $result = $this->parse("26=Jz-9640  Umair\r\n27=Jz-8959  Faizan\r\n37=Le-9907  Shabruk");
 
-        $this->assertCount(2, $result['lines']);
+        $this->assertCount(3, $result['lines']);
     }
+
+    // -----------------------------------------------------------------
+    // Vehicle numbers
+    // -----------------------------------------------------------------
 
     public function test_vehicle_tokens_normalise_to_the_same_key(): void
     {
         $expected = 'JZ9036';
 
-        $this->assertSame($expected, AttendanceMessageParser::normalizeVehicleToken('JZ-9036'));
-        $this->assertSame($expected, AttendanceMessageParser::normalizeVehicleToken('jz 9036'));
-        $this->assertSame($expected, AttendanceMessageParser::normalizeVehicleToken('  JZ9036 '));
-        $this->assertSame($expected, AttendanceMessageParser::normalizeVehicleToken('JZ/9036'));
+        foreach (['JZ-9036', 'jz 9036', 'Jz.9036', '  JZ9036 ', 'JZ/9036'] as $written) {
+            $this->assertSame($expected, AttendanceMessageParser::normalizeVehicleToken($written), $written);
+        }
+
         $this->assertSame('', AttendanceMessageParser::normalizeVehicleToken(null));
+    }
+
+    /** Every prefix seen in the real groups has to be recognised. */
+    public function test_every_prefix_the_groups_use_is_recognised(): void
+    {
+        $body = "1•JZ 9785 a\n2•LE 9917 b\n3•LF 1073 c\n4•KP 9315 d\n5=Kq-6020 e\n6=Ld-0718 f\n7=Jv-8188 g";
+
+        $result = $this->parse($body);
+
+        $this->assertCount(7, $result['lines']);
+        $this->assertSame(
+            ['JZ 9785', 'LE 9917', 'LF 1073', 'KP 9315', 'Kq-6020', 'Ld-0718', 'Jv-8188'],
+            array_column($result['lines'], 'vehicle_token')
+        );
+    }
+
+    public function test_line_numbers_point_back_at_the_original_message(): void
+    {
+        $result = $this->parse("Orengi attendence\n1•JZ 9785 a " . self::P . "\n2•JZ 9787 b " . self::P . "\n3•JZ 9737 c " . self::P);
+
+        $this->assertSame([2, 3, 4], array_column($result['lines'], 'line_no'));
     }
 }

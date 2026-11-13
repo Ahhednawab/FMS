@@ -103,15 +103,15 @@
                                     <th style="width: 34px;" class="text-center">
                                         <input type="checkbox" id="checkAll">
                                     </th>
-                                    <th style="width: 13%;">Supervisor</th>
-                                    <th style="width: 10%;">Date</th>
-                                    <th style="width: 12%;">What was sent</th>
-                                    <th style="width: 9%;">Vehicle</th>
-                                    <th style="width: 16%;">Driver</th>
-                                    <th style="width: 12%;">Status</th>
+                                    <th style="width: 11%;">Supervisor</th>
+                                    <th style="width: 9%;">Date</th>
+                                    <th style="width: 16%;">What was sent</th>
+                                    <th style="width: 8%;">Vehicle</th>
+                                    <th style="width: 17%;">Driver</th>
+                                    <th style="width: 11%;">Status</th>
                                     {{-- The notes carry the whole reason a row is flagged, so this
                                          column gets a floor the others cannot squeeze it below. --}}
-                                    <th style="min-width: 200px;">Notes</th>
+                                    <th style="min-width: 220px;">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -150,7 +150,17 @@
                                             @endif
                                         </td>
 
-                                        <td><code class="wa-raw">{{ $draft->raw_line }}</code></td>
+                                        <td>
+                                            <code class="wa-raw">{{ $draft->raw_line }}</code>
+                                            @if ($draft->driver_name_token)
+                                                <div class="text-muted" style="font-size: 11px;">
+                                                    name sent: <strong>{{ $draft->driver_name_token }}</strong>
+                                                    @if ($draft->replacement_name_token)
+                                                        &rarr; {{ $draft->replacement_name_token }}
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
 
                                         <td>
                                             @if ($draft->vehicle)
@@ -158,10 +168,22 @@
                                             @else
                                                 <span class="text-muted">{{ $draft->vehicle_token ?? '-' }}</span>
                                             @endif
+
+                                            @if ($draft->shift)
+                                                <div class="text-muted" style="font-size: 11px;">{{ $draft->shift }}</div>
+                                            @endif
+
+                                            @if ($draft->replacementVehicle)
+                                                <div class="text-info" style="font-size: 11px;">
+                                                    &rarr; {{ $draft->replacementVehicle->vehicle_no }}
+                                                </div>
+                                            @endif
                                         </td>
 
                                         <td>
-                                            @if ($isPending)
+                                            @if ($draft->kind === 'vehicle')
+                                                <span class="text-muted">vehicle register</span>
+                                            @elseif ($isPending)
                                                 <select name="driver_id[{{ $draft->id }}]"
                                                     class="form-control form-control-sm {{ $drivers === [] ? 'wa-driver-all' : '' }}">
                                                     <option value="">-- choose --</option>
@@ -172,6 +194,15 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
+
+                                                @if ($draft->match_score !== null && $draft->matched_by === 'name')
+                                                    {{-- How sure the name match was, so a weak one can
+                                                         be spotted without opening anything. --}}
+                                                    <div style="font-size: 11px;"
+                                                        class="{{ $draft->match_score >= 92 ? 'text-success' : 'text-warning' }}">
+                                                        matched by name, {{ $draft->match_score }}%
+                                                    </div>
+                                                @endif
                                             @else
                                                 {{ $draft->driver->full_name ?? '-' }}
                                             @endif
@@ -194,8 +225,30 @@
                                         </td>
 
                                         <td style="font-size: 12px;">
+                                            @if ($draft->disagreesWithFms())
+                                                {{-- The one disagreement that matters most: the system
+                                                     has somebody else on this vehicle. The name wins,
+                                                     but not quietly. --}}
+                                                <div class="text-danger">
+                                                    FMS has <strong>{{ $draft->fmsDriver->full_name ?? '?' }}</strong>
+                                                    on this vehicle
+                                                </div>
+                                            @endif
+
                                             @if ($draft->error)
                                                 <div class="text-danger">{{ $draft->error }}</div>
+                                            @endif
+
+                                            @if ($isPending && $draft->status_assumed)
+                                                <div class="text-muted">No status sent - Present assumed</div>
+                                            @endif
+
+                                            @if ($isPending && $draft->replacementDriver)
+                                                <div class="text-info">
+                                                    Saves as Replace:
+                                                    <strong>{{ $draft->replacementDriver->full_name }}</strong>
+                                                    in place of {{ $draft->driver->full_name ?? 'the named driver' }}
+                                                </div>
                                             @endif
 
                                             @if ($isPending && $existing)

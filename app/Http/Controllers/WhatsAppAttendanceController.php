@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceStatus;
 use App\Models\Driver;
 use App\Models\DriversAttendance;
+use App\Models\VehiclesAttendance;
 use App\Models\WhatsAppAttendanceDraft;
 use App\Models\WhatsAppSender;
+use App\Services\DriverAvailabilitySync;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,10 @@ class WhatsAppAttendanceController extends Controller
         WhatsAppAttendanceDraft::STATE_REJECTED => 'Rejected',
     ];
 
+    public function __construct(private DriverAvailabilitySync $availability)
+    {
+    }
+
     public function index(Request $request)
     {
         $state = $request->query('state', WhatsAppAttendanceDraft::STATE_PENDING);
@@ -39,7 +45,16 @@ class WhatsAppAttendanceController extends Controller
         $perPage = in_array($perPage, [25, 50, 100], true) ? $perPage : 50;
 
         $drafts = WhatsAppAttendanceDraft::query()
-            ->with(['message.sender', 'vehicle:id,vehicle_no', 'driver:id,full_name,serial_no,vehicle_id', 'attendanceStatus'])
+            ->with([
+                'message.sender',
+                'vehicle:id,vehicle_no',
+                'replacementVehicle:id,vehicle_no',
+                'driver:id,full_name,serial_no,vehicle_id',
+                'fmsDriver:id,full_name',
+                'replacementDriver:id,full_name',
+                'attendanceStatus',
+                'confirmedBy:id,name',
+            ])
             ->where('state', $state)
             ->when($date !== '', fn ($query) => $query->whereDate('attendance_date', $date))
             ->when($senderId !== '', fn ($query) => $query->whereHas(
@@ -107,29 +122,17 @@ class WhatsAppAttendanceController extends Controller
                     continue;
                 }
 
-                $existing = DriversAttendance::where('driver_id', $draft->driver_id)
-                    ->whereDate('date', $draft->attendance_date)
-                    ->first();
+                $result = $draft->isVehicleRegister()
+                    ? $this->confirmVehicle($draft)
+                    : $this->confirmDriver($draft);
 
-                if ($existing) {
+                if ($result['replaced']) {
                     $overwritten++;
                 }
 
-                $attendance = DriversAttendance::updateOrCreate(
-                    [
-                        'driver_id' => $draft->driver_id,
-                        'date' => $draft->attendance_date->toDateString(),
-                    ],
-                    [
-                        'vehicle_id' => $draft->vehicle_id ?: $draft->driver?->vehicle_id,
-                        'status' => $draft->status,
-                        'is_active' => 1,
-                    ]
-                );
-
                 $draft->update([
                     'state' => WhatsAppAttendanceDraft::STATE_CONFIRMED,
-                    'drivers_attendance_id' => $attendance->id,
+                    'drivers_attendance_id' => $result['id'],
                     'confirmed_by' => Auth::id(),
                     'confirmed_at' => now(),
                 ]);
@@ -172,6 +175,82 @@ class WhatsAppAttendanceController extends Controller
             ]);
 
         return back()->with('success', $rejected . ' line(s) rejected. No attendance was written.');
+    }
+
+    /**
+     * Write one driver register line.
+     *
+     * A line that names a stand-in - "Nizam 🅰️ Imran akhtr 🅿️" - is saved the
+     * way the Driver Attendance screen saves one: a single Replace row whose
+     * `driver_id` is the man who actually drove, with the man he covered kept
+     * in `original_driver_id`. Keeping the two screens identical matters more
+     * than recording the absence separately, which this schema has no room for.
+     *
+     * @return array{id: int, replaced: bool}
+     */
+    private function confirmDriver(WhatsAppAttendanceDraft $draft): array
+    {
+        $isReplacement = $draft->replacement_driver_id !== null
+            && in_array((int) $draft->status, WhatsAppAttendanceDraft::AWAY_STATUSES, true);
+
+        $driverId = $isReplacement ? (int) $draft->replacement_driver_id : (int) $draft->driver_id;
+        $status = $isReplacement ? WhatsAppAttendanceDraft::REPLACE_STATUS : (int) $draft->status;
+
+        $replaced = DriversAttendance::where('driver_id', $driverId)
+            ->whereDate('date', $draft->attendance_date)
+            ->exists();
+
+        $attendance = DriversAttendance::updateOrCreate(
+            [
+                'driver_id' => $driverId,
+                'date' => $draft->attendance_date->toDateString(),
+            ],
+            [
+                'vehicle_id' => $draft->vehicle_id ?: $draft->driver?->vehicle_id,
+                'original_driver_id' => $isReplacement ? (int) $draft->driver_id : null,
+                'replacement_driver_id' => $isReplacement ? (int) $draft->replacement_driver_id : null,
+                'is_replacement' => $isReplacement,
+                'status' => $status,
+                'is_active' => 1,
+            ]
+        );
+
+        // The same thing the manual screen does once a row is saved.
+        $this->availability->forDriver($driverId, $status);
+
+        if ($isReplacement) {
+            $this->availability->forDriver((int) $draft->driver_id, (int) $draft->status);
+        }
+
+        return ['id' => $attendance->id, 'replaced' => $replaced];
+    }
+
+    /**
+     * Write one vehicle register line. The stand-in vehicle on a line like
+     * "Jz 9853 inspection replecment LE-1940" goes in `pool_id`, which is what
+     * that column is for.
+     *
+     * @return array{id: int, replaced: bool}
+     */
+    private function confirmVehicle(WhatsAppAttendanceDraft $draft): array
+    {
+        $replaced = VehiclesAttendance::where('vehicle_id', $draft->vehicle_id)
+            ->whereDate('date', $draft->attendance_date)
+            ->exists();
+
+        $attendance = VehiclesAttendance::updateOrCreate(
+            [
+                'vehicle_id' => $draft->vehicle_id,
+                'date' => $draft->attendance_date->toDateString(),
+            ],
+            [
+                'pool_id' => $draft->replacement_vehicle_id,
+                'status' => $draft->status,
+                'is_active' => 1,
+            ]
+        );
+
+        return ['id' => $attendance->id, 'replaced' => $replaced];
     }
 
     /**
@@ -253,6 +332,17 @@ class WhatsAppAttendanceController extends Controller
 
         foreach ($drivers as $driver) {
             $choices[(int) $driver->vehicle_id][(int) $driver->id] = (string) $driver->full_name;
+        }
+
+        // The man the supervisor named belongs in the list even when the
+        // system has him on another vehicle - usually he is the right answer.
+        foreach ($drafts as $draft) {
+            if ($draft->vehicle_id === null || $draft->driver_id === null) {
+                continue;
+            }
+
+            $choices[(int) $draft->vehicle_id][(int) $draft->driver_id] =
+                (string) ($draft->driver->full_name ?? $draft->driver_name_token);
         }
 
         return $choices;

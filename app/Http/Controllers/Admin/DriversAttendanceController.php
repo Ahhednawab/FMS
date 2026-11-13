@@ -713,25 +713,13 @@ class DriversAttendanceController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Moved into DriverAvailabilitySync so the WhatsApp review screen marks
+     * attendance exactly the way this screen does. The behaviour is unchanged.
+     */
     private function syncDriverAvailability(int $driverId, int $statusId): void
     {
-        $driver = Driver::with(['primaryVehicles', 'poolVehicles'])->find($driverId);
-        if (!$driver) {
-            return;
-        }
-
-        $statusName = strtolower((string) AttendanceStatus::where('id', $statusId)->value('name'));
-        $unavailableStatuses = ['absent', 'leave', 'off day', 'inspection', 'under maintenance', 'under maintanance'];
-        $driver->is_available = !in_array($statusName, $unavailableStatuses, true);
-        $driver->save();
-
-        foreach ($driver->primaryVehicles as $vehicle) {
-            $this->vehicleDriverAssignmentService->resolveCurrentDriver($vehicle);
-        }
-
-        foreach ($driver->poolVehicles as $vehicle) {
-            $this->vehicleDriverAssignmentService->resolveCurrentDriver($vehicle);
-        }
+        app(\App\Services\DriverAvailabilitySync::class)->forDriver($driverId, $statusId);
     }
 
     private function syncReplacementAssignmentsForDate(string $date, array $driverIds): void

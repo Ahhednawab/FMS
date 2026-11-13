@@ -42,42 +42,83 @@ delivered again and again.
 
 ---
 
-## 2. Message format
+## 2. What the supervisors actually send
 
-Free text is too unreliable to parse. Supervisors use one fixed shape:
+No format was imposed and none is going to be. These are the three shapes the
+real groups use, transcribed from recordings of them, and the parser is written
+around all three.
+
+**A - the Orangi & Garden driver register**
 
 ```
-ATT 12-11-2026
-JZ-9036 P
-JZ-9019 A
-LE-9912 OFF
+Orengi & garden driver's attendence
+
+1•JZ 9785 shahinsha 🅿️
+6•LE 1940 Imran somro(m) Tanveer 🅿️
+13•LE 1963 Nizam 🅰️ Imran akhtr 🅿️
+14•LE 9927 A waseem & Habib 🅿️
 ```
 
-**First line** — `ATT` (or `ATTENDANCE`), then the date. If the date is left out,
-today is used. `12-11-2026`, `12/11/2026` and `2026-11-12` are all accepted.
+A `•` after the index, a space inside the vehicle number, **the driver's name**,
+and the status as the emoji 🅿️ or 🅰️ rather than a letter. Line 13 is an
+absence and the man who covered it, on one line.
 
-**Every line after that** — vehicle number, then a status code.
+**B - another supervisor's driver register**
 
-| Code | Status | `drivers_attendances.status` |
+```
+30=Jz-9641  per rehman
+31=Jz-9641  Naveed
+33=Jz-9744  Gachi (L)Shaid hussain
+34=Jz-9676.  Saud
+54=Lf-1068 Shahwazir( L)Shakeel
+```
+
+`=` instead of a bullet, a dash inside the number, a stray full stop after it,
+and **no status marker at all** - the whole message is a present list. `(L)` is
+a leave, followed by who stood in. The same vehicle appears twice when two
+drivers share it. These run to 56 lines and more, past WhatsApp's "Read more".
+
+**C - the vehicle register, a separate group**
+
+```
+12- NOV -2026 KORANGI
+VEHICLES ATTENDANCE
+
+1= Jz 9673 (P)
+2= Jz 9741 (P
+8= Jz 9853 inspection replecment LE-1940 (P)
+14=Jz-9670  (Day)
+15=Jz-9670  (Night)
+22= Le. 5764 (P)
+```
+
+This one is about vehicles, not drivers, and goes to `vehicles_attendances`.
+It carries a date in the header, puts the status in brackets, often misses the
+closing one, and uses `(Day)` / `(Night)` for shifts rather than statuses. A
+stand-in vehicle is named on the line.
+
+### What the parser does with all this
+
+| Rule | Why |
+|---|---|
+| The index prefix `1•`, `37=`, `23.`, `4)` is stripped | Every supervisor numbers differently |
+| The vehicle is found by pattern - two letters, 3-4 digits, any separator | `JZ 9785`, `Jz-9641`, `Le. 5764` all reach the same key |
+| A status marker applies to the text in front of it | That is what splits "Nizam 🅰️ Imran akhtr 🅿️" into two people |
+| A bare letter counts only at the end of a line | Otherwise the initial in "A waseem & Habib" reads as Absent |
+| No marker at all means Present, recorded as an assumption | Register B sends no markers, and the screen says so on every such row |
+| A message is attendance when it holds three or more vehicle lines | No keyword is required, because the real registers carry none |
+
+### The statuses
+
+| Marker | Status | `attendance_status.id` |
 |---|---|---|
-| `P` | Present | 1 |
-| `A` | Absent | 2 |
-| `L` | Leave | 3 |
-| `R` | Replace | 4 |
-| `M` | Under maintenance | 5 |
-| `I` | Inspection | 6 |
-| `OFF` | OFF | 7 |
-
-The parser is deliberately forgiving: upper or lower case, extra spaces, and missing or
-extra dashes all work, so `jz 9036 p` and `JZ-9036 P` are the same thing. Full words
-(`Present`, `Absent`) are accepted too. The vehicle is matched first on
-`vehicles.vehicle_no`; if that fails, on the driver's `serial_no`. The driver comes
-from `drivers.vehicle_id`.
-
-Anything the parser cannot make sense of is **not discarded** — it lands on the review
-screen marked with the problem, so it can be fixed by hand.
-
----
+| 🅿️ `(P)` `P` | Present | 1 |
+| 🅰️ `(A)` `A` | Absent | 2 |
+| `(L)` `L` | Leave | 3 |
+| - | Replace | 4 |
+| `(M)` | Under maintenance | 5 |
+| `(I)` | Inspection | 6 |
+| `(O)` `OFF` | OFF | 7 |
 
 ## 3. The review screen
 
@@ -95,27 +136,69 @@ A new page under Attendance: **WhatsApp Attendance**.
 Confirming writes with `updateOrCreate` on (`driver_id`, `date`), records who confirmed
 it and when, and links the draft to the row it created.
 
+### The name decides, not the vehicle
+
+This is the most important rule in the whole module, and it was not the
+original plan.
+
+Checked against 42 lines taken off the real recordings, **every one of the 56
+vehicle numbers was found in the database** - but the driver the supervisor
+named was frequently not the driver `drivers.vehicle_id` has on that vehicle:
+
+```
+Supervisor: JZ 9787 Adnan khan   FMS: Adnan Khan is on JZ-9668;
+                                      JZ 9787 has Muhammad Yousuf
+Supervisor: JZ 9739 naveed       FMS: Muhammad Naveed is on JZ-9641;
+                                      JZ 9739 has Ahmed Faraz
+Supervisor: JZ 9745 Talib        FMS: Talib Hussain is on JZ-9741;
+                                      JZ 9745 has Shahid
+```
+
+Resolving by vehicle number alone would have marked Muhammad Yousuf present on
+a day Adnan Khan drove. On a register that feeds payroll that is the one
+failure that must not happen, so the name leads and the vehicle assignment is
+the fallback. Where the two disagree the row still saves under the name, and
+the screen says in red whom FMS had on that vehicle.
+
+That the assignments have drifted is a finding in its own right, and worth
+fixing separately - the WhatsApp feed is a good way to find them.
+
+### Matching a name written on a phone
+
+Supervisors write "shahinsha" for Shahin shah, "Juneed" for Junaid Ali,
+"zeshan" for Muhammad Zeeshan, "Shabruk" for Shahrukh. `DriverNameMatcher`
+compares by sound and by word rather than letter by letter: metaphone keys,
+prefix shortenings, and a penalty for matching only part of a longer name.
+
+It refuses as readily as it accepts. "Saud" scores 70% against its nearest
+driver and is left for the reviewer; so are "Gachi" at 60%, "shakir" where two
+drivers answer to it equally well, and "A waseem & Habib" where one line names
+two men. A match only fills itself in above 78%, and the row always shows the
+percentage it got.
+
 ### Why the review step is not optional
 
-Three things in the live data mean some lines cannot be resolved by any amount
-of parsing. They are the reason a person has to be in the loop:
+On top of the name drift, three things in the live data cannot be resolved by
+any amount of parsing:
 
 | In the data today | What the reviewer sees |
 |---|---|
-| **9 vehicles carry two active drivers** (JZ-9641, JV-9148, JZ-9788, JZ-9782, JZ-9809, JV-8188, JZ-9790, LE-9920, NW-0009) | "2 drivers are on JZ-9641 — choose one", with the driver dropdown narrowed to those two |
+| **9 vehicles carry two active drivers** (JZ-9641, JV-9148, JZ-9788, JZ-9782, JZ-9809, JV-8188, JZ-9790, LE-9920, NW-0009) | The name usually settles it; where no name was sent, "2 drivers are on JZ-9641 - choose one" |
 | **`LE-9937` exists on two vehicle rows** | "2 vehicles share the number LE-9937" |
 | **Some vehicles have no active driver** | "No active driver is assigned to JZ-8942" |
 
-Guessing in any of these cases would mark the wrong man present. The row is
-flagged instead and waits.
+### Replacements
 
-### One thing this screen will not do
+A line that names a stand-in - "Nizam 🅰️ Imran akhtr 🅿️", or "Gachi (L)Shaid
+hussain" - is saved the way the Driver Attendance screen saves one: a single
+**Replace** row whose `driver_id` is the man who actually drove, with the man
+he covered in `original_driver_id`. The two screens produce identical rows.
 
-A **Replace** line (`R`) is read and shown, but cannot be confirmed here. A
-replace entry also needs the pool driver who stood in, and a WhatsApp line does
-not carry that. Rather than save half a record, the row is refused with
-"Replace needs a pool driver — mark this one on the Driver Attendance screen"
-and stays pending. Every other status writes normally.
+One gap to know about: the manual screen also re-syncs pool-driver assignments
+for the date (`syncReplacementAssignmentsForDate`). The WhatsApp screen updates
+driver availability through the shared `DriverAvailabilitySync`, but does not
+run that second sweep. A Replace confirmed here is a correct attendance row; if
+pool assignments matter for that day, open it on the Driver Attendance screen.
 
 ---
 
@@ -160,7 +243,8 @@ a duplicate of its own; it just cannot promise the table has none. Cleaning the
 | Review screen + confirm/reject | `app/Http/Controllers/WhatsAppAttendanceController.php` + `resources/views/whatsapp/attendance.blade.php` |
 | Models | `app/Models/WhatsAppSender.php`, `WhatsAppMessage.php`, `WhatsAppAttendanceDraft.php` |
 | Optional reply to supervisor | `app/Services/WhatsApp/WhatsAppClient.php` |
-| Parser tests (23, no database) | `tests/Unit/AttendanceMessageParserTest.php` |
+| Parser tests, all from real messages | `tests/Unit/AttendanceMessageParserTest.php` |
+| Name-matching tests, every pair a real one | `tests/Unit/DriverNameMatcherTest.php` |
 
 The parser and the resolver are deliberately separate. The parser decides that
 a line says "JZ-9036 is present"; the resolver decides which driver that is.
@@ -321,10 +405,18 @@ nothing was written):
   repo are still unrecorded, so `php artisan migrate` on its own would try to
   recreate existing tables. These four were run with explicit `--path`
   arguments, and the same is needed on any other machine.
-- 23 parser tests pass, covering lower case, missing spaces, numbered lines,
-  `JZ-9036P` with no space, full words, numeric codes, both spellings of
-  maintenance, Urdu `HAZRI`, four date formats, an unreadable date, a future
-  date, Windows line endings, and closing chatter.
+- 53 unit tests pass. The 19 parser tests are written from the real messages:
+  bullets and equals signs, emoji statuses, a name between vehicle and status,
+  an initial that must not read as Absent, an inline `(L)` with the stand-in
+  after it, an unclosed bracket, `(Day)` and `(Night)`, a stray full stop, a
+  replacement vehicle, and ordinary chat that must not be mistaken for a
+  register. The 33 name-matching tests use real pairs in both directions -
+  22 that must match, 7 that must not.
+- Run end to end against the live database, all three formats: 56 of 56
+  vehicle numbers resolved, names matched or refused as described above,
+  confirmed rows written to `drivers_attendances` and `vehicles_attendances`
+  including a Replace row and a stand-in vehicle in `pool_id`, and confirming
+  the same drafts twice wrote nothing more.
 - The webhook refuses a missing, wrong, prefix-less or tampered signature
   (403), echoes the challenge on a correct verify token, refuses the wrong one
   (403), and returns 503 while `WHATSAPP_APP_SECRET` is unset. A redelivered
