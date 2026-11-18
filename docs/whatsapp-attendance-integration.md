@@ -142,26 +142,30 @@ This is the most important rule in the whole module, and it was not the
 original plan.
 
 Checked against 42 lines taken off the real recordings, **every one of the 56
-vehicle numbers was found in the database** - but the driver the supervisor
-named was frequently not the driver `drivers.vehicle_id` has on that vehicle:
+vehicle numbers was found in the database**, and on the live data **30 of the
+42 names agree** with the driver `drivers.vehicle_id` holds for that vehicle.
+
+The remaining handful do not, and that is why the name leads:
 
 ```
-Supervisor: JZ 9787 Adnan khan   FMS: Adnan Khan is on JZ-9668;
-                                      JZ 9787 has Muhammad Yousuf
-Supervisor: JZ 9739 naveed       FMS: Muhammad Naveed is on JZ-9641;
-                                      JZ 9739 has Ahmed Faraz
-Supervisor: JZ 9745 Talib        FMS: Talib Hussain is on JZ-9741;
-                                      JZ 9745 has Shahid
+Supervisor: JZ 9739 naveed   FMS has Naveed Ahmed on this vehicle,
+                             while Muhammad Naveed is the man named
 ```
 
-Resolving by vehicle number alone would have marked Muhammad Yousuf present on
-a day Adnan Khan drove. On a register that feeds payroll that is the one
-failure that must not happen, so the name leads and the vehicle assignment is
-the fallback. Where the two disagree the row still saves under the name, and
-the screen says in red whom FMS had on that vehicle.
+Resolving by vehicle number alone would mark the wrong driver present on those
+lines. On a register that feeds payroll that is the one failure that must not
+happen, so the name decides and the vehicle assignment is the fallback. Where
+the two disagree the row still saves under the name, and the screen says in red
+whom FMS had on that vehicle.
 
-That the assignments have drifted is a finding in its own right, and worth
-fixing separately - the WhatsApp feed is a good way to find them.
+> **A correction worth recording.** An earlier draft of this document reported
+> that only 13 of 42 names agreed and that the assignments had drifted badly.
+> That measurement was taken against an older, partial copy of the database
+> which held 271 drivers. Against the live database - 323 drivers - most of
+> those apparent mismatches disappear: "Faizan" is Muhammad Faizan and "Saud"
+> is Saud Ahmed Qureshi, both of whom simply were not in the older copy. The
+> design is unchanged, because it is the safe one either way, but far fewer
+> rows are flagged in practice than that draft implied.
 
 ### Matching a name written on a phone
 
@@ -183,7 +187,7 @@ any amount of parsing:
 
 | In the data today | What the reviewer sees |
 |---|---|
-| **9 vehicles carry two active drivers** (JZ-9641, JV-9148, JZ-9788, JZ-9782, JZ-9809, JV-8188, JZ-9790, LE-9920, NW-0009) | The name usually settles it; where no name was sent, "2 drivers are on JZ-9641 - choose one" |
+| **16 vehicles carry two active drivers** | The name usually settles it; where no name was sent, "2 drivers are on JZ-9641 - choose one" |
 | **`LE-9937` exists on two vehicle rows** | "2 vehicles share the number LE-9937" |
 | **Some vehicles have no active driver** | "No active driver is assigned to JZ-8942" |
 
@@ -310,8 +314,9 @@ Its limits, which shape the pilot:
   never turned into a draft.
 - A driver at a different `station_id` from the supervisor is flagged on the review
   screen. **In practice this check is dormant:** 265 of the 271 drivers have no
-  `station_id` at all, and the code will not flag what it does not know. It starts
-  working as those are filled in; until then the sender list is the only gate.
+  `station_id` at all (21 of 323 on the live data), and the code will not flag
+  what it does not know. It starts working as those are filled in; until then
+  the sender list is the only gate.
 - Credentials (`WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`,
   `WHATSAPP_VERIFY_TOKEN`) live in `.env` only. `.env` and `.env.*` are gitignored and
   nothing goes in the repo.
@@ -439,4 +444,4 @@ nothing was written):
 3. A webhook host: a tunnel to this machine, or `formulaone.pk`.
 4. Pasting the webhook URL into the Meta dashboard and subscribing to
    **messages**.
-5. The 23 duplicate `drivers_attendances` pairs, if the unique index is wanted.
+5. The 207 duplicate `drivers_attendances` pairs, if the unique index is wanted.
